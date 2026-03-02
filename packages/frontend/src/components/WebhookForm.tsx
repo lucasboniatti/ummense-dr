@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { webhookService } from '../services/webhook.service';
+import { analyticsService } from '../services/analytics.service';
 
 interface WebhookFormProps {
   webhookId?: string;
@@ -89,12 +90,14 @@ export const WebhookForm: React.FC<WebhookFormProps> = ({
           description,
           enabled,
         });
+        analyticsService.trackWebhookUpdated(webhookId, ['url', 'description', 'enabled']);
       } else {
         webhook = await webhookService.createWebhook({
           url,
           description,
           enabled,
         });
+        analyticsService.trackWebhookCreated(webhook.id, { url, hasDescription: !!description });
         setGeneratedKey(webhook.apiKey);
       }
 

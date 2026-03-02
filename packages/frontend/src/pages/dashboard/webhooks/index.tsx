@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { webhookService } from '../../../services/webhook.service';
+import { analyticsService } from '../../../services/analytics.service';
 import { DeliveryStatusBadge } from '../../../components/DeliveryStatusBadge';
 
 interface Webhook {
@@ -25,6 +26,11 @@ export default function WebhooksPage() {
     loadWebhooks();
   }, []);
 
+  useEffect(() => {
+    // Track page view
+    analyticsService.trackWebhookListViewed(webhooks.length);
+  }, [webhooks.length]);
+
   const loadWebhooks = async () => {
     try {
       setLoading(true);
@@ -42,6 +48,7 @@ export default function WebhooksPage() {
     if (!confirm('Delete this webhook? This action cannot be undone.')) return;
     try {
       await webhookService.deleteWebhook(id);
+      analyticsService.trackWebhookDeleted(id);
       setWebhooks(webhooks.filter(w => w.id !== id));
     } catch (err) {
       setError((err as Error).message);
