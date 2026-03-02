@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS cards (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  column_id INTEGER NOT NULL REFERENCES columns(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id SERIAL PRIMARY KEY,
+  text TEXT NOT NULL,
+  card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_cards_column_id ON cards(column_id);
+CREATE INDEX idx_comments_card_id ON comments(card_id);
