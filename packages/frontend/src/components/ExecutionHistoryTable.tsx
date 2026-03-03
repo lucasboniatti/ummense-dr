@@ -24,6 +24,10 @@ interface ExecutionHistoryTableProps {
   onRowClick: (executionId: string) => void;
   sortBy?: 'timestamp' | 'status' | 'duration';
   onSort?: (sortBy: string) => void;
+  onSearch?: (searchTerm: string) => void;
+  searchTerm?: string;
+  searchTime?: number;
+  onFilterChange?: (filters: any) => void;
 }
 
 export function ExecutionHistoryTable({
@@ -35,9 +39,22 @@ export function ExecutionHistoryTable({
   onRowClick,
   sortBy = 'timestamp',
   onSort,
+  onSearch,
+  searchTerm = '',
+  searchTime,
+  onFilterChange,
 }: ExecutionHistoryTableProps) {
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filters, setFilters] = useState({
+    status: '',
+    automationId: '',
+    startDate: '',
+    endDate: '',
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -65,8 +82,122 @@ export function ExecutionHistoryTable({
     }
   };
 
+  const handleSearch = (term: string) => {
+    onSearch?.(term);
+    // Simulate autocomplete suggestions
+    if (term.length > 0) {
+      setSearchSuggestions(['timeout', 'database error', 'connection failed', 'validation error'].filter((s) => s.includes(term.toLowerCase())));
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+    onFilterChange?.(newFilters);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Search and Filters Section */}
+      <div className="space-y-3">
+        {/* Full-Text Search Box with Autocomplete */}
+        <div className="relative">
+          <div className="flex gap-2 items-center">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Buscar por erro, automação, mensagem... (busca em tempo real)"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                onFocus={() => searchTerm && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                className="w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {searchTime !== undefined && (
+                <span className="absolute right-3 top-2.5 text-xs text-gray-500">
+                  {searchTime}ms
+                </span>
+              )}
+
+              {/* Autocomplete Suggestions */}
+              {showSuggestions && searchSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-md shadow-lg z-10">
+                  {searchSuggestions.map((suggestion, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        handleSearch(suggestion);
+                        setShowSuggestions(false);
+                      }}
+                      className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
+                    >
+                      {suggestion}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Advanced Filters Toggle */}
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="px-3 py-2 border rounded-md text-sm text-gray-700 hover:bg-gray-50 transition"
+              title="Filtros avançados"
+            >
+              ⚙ Filtros
+            </button>
+          </div>
+        </div>
+
+        {/* Advanced Filters */}
+        {showAdvancedFilters && (
+          <div className="grid grid-cols-4 gap-3 p-3 bg-gray-50 border rounded-md">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => handleFilterChange({ ...filters, status: e.target.value })}
+                className="w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="">Todos</option>
+                <option value="success">✓ Sucesso</option>
+                <option value="failed">✗ Falha</option>
+                <option value="skipped">- Ignorado</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Data Inicial</label>
+              <input
+                type="date"
+                value={filters.startDate}
+                onChange={(e) => handleFilterChange({ ...filters, startDate: e.target.value })}
+                className="w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Data Final</label>
+              <input
+                type="date"
+                value={filters.endDate}
+                onChange={(e) => handleFilterChange({ ...filters, endDate: e.target.value })}
+                className="w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Resultados: {total}
+              </label>
+              <div className="text-sm text-gray-600 mt-1">{total} execuções</div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="overflow-x-auto border rounded-lg">
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
