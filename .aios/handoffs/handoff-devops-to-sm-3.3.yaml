@@ -1,0 +1,36 @@
+handoff:
+  from_agent: devops
+  to_agent: sm
+  timestamp: "2026-03-03T13:23:00Z"
+  consumed: false
+
+  story_context:
+    story_id: "3.3"
+    story_path: "docs/stories/3.3.story.md"
+    story_status: "Done"
+    current_task: "Story 3.3 completa — pronto para criar Story 3.5"
+    branch: "main"
+
+  decisions:
+    - "Story 3.3 (Scheduled Automations) finalizada e mergeada para main (PR #7)"
+    - "Story 3.4 (Multi-Step Workflow Builder) já estava em main (PR #6)"
+    - "Main branch atualizado com 24 arquivos das Stories 3.3 e 3.4"
+    - "Próxima story a criar: 3.5 (Rate Limiting, Concurrency Control & Error Recovery)"
+
+  files_modified:
+    - "docs/stories/3.3.story.md"
+    - "packages/frontend/src/components/TriggerTypeSelector.tsx"
+    - "packages/frontend/src/components/ScheduleToggleControl.tsx"
+    - "packages/backend/src/automations/scheduler/__tests__/scheduler.load.test.ts"
+
+  blockers: []
+
+  next_action: >
+    Ativar @sm (River) e executar *draft para criar Story 3.5:
+    Rate Limiting, Concurrency Control & Error Recovery
+    (Status: Draft em docs/stories/3.7.story.md — verificar se 3.5 e 3.6 já existem)
+
+  sprint_status:
+    done: ["3.1", "3.2", "3.3", "3.4"]
+    draft: ["3.5", "3.6", "3.7"]
+    next_target: "3.5"
