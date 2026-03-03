@@ -1,0 +1,853 @@
+epic:
+  id: EPIC-3-WAVE-3
+  name: "Wave 3 — Advanced Automations, Reliability & Scaling"
+  version: 1.0
+  status: planning
+  prd_reference: docs/prd-wave-3.md
+  created_at: 2026-03-02
+  product_manager: Morgan
+  target_completion: 2026-05-30
+  estimated_effort_weeks: 14
+  team_size: 3
+
+  # Overall Epic Goals
+  goals:
+    - Transform automation platform from basic to production-grade
+    - Enable multi-step workflows with conditional logic
+    - Implement enterprise-grade webhook reliability (99.9%)
+    - Support 10,000+ concurrent automation executions
+    - Provide real-time observability and audit trails
+
+---
+
+# EXECUTION STRATEGY
+execution:
+  strategy: wave-based-parallel
+  total_waves: 3
+  description: |
+    Wave 1: Foundation & Core Reliability (Stories 3.1, 3.2, 3.3)
+    Wave 2: Advanced Features & Observability (Stories 3.4, 3.5, 3.6)
+    Wave 3: Scaling & Polish (Story 3.7 + Integration Testing)
+
+---
+
+# WAVE 1: FOUNDATION & CORE RELIABILITY
+# Timeline: Weeks 1-8 (Parallel development, 2 engineers)
+waves:
+  wave_1:
+    name: "Foundation & Core Reliability"
+    timeline: "Weeks 1-8"
+    status: pending
+    engineers: 2
+    parallel_tracks: 2
+
+    # TRACK A: Execution Engine Foundation
+    track_a:
+      name: "Execution Engine & Webhook Reliability"
+
+      stories:
+        - story_id: 3.1
+          title: "Workflow Execution Engine Refactor"
+          type: foundation
+          effort: large
+          engineer_count: 1
+          timeline: "Weeks 1-3"
+          status: pending
+          acceptance_criteria_count: 6
+          test_coverage_target: 95
+
+          tasks:
+            - id: 3.1.1
+              title: "Design execution engine architecture (multi-step context passing)"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+
+            - id: 3.1.2
+              title: "Implement ExecutionStep model and database schema"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.1.1]
+
+            - id: 3.1.3
+              title: "Refactor execution service to support step sequencing"
+              assigned_to: "@dev"
+              effort: 5d
+              blocking: false
+              dependencies: [3.1.2]
+
+            - id: 3.1.4
+              title: "Add execution context management and variable passing"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.1.3]
+
+            - id: 3.1.5
+              title: "Implement backwards compatibility layer for Wave 2 automations"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: true
+              dependencies: [3.1.4]
+
+            - id: 3.1.6
+              title: "Unit tests for execution engine (95% coverage)"
+              assigned_to: "@qa"
+              effort: 4d
+              blocking: true
+              dependencies: [3.1.5]
+
+            - id: 3.1.7
+              title: "Integration tests: Wave 2 automations execute unchanged"
+              assigned_to: "@qa"
+              effort: 3d
+              blocking: true
+              dependencies: [3.1.5]
+
+          verification:
+            - All Wave 2 automations execute identically (output comparison)
+            - No performance regression (P99 latency stable)
+            - Dashboard unaffected
+            - 95% test coverage achieved
+
+          gates:
+            pre_development:
+              - Database schema reviewed by @data-engineer
+              - Architecture approved by @architect
+            pre_merge:
+              - All tests passing
+              - CodeRabbit review clean
+              - Performance benchmarks stable
+
+        - story_id: 3.2
+          title: "Webhook Reliability & Retry Logic"
+          type: core_feature
+          effort: large
+          engineer_count: 1
+          timeline: "Weeks 3-6"
+          status: pending
+          acceptance_criteria_count: 7
+          test_coverage_target: 90
+
+          tasks:
+            - id: 3.2.1
+              title: "Design retry strategy and DLQ architecture"
+              assigned_to: "@architect"
+              effort: 2d
+              blocking: false
+
+            - id: 3.2.2
+              title: "Implement webhook delivery retry service (exponential backoff)"
+              assigned_to: "@dev"
+              effort: 4d
+              blocking: false
+              dependencies: [3.2.1]
+
+            - id: 3.2.3
+              title: "Create DLQ table and management API endpoints"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.2.2]
+
+            - id: 3.2.4
+              title: "Implement HMAC-SHA256 webhook signature validation"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.2.2]
+
+            - id: 3.2.5
+              title: "Add audit logging for all delivery attempts"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.2.3]
+
+            - id: 3.2.6
+              title: "Build DLQ dashboard UI (view failed webhooks, manual retry)"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.2.3]
+
+            - id: 3.2.7
+              title: "Integration tests for retry logic and DLQ workflow"
+              assigned_to: "@qa"
+              effort: 4d
+              blocking: true
+              dependencies: [3.2.6]
+
+          verification:
+            - Webhook retry with correct exponential backoff timings
+            - DLQ interface functional and accessible
+            - Manual retry from DLQ succeeds
+            - Signature validation rejects tampered webhooks
+
+          gates:
+            pre_development:
+              - Security review of signature validation approach
+            pre_merge:
+              - Load test: 1000 concurrent webhook deliveries
+              - DLQ safety verified (no data loss)
+
+    # TRACK B: Scheduled Automations
+    track_b:
+      name: "Scheduled Automations & Cron Support"
+
+      stories:
+        - story_id: 3.3
+          title: "Scheduled Automations & Cron Support"
+          type: core_feature
+          effort: medium
+          engineer_count: 1
+          timeline: "Weeks 4-6"
+          status: pending
+          acceptance_criteria_count: 7
+          test_coverage_target: 85
+
+          tasks:
+            - id: 3.3.1
+              title: "Design scheduler service architecture"
+              assigned_to: "@architect"
+              effort: 1d
+              blocking: false
+
+            - id: 3.3.2
+              title: "Select and integrate scheduler library (Bull or node-cron)"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.3.1]
+
+            - id: 3.3.3
+              title: "Implement automation scheduling data model"
+              assigned_to: "@data-engineer"
+              effort: 2d
+              blocking: false
+              dependencies: [3.3.1]
+
+            - id: 3.3.4
+              title: "Build scheduler service with cron expression evaluation"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.3.2, 3.3.3]
+
+            - id: 3.3.5
+              title: "Add cron expression validator to API/UI"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.3.4]
+
+            - id: 3.3.6
+              title: "Implement next-execution-time preview in UI"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.3.5]
+
+            - id: 3.3.7
+              title: "Integration tests for scheduler with multiple cron expressions"
+              assigned_to: "@qa"
+              effort: 3d
+              blocking: true
+              dependencies: [3.3.6]
+
+          verification:
+            - Cron expressions evaluated correctly within ±2 minutes
+            - Scheduler resilient to downtime (missed executions logged)
+            - Existing event-triggered automations unaffected
+
+          gates:
+            pre_merge:
+              - Scheduler passes reliability test (99%+ execution rate)
+              - No performance impact on existing automations
+
+---
+
+# WAVE 2: ADVANCED FEATURES & OBSERVABILITY
+# Timeline: Weeks 7-12 (Parallel development, 2-3 engineers)
+  wave_2:
+    name: "Advanced Features & Observability"
+    timeline: "Weeks 7-12"
+    status: pending
+    engineers: 3
+    parallel_tracks: 3
+    dependencies: [wave_1]
+
+    # TRACK A: Multi-Step Workflows
+    track_a:
+      name: "Multi-Step Workflow Builder"
+
+      stories:
+        - story_id: 3.4
+          title: "Multi-Step Workflow Builder & Conditional Logic"
+          type: feature_enhancement
+          effort: large
+          engineer_count: 2
+          timeline: "Weeks 7-10"
+          status: pending
+          acceptance_criteria_count: 7
+          test_coverage_target: 90
+
+          tasks:
+            - id: 3.4.1
+              title: "Design workflow DAG model and visualization library"
+              assigned_to: "@architect"
+              effort: 2d
+              blocking: false
+
+            - id: 3.4.2
+              title: "Implement conditional logic evaluator (if/then/else)"
+              assigned_to: "@dev"
+              effort: 4d
+              blocking: false
+              dependencies: [3.4.1]
+
+            - id: 3.4.3
+              title: "Extend workflow builder UI with DAG visualization (React)"
+              assigned_to: "@dev"
+              effort: 5d
+              blocking: false
+              dependencies: [3.4.1]
+
+            - id: 3.4.4
+              title: "Implement branching logic in execution engine"
+              assigned_to: "@dev"
+              effort: 4d
+              blocking: false
+              dependencies: [3.4.2, 3.1.3]
+
+            - id: 3.4.5
+              title: "Add workflow template save/load functionality"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.4.4]
+
+            - id: 3.4.6
+              title: "Implement dry-run execution for test workflows"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.4.4]
+
+            - id: 3.4.7
+              title: "Migration: Convert Wave 2 automations to new workflow model"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: true
+              dependencies: [3.4.5]
+
+            - id: 3.4.8
+              title: "Unit tests for conditional logic and branching"
+              assigned_to: "@qa"
+              effort: 4d
+              blocking: true
+              dependencies: [3.4.7]
+
+            - id: 3.4.9
+              title: "E2E tests: Complex workflows with multiple branches"
+              assigned_to: "@qa"
+              effort: 3d
+              blocking: true
+              dependencies: [3.4.8]
+
+          verification:
+            - DAG visualization renders correctly for complex workflows
+            - Conditional branches execute correctly (only active branches run)
+            - Wave 2 automations migrate without manual intervention
+            - Dry-run execution accurate
+
+          gates:
+            pre_development:
+              - UI/UX review by @ux-design-expert
+              - Conditional logic security review
+            pre_merge:
+              - 90% test coverage verified
+              - Complex workflow E2E tests all passing
+
+    # TRACK B: Observability & Audit Logs
+    track_b:
+      name: "Execution History & Audit Logging"
+
+      stories:
+        - story_id: 3.5
+          title: "Automation Execution History & Audit Log"
+          type: observability
+          effort: medium
+          engineer_count: 1
+          timeline: "Weeks 8-10"
+          status: pending
+          acceptance_criteria_count: 7
+          test_coverage_target: 85
+
+          tasks:
+            - id: 3.5.1
+              title: "Design audit log schema and retention policy"
+              assigned_to: "@data-engineer"
+              effort: 2d
+              blocking: false
+
+            - id: 3.5.2
+              title: "Implement audit logging middleware (async, non-blocking)"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.5.1]
+
+            - id: 3.5.3
+              title: "Build execution history API endpoints (search, filter, export)"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.5.2]
+
+            - id: 3.5.4
+              title: "Create execution detail page with step breakdown"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.5.3]
+
+            - id: 3.5.5
+              title: "Implement error context capture (stack trace, state snapshot)"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.5.4]
+
+            - id: 3.5.6
+              title: "Add export functionality (CSV, JSON)"
+              assigned_to: "@dev"
+              effort: 1d
+              blocking: false
+              dependencies: [3.5.3]
+
+            - id: 3.5.7
+              title: "Integration tests for audit log accuracy and retention"
+              assigned_to: "@qa"
+              effort: 2d
+              blocking: true
+              dependencies: [3.5.6]
+
+          verification:
+            - Audit log captures all executions with correct timestamps
+            - Search and filter work efficiently (P99 latency <2s)
+            - Export produces valid CSV/JSON
+
+          gates:
+            pre_merge:
+              - Performance test: Query 1M execution records
+              - Audit log immutability verified
+
+    # TRACK C: Real-Time Dashboard
+    track_c:
+      name: "Real-Time Dashboard & Analytics"
+
+      stories:
+        - story_id: 3.6
+          title: "Real-Time Execution Dashboard & Analytics"
+          type: ui_enhancement
+          effort: large
+          engineer_count: 1
+          timeline: "Weeks 9-12"
+          status: pending
+          acceptance_criteria_count: 7
+          test_coverage_target: 80
+
+          tasks:
+            - id: 3.6.1
+              title: "Design dashboard data schema (aggregations, materialized views)"
+              assigned_to: "@data-engineer"
+              effort: 2d
+              blocking: false
+
+            - id: 3.6.2
+              title: "Implement WebSocket server for real-time updates"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.6.1]
+
+            - id: 3.6.3
+              title: "Build real-time execution feed UI component (React)"
+              assigned_to: "@dev"
+              effort: 3d
+              blocking: false
+              dependencies: [3.6.2]
+
+            - id: 3.6.4
+              title: "Create analytics section with charts (trends, success rate)"
+              assigned_to: "@dev"
+              effort: 4d
+              blocking: false
+              dependencies: [3.6.1]
+
+            - id: 3.6.5
+              title: "Build DLQ widget and connector health dashboard"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.2.6]
+
+            - id: 3.6.6
+              title: "Add PDF report export functionality"
+              assigned_to: "@dev"
+              effort: 2d
+              blocking: false
+              dependencies: [3.6.4]
+
+            - id: 3.6.7
+              title: "UI/UX testing and responsive design (mobile/tablet)"
+              assigned_to: "@qa"
+              effort: 2d
+              blocking: true
+              dependencies: [3.6.6]
+
+          verification:
+            - Real-time updates arrive within 2 seconds
+            - Charts render correctly and update smoothly
+            - Mobile responsive design verified
+            - PDF export readable and complete
+
+          gates:
+            pre_development:
+              - UX/UI design review by @ux-design-expert
+            pre_merge:
+              - Performance test: Dashboard with 10K+ concurrent executions
+              - WebSocket fallback to polling works smoothly
+
+---
+
+# WAVE 3: SCALING & INTEGRATION
+# Timeline: Weeks 13-14 (Full team, integration & polish)
+  wave_3:
+    name: "Scaling, Integration Testing & Deployment Prep"
+    timeline: "Weeks 13-14"
+    status: pending
+    engineers: 3
+    dependencies: [wave_2]
+
+    stories:
+      - story_id: 3.7
+        title: "Rate Limiting, Concurrency Control & Error Recovery"
+        type: scaling
+        effort: medium
+        engineer_count: 1
+        timeline: "Weeks 10-13"
+        status: pending
+        acceptance_criteria_count: 7
+        test_coverage_target: 85
+
+        tasks:
+          - id: 3.7.1
+            title: "Design rate limiting and concurrency control architecture"
+            assigned_to: "@architect"
+            effort: 2d
+            blocking: false
+
+          - id: 3.7.2
+            title: "Implement per-connector rate limiting (token bucket algorithm)"
+            assigned_to: "@dev"
+            effort: 3d
+            blocking: false
+            dependencies: [3.7.1]
+
+          - id: 3.7.3
+            title: "Build execution queue with backpressure management"
+            assigned_to: "@dev"
+            effort: 3d
+            blocking: false
+            dependencies: [3.7.2]
+
+          - id: 3.7.4
+            title: "Implement circuit breaker pattern for failing connectors"
+            assigned_to: "@dev"
+            effort: 2d
+            blocking: false
+            dependencies: [3.7.3]
+
+          - id: 3.7.5
+            title: "Add pause/resume and queue management UI controls"
+            assigned_to: "@dev"
+            effort: 2d
+            blocking: false
+            dependencies: [3.7.4]
+
+          - id: 3.7.6
+            title: "Integration tests: Load test with 10,000 concurrent executions"
+            assigned_to: "@qa"
+            effort: 3d
+            blocking: true
+            dependencies: [3.7.5]
+
+          - id: 3.7.7
+            title: "Stress test: Verify platform stability under sustained load"
+            assigned_to: "@qa"
+            effort: 2d
+            blocking: true
+            dependencies: [3.7.6]
+
+        verification:
+          - Rate limiting enforced correctly per connector
+          - Concurrency limit respected globally
+          - Circuit breaker activates/deactivates correctly
+          - Load test: 10K concurrent executions without degradation
+
+        gates:
+          pre_merge:
+            - Load test passing (10K concurrent)
+            - No memory leaks detected
+            - Queue depth monitoring implemented
+
+---
+
+# QUALITY & GATES
+quality:
+  pre_wave_1_gate:
+    name: "Wave 1 Entry Gate"
+    criteria:
+      - PRD reviewed and approved by @po
+      - Database schema designed and reviewed by @data-engineer
+      - Architecture reviewed by @architect
+      - Team capacity confirmed (3 engineers available)
+    owner: "@pm"
+    status: pending
+
+  wave_1_exit_gate:
+    name: "Wave 1 Exit Gate (Foundation Complete)"
+    criteria:
+      - Story 3.1: DONE (95% coverage, zero Wave 2 regressions)
+      - Story 3.2: DONE (DLQ tested, 99% delivery reliability)
+      - Story 3.3: DONE (Scheduler passing reliability test)
+      - All integration tests passing
+      - CodeRabbit review clean for all code
+      - Database migrations backward compatible
+    owner: "@qa"
+    status: pending
+
+  wave_2_exit_gate:
+    name: "Wave 2 Exit Gate (Features Complete)"
+    criteria:
+      - Story 3.4: DONE (DAG visualization, conditional logic tested)
+      - Story 3.5: DONE (Audit logs immutable, search efficient)
+      - Story 3.6: DONE (Dashboard real-time, responsive, reports working)
+      - All E2E tests passing
+      - Wave 2 backward compatibility verified
+      - Performance benchmarks stable (P99 latency ±20% of baseline)
+    owner: "@qa"
+    status: pending
+
+  wave_3_exit_gate:
+    name: "Wave 3 Exit Gate (Scaling Verified)"
+    criteria:
+      - Story 3.7: DONE (10K concurrent executions, no memory leaks)
+      - Full integration tests passing
+      - Staging deployment successful
+      - Rollback plan documented and tested
+      - SRE sign-off on production readiness
+    owner: "@qa"
+    status: pending
+
+  pre_production_gate:
+    name: "Pre-Production Release Gate"
+    criteria:
+      - All quality gates passed
+      - Security audit complete
+      - 99.9% webhook reliability verified
+      - Staging deployment stable for 48 hours
+      - Runbooks and support playbooks ready
+      - Communication plan executed (user docs, release notes)
+    owner: "@devops"
+    status: pending
+
+---
+
+# EXECUTION TIMELINE
+timeline:
+  week_1_2:
+    focus: "Infrastructure & Architecture Design"
+    story_3_1: "Design & Database Schema (Task 3.1.1-3.1.2)"
+    owner: "@architect, @data-engineer"
+
+  week_3_4:
+    focus: "Execution Engine Foundation"
+    story_3_1: "Engine Implementation (Task 3.1.3-3.1.5) — PARALLEL"
+    story_3_3: "Scheduler Design (Task 3.3.1-3.3.3) — PARALLEL"
+    owner: "@dev"
+
+  week_5_6:
+    focus: "Webhook Reliability & Cron Testing"
+    story_3_2: "DLQ & Retry Logic (Task 3.2.2-3.2.6) — PARALLEL"
+    story_3_3: "Scheduler Implementation (Task 3.3.4-3.3.6) — PARALLEL"
+    owner: "@dev"
+
+  week_7_8:
+    focus: "WAVE 1 EXIT GATE + Wave 2 Features Begin"
+    wave_1_testing: "Final integration tests for Stories 3.1, 3.2, 3.3"
+    story_3_4: "Workflow Engine Design (Task 3.4.1-3.4.2) — PARALLEL"
+    story_3_5: "Audit Log Schema (Task 3.5.1-3.5.2) — PARALLEL"
+    owner: "@qa + @dev"
+
+  week_9_10:
+    focus: "Multi-Step Workflows & History"
+    story_3_4: "UI Builder & Branching (Task 3.4.3-3.4.6) — PARALLEL"
+    story_3_5: "History API & Detail Page (Task 3.5.3-3.5.5) — PARALLEL"
+    story_3_6: "Dashboard Design (Task 3.6.1-3.6.2) — PARALLEL"
+    owner: "@dev"
+
+  week_11_12:
+    focus: "WAVE 2 POLISH + Dashboard Final"
+    story_3_4: "Migration & Testing (Task 3.4.7-3.4.9)"
+    story_3_5: "Export & Testing (Task 3.5.6-3.5.7)"
+    story_3_6: "Analytics & Export (Task 3.6.3-3.6.6)"
+    owner: "@dev, @qa"
+
+  week_13_14:
+    focus: "WAVE 3: Scaling & Production Readiness"
+    story_3_7: "Rate Limiting & Load Tests (Task 3.7.1-3.7.7)"
+    integration: "Full system integration testing"
+    deployment: "Staging deployment + rollback plan"
+    owner: "@dev, @qa, @devops"
+
+---
+
+# DEPENDENCIES & BLOCKERS
+dependencies:
+  story_3_2:
+    depends_on: [3.1]
+    reason: "Requires execution context and step tracking from 3.1"
+
+  story_3_3:
+    depends_on: []
+    reason: "Can run in parallel with 3.1-3.2 (uses existing execution service)"
+
+  story_3_4:
+    depends_on: [3.1, 3.2, 3.3]
+    reason: "Requires execution engine, retry logic, and scheduler"
+
+  story_3_5:
+    depends_on: [3.1]
+    reason: "Requires execution context and step tracking"
+
+  story_3_6:
+    depends_on: [3.2, 3.5]
+    reason: "Requires DLQ data and audit logs"
+
+  story_3_7:
+    depends_on: [3.1, 3.2, 3.3, 3.4]
+    reason: "Rate limiting applies to all execution paths"
+
+known_blockers:
+  - name: "Database Growth Risk"
+    impact: "Audit logs may grow > 10GB/month at scale"
+    mitigation: "Implement partitioning and retention policies in Story 3.5"
+    owner: "@data-engineer"
+
+  - name: "Scheduler Reliability at Downtime"
+    impact: "Scheduled automations may be missed if service is down"
+    mitigation: "Use distributed scheduler with database persistence"
+    owner: "@architect"
+
+  - name: "Webhook Delivery at Scale"
+    impact: "Concurrent webhook deliveries may overwhelm external services"
+    mitigation: "Implement rate limiting (Story 3.7) and exponential backoff"
+    owner: "@dev"
+
+---
+
+# TEAM ASSIGNMENTS
+team:
+  backend_lead:
+    name: "TBD (@dev Lead)"
+    role: "Stories 3.1, 3.2, 3.4"
+    hours_per_week: 40
+    expertise: "Node.js, Express, execution engines, webhooks"
+
+  fullstack_engineer:
+    name: "TBD (@dev)"
+    role: "Stories 3.3, 3.5, 3.6, 3.7"
+    hours_per_week: 40
+    expertise: "TypeScript, React, database optimization, UI/UX"
+
+  qa_engineer:
+    name: "TBD (@qa)"
+    role: "Testing, integration, load testing"
+    hours_per_week: 40
+    expertise: "Test automation, performance testing, QA strategy"
+
+  architect:
+    name: "TBD (@architect)"
+    role: "Design reviews, architecture decisions"
+    hours_per_week: 10
+    expertise: "System design, scalability, reliability patterns"
+
+  data_engineer:
+    name: "TBD (@data-engineer)"
+    role: "Schema design, optimization, retention policies"
+    hours_per_week: 10
+    expertise: "PostgreSQL, indexing, query optimization"
+
+---
+
+# EXECUTION COMMAND
+execution_instruction: |
+  To execute this epic, use:
+
+  @pm: *execute-epic docs/EPIC-3-WAVE-3.yaml
+
+  This will:
+  1. Validate all story dependencies
+  2. Confirm team capacity (3 engineers)
+  3. Create Story files for each wave
+  4. Spawn @sm to create detailed user stories
+  5. Begin Wave 1 development immediately
+
+  Status updates available via:
+  - @pm: *session-info
+  - Dashboard: docs/EPIC-3-WAVE-3-STATUS.md (auto-updated)
+
+---
+
+# SUCCESS METRICS
+success_metrics:
+  reliability:
+    - "99.9% webhook delivery reliability (measured over 30 days in production)"
+    - "Zero data loss in DLQ (100% recovery rate)"
+    - "Scheduler execution rate ≥ 99.5% within ±2 min window"
+
+  performance:
+    - "Execution engine latency ≤ 500ms (excluding external API calls)"
+    - "Dashboard real-time updates within 2 seconds"
+    - "Support 10,000+ concurrent executions without degradation"
+
+  quality:
+    - "95%+ test coverage for new code"
+    - "Zero breaking changes to Wave 2 automations"
+    - "CodeRabbit review score ≥ 8/10 average"
+
+  business:
+    - "Enable 50+ new enterprise customers with advanced workflow needs"
+    - "Reduce automation-related support tickets by 40%"
+    - "Enable Wave 4 (API-First Automations) without infrastructure rework"
+
+---
+
+# DOCUMENT METADATA
+metadata:
+  version: 1.0
+  created_by: Morgan (PM)
+  created_at: 2026-03-02
+  last_updated: 2026-03-02
+  approval_status: pending
+  approval_required_from: ["@po", "@architect"]
+
+  next_action: |
+    1. Review and approve this EPIC-3-WAVE-3.yaml
+    2. Run: @pm *execute-epic docs/EPIC-3-WAVE-3.yaml
+    3. Stories will be created automatically for each wave
+    4. Wave 1 development begins immediately

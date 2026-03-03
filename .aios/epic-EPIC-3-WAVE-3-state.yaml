@@ -1,0 +1,157 @@
+epic_state:
+  epicId: "EPIC-3-WAVE-3"
+  epicName: "Wave 3 — Advanced Automations, Reliability & Scaling"
+  executionPlan: "docs/EPIC-3-WAVE-3-EXECUTION.yaml"
+  mode: "interactive"
+
+  started_at: "2026-03-02T00:00:00Z"
+  updated_at: "2026-03-02T00:00:00Z"
+  status: "active"
+
+  current_wave: 1
+  total_waves: 3
+
+  waves:
+    1:
+      name: "Foundation & Core Reliability"
+      status: "in_progress"
+      timeline: "Weeks 1-8"
+      tag: "wave-1-complete"
+
+      stories:
+        "3.1":
+          title: "Workflow Execution Engine Refactor"
+          status: "pending"
+          branch: "feat/3.1-workflow-execution-engine"
+          executor: "@dev"
+          qualityGate: "@qa"
+          storyPoints: 13
+          wave: 1
+          track: "A"
+          dependencies: []
+          started_at: null
+          completed_at: null
+
+        "3.2":
+          title: "Webhook Reliability & Retry Logic"
+          status: "pending"
+          branch: "feat/3.2-webhook-reliability"
+          executor: "@dev"
+          qualityGate: "@qa"
+          storyPoints: 13
+          wave: 1
+          track: "A"
+          dependencies: ["3.1"]
+          started_at: null
+          completed_at: null
+
+        "3.3":
+          title: "Scheduled Automations & Cron Support"
+          status: "pending"
+          branch: "feat/3.3-scheduled-automations"
+          executor: "@dev"
+          qualityGate: "@qa"
+          storyPoints: 8
+          wave: 1
+          track: "B"
+          dependencies: []
+          started_at: null
+          completed_at: null
+
+      gate:
+        agent: "@architect"
+        status: "pending"
+        verdict: null
+
+    2:
+      name: "Advanced Features & Observability"
+      status: "pending"
+      timeline: "Weeks 7-12"
+      tag: "wave-2-complete"
+      dependencies: [1]
+
+      stories:
+        "3.4":
+          title: "Multi-Step Workflow Builder & Conditional Logic"
+          status: "pending"
+          branch: "feat/3.4-workflow-builder"
+          executor: "@dev"
+          qualityGate: "@qa"
+          storyPoints: 13
+          wave: 2
+          track: "A"
+          dependencies: ["3.1", "3.2", "3.3"]
+          started_at: null
+          completed_at: null
+
+        "3.5":
+          title: "Automation Execution History & Audit Log"
+          status: "pending"
+          branch: "feat/3.5-execution-history"
+          executor: "@dev"
+          qualityGate: "@qa"
+          storyPoints: 8
+          wave: 2
+          track: "B"
+          dependencies: ["3.1"]
+          started_at: null
+          completed_at: null
+
+        "3.6":
+          title: "Real-Time Execution Dashboard & Analytics"
+          status: "pending"
+          branch: "feat/3.6-dashboard-analytics"
+          executor: "@dev"
+          qualityGate: "@qa"
+          storyPoints: 13
+          wave: 2
+          track: "C"
+          dependencies: ["3.2", "3.5"]
+          started_at: null
+          completed_at: null
+
+      gate:
+        agent: "@architect"
+        status: "pending"
+        verdict: null
+
+    3:
+      name: "Scaling, Integration Testing & Deployment Prep"
+      status: "pending"
+      timeline: "Weeks 13-14"
+      tag: "wave-3-complete"
+      dependencies: [2]
+
+      stories:
+        "3.7":
+          title: "Rate Limiting, Concurrency Control & Error Recovery"
+          status: "pending"
+          branch: "feat/3.7-rate-limiting-scaling"
+          executor: "@dev"
+          qualityGate: "@qa"
+          storyPoints: 8
+          wave: 3
+          track: "primary"
+          dependencies: ["3.1", "3.2", "3.3", "3.4"]
+          started_at: null
+          completed_at: null
+
+      gate:
+        agent: "@architect"
+        status: "pending"
+        verdict: null
+
+  final_gate:
+    agent: "@architect"
+    status: "pending"
+    verdict: null
+
+  gate_verdicts: {}
+  bug_verification: {}
+
+  metadata:
+    createdBy: "Morgan (PM)"
+    createdAt: "2026-03-02T00:00:00Z"
+    totalStories: 7
+    totalWaves: 3
+    stateVersion: "1.0"
