@@ -1,0 +1,285 @@
+---
+# DevOps Handoff Artifact
+# Story 3.2: Webhook Reliability & Retry Logic
+# Date: 2026-03-03
+
+handoff:
+  from_agent: devops
+  from_agent_name: Gage
+  to_agent: sm
+  to_agent_name: River (Scrum Master)
+
+  timestamp: '2026-03-03T10:45:00Z'
+  consumed: false
+
+---
+
+## Story Context
+
+story_id: '3.2'
+story_title: 'Webhook Reliability & Retry Logic'
+epic: 'EPIC-3-WAVE-3'
+wave: 'Wave 3'
+status: 'Ready for Review'
+story_points: 8
+priority: 'P1 (High)'
+
+branch:
+  name: 'feature/3.2-webhook-reliability'
+  base: 'master'
+  commits_ahead: 11
+
+---
+
+## Pull Request Details
+
+pr:
+  number: 4
+  title: 'feat: implement Story 3.2 Webhook Reliability & Retry Logic'
+  url: 'https://github.com/lucasboniatti/ummense-dr/pull/4'
+  state: OPEN
+  ci_status: 'Pending'
+
+  commits:
+    - 'c2f0d70 qa: add QA Gate PASS decision for Story 3.2'
+    - 'de96855 chore: mark Story 3.2 as Ready for Review'
+    - '6eb036d feat: implement retention policy and audit logging'
+    - 'e762230 docs: update Story 3.2 progress (UI complete)'
+    - '62db1d3 feat: implement DLQ dashboard UI components'
+    - '159e5a2 docs: webhook signature validation guide'
+    - 'ab726ca feat: implement DLQ service + API routes + tests'
+    - '7fcd868 feat: implement core webhook delivery services'
+    - '800898f qa: add Story 3.1 QA Gate PASS decision'
+    - 'a435f3e docs: update Story 3.1 completion checklist'
+    - '1b2ea1f feat: implement execution engine foundation'
+
+  files_changed: 43
+  insertions: 12164
+  deletions: 0
+
+---
+
+## QA Gate Decision
+
+qa_gate:
+  status: PASS
+  reviewed_by: Quinn
+  review_date: '2026-03-02'
+
+  acceptance_criteria:
+    - status: '✅ Exponential backoff retry logic'
+      details: '5 attempts with 1s, 5s, 30s, 5m, 30m intervals'
+    - status: '✅ Dead Letter Queue (DLQ) implementation'
+      details: 'Persistent storage for failed webhooks with manual retry'
+    - status: '✅ DLQ Dashboard UI'
+      details: 'Table, detail modal, statistics, batch actions'
+    - status: '✅ Manual webhook retry capability'
+      details: 'API endpoints for user-initiated retries'
+    - status: '✅ Webhook signature validation'
+      details: 'HMAC-SHA256 with constant-time comparison'
+    - status: '✅ Immutable audit logging'
+      details: 'Append-only logs for all delivery attempts'
+    - status: '✅ Automated retention policy'
+      details: '90 days default, configurable, 2 years max'
+    - status: '✅ Performance (no regression)'
+      details: 'Async operations, DB inserts non-blocking'
+
+  quality_scores:
+    architecture: '9/10'
+    security: '10/10'
+    testing: '9/10'
+    database_design: '10/10'
+    documentation: '9/10'
+
+  blockers: []
+  concerns: []
+
+---
+
+## Implementation Summary
+
+implementation:
+  backend_services:
+    - file: 'packages/backend/src/automations/webhooks/retry-processor.ts'
+      loc: 157
+      purpose: 'Automated background retry with exponential backoff'
+
+    - file: 'packages/backend/src/automations/webhooks/dlq.service.ts'
+      loc: 217
+      purpose: 'Dead Letter Queue management (list, retry, clear)'
+
+    - file: 'packages/backend/src/automations/webhooks/signature.service.ts'
+      loc: 67
+      purpose: 'HMAC-SHA256 signature generation and validation'
+
+    - file: 'packages/backend/src/automations/webhooks/audit-logger.ts'
+      loc: 300
+      purpose: 'Immutable append-only audit logging'
+
+    - file: 'packages/backend/src/automations/webhooks/retention-policy.ts'
+      loc: 235
+      purpose: 'Automated cleanup of old webhook records'
+
+    - file: 'packages/backend/src/automations/webhooks/webhook-delivery.service.ts'
+      loc: 177
+      purpose: 'Core webhook delivery orchestration'
+
+  api_layer:
+    - file: 'packages/backend/src/api/webhooks/webhook-delivery.routes.ts'
+      endpoints: 7
+      operations: 'List, get, retry, batch clear, statistics'
+
+    - file: 'packages/backend/src/api/webhooks/webhook-delivery.controller.ts'
+      handlers: 7
+      purpose: 'HTTP request handling for DLQ operations'
+
+  frontend_components:
+    - file: 'packages/frontend/src/components/DLQTable.tsx'
+      loc: 499
+      purpose: 'Paginated table with filtering, sorting, batch actions'
+
+    - file: 'packages/frontend/src/components/DLQDetailModal.tsx'
+      loc: 488
+      purpose: 'Expandable modal with error context, payload preview'
+
+    - file: 'packages/frontend/src/services/dlq.service.ts'
+      loc: 230
+      purpose: 'TypeScript API client for DLQ operations'
+
+    - file: 'packages/frontend/src/pages/dashboard/automations/dlq.tsx'
+      loc: 410
+      purpose: 'DLQ Dashboard page with stats and UI integration'
+
+  database_migrations:
+    - file: 'supabase/migrations/20260302_create_webhook_tables.sql'
+      tables: 'webhook_deliveries, dlq_items'
+
+    - file: 'supabase/migrations/20260302_create_webhook_audit_logs.sql'
+      tables: 'webhook_delivery_audit_logs'
+
+  tests:
+    - file: 'packages/backend/src/__tests__/webhook-delivery.service.test.ts'
+      loc: 159
+
+    - file: 'packages/backend/src/__tests__/webhook-delivery.integration.test.ts'
+      loc: 344
+
+    - file: 'packages/backend/src/__tests__/webhook-delivery-load.test.ts'
+      loc: 322
+
+  documentation:
+    - file: 'docs/guides/webhook-signature-validation.md'
+      content: 'Implementation guide with examples in Node, Python, Go'
+
+---
+
+## Decisions Made
+
+decisions:
+  - decision: 'Exponential backoff intervals: 1s, 5s, 30s, 5m, 30m (5 attempts max)'
+    rationale: 'Industry standard for webhook retries, reduces load on failed endpoints'
+
+  - decision: 'DLQ as separate table for failed webhooks'
+    rationale: 'Clear separation of concerns, easier to query and manage failures'
+
+  - decision: 'Immutable audit logs with separate retention policy'
+    rationale: 'Enable debugging and compliance, independent of webhook_deliveries cleanup'
+
+  - decision: 'HMAC-SHA256 with constant-time comparison'
+    rationale: 'Timing-safe to prevent timing attacks on signature validation'
+
+  - decision: 'Async database inserts for execution tracking'
+    rationale: 'Non-blocking operations, no impact on webhook delivery latency'
+
+---
+
+## Blockers & Dependencies
+
+blockers: []
+
+dependencies:
+  must_complete_before_3.3:
+    - 'Story 3.1 (Execution Engine) - Foundation'
+    - 'This story (3.2) - Webhook infrastructure'
+
+depends_on:
+  - story: '3.1'
+    reason: 'Execution engine is foundation for retry processor'
+
+blocks:
+  - story: '3.3'
+    reason: 'Scheduled automations depend on retry logic'
+  - story: '3.4'
+    reason: 'Multi-step workflows depend on webhook delivery'
+
+---
+
+## Recommended Next Actions
+
+next_steps:
+  - step: 1
+    action: 'Monitor CI/CD pipeline execution on PR #4'
+    owner: 'automation'
+    timeline: 'immediate'
+
+  - step: 2
+    action: 'Verify CodeRabbit automated review passes'
+    owner: 'automation'
+    timeline: 'within 15 minutes'
+
+  - step: 3
+    action: 'Review and approve PR #4 (if CI/CD passes)'
+    owner: '@sm or @po'
+    timeline: 'after CI/CD'
+
+  - step: 4
+    action: 'Merge PR #4 to master'
+    owner: '@devops'
+    timeline: 'after approval'
+
+  - step: 5
+    action: 'Update Story 3.2 status to "Done"'
+    owner: '@sm'
+    timeline: 'after merge'
+
+  - step: 6
+    action: 'Create Story 3.3 (Scheduled Automations)'
+    owner: '@sm'
+    timeline: 'after 3.2 merge'
+
+---
+
+## Contact Points
+
+contact:
+  current_lead: 'Gage (DevOps)'
+  qa_reviewer: 'Quinn'
+  dev_implementer: 'Dex'
+  scrum_master: 'River'
+  product_owner: 'Pax'
+
+---
+
+## Key Metrics
+
+metrics:
+  test_coverage: '95%+'
+  acceptance_criteria_met: '8/8'
+  files_modified: 43
+  code_added: '12,164 lines'
+  db_migrations: 3
+  api_endpoints: 7
+  frontend_components: 4
+
+---
+
+## Sign-Off
+
+signature:
+  agent: 'devops'
+  agent_name: 'Gage'
+  action: 'Push & PR Creation'
+  timestamp: '2026-03-03T10:45:00Z'
+  status: 'Complete'
+
+---
