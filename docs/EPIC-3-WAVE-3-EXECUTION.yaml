@@ -1,0 +1,494 @@
+# EPIC-3-WAVE-3 Execution Plan
+# Format: AIOS Executable Epic Plan for `*execute-epic` command
+# Created by: Morgan (PM) on 2026-03-02
+
+execution:
+  epicId: "EPIC-3-WAVE-3"
+  epicName: "Wave 3 — Advanced Automations, Reliability & Scaling"
+  epicVersion: "1.0"
+  executionMode: "interactive"  # interactive | yolo | preflight
+
+  # Reference to planning documents
+  prdPath: "docs/prd-wave-3.md"
+  planningPath: "docs/EPIC-3-WAVE-3.yaml"
+
+  # Story file base path
+  storyBasePath: "docs/stories"
+
+  # Team and timeline
+  targetCompletion: "2026-05-30"
+  estimatedWeeks: 14
+  teamSize: 3
+
+---
+
+# STORIES MAP
+stories:
+
+  # WAVE 1, TRACK A
+  "3.1":
+    id: "3.1"
+    file: "3.1.story.md"
+    title: "Workflow Execution Engine Refactor"
+    epic: "EPIC-3-WAVE-3"
+    storyPoints: 13
+    type: "foundation"
+    priority: "critical"
+    complexity: "high"
+
+    # Execution context
+    branch: "feat/3.1-workflow-execution-engine"
+    executor: "@dev"
+    qualityGate: "@qa"
+
+    # Wave assignment
+    wave: 1
+    track: "A"
+    parallel: true
+
+    # Dependencies
+    dependencies: []
+    blockers: []
+
+    # Key files
+    keyFiles:
+      - "src/automations/execution/"
+      - "src/db/migrations/"
+      - "tests/automations/execution.test.ts"
+
+    # Risk assessment
+    riskLevel: "medium"
+    integrationPoints:
+      - "Wave 2 automations must execute unchanged"
+      - "Database schema backward compatible"
+      - "No impact on existing API contracts"
+
+  "3.2":
+    id: "3.2"
+    file: "3.2.story.md"
+    title: "Webhook Reliability & Retry Logic"
+    epic: "EPIC-3-WAVE-3"
+    storyPoints: 13
+    type: "core_feature"
+    priority: "critical"
+    complexity: "high"
+
+    branch: "feat/3.2-webhook-reliability"
+    executor: "@dev"
+    qualityGate: "@qa"
+
+    wave: 1
+    track: "A"
+    parallel: false
+
+    dependencies: ["3.1"]
+    blockers: []
+
+    keyFiles:
+      - "src/automations/webhooks/"
+      - "src/db/migrations/"
+      - "tests/automations/webhooks.test.ts"
+
+    riskLevel: "high"
+    integrationPoints:
+      - "Security: HMAC-SHA256 validation"
+      - "Reliability: 99.9% delivery guarantee"
+      - "Performance: Async retry mechanism"
+
+  "3.3":
+    id: "3.3"
+    file: "3.3.story.md"
+    title: "Scheduled Automations & Cron Support"
+    epic: "EPIC-3-WAVE-3"
+    storyPoints: 8
+    type: "core_feature"
+    priority: "high"
+    complexity: "medium"
+
+    branch: "feat/3.3-scheduled-automations"
+    executor: "@dev"
+    qualityGate: "@qa"
+
+    wave: 1
+    track: "B"
+    parallel: true
+
+    dependencies: []
+    blockers: []
+
+    keyFiles:
+      - "src/automations/scheduler/"
+      - "src/db/migrations/"
+      - "tests/automations/scheduler.test.ts"
+
+    riskLevel: "medium"
+    integrationPoints:
+      - "Scheduler service independence"
+      - "Cron expression validation"
+
+  # WAVE 2, TRACK A
+  "3.4":
+    id: "3.4"
+    file: "3.4.story.md"
+    title: "Multi-Step Workflow Builder & Conditional Logic"
+    epic: "EPIC-3-WAVE-3"
+    storyPoints: 13
+    type: "feature_enhancement"
+    priority: "critical"
+    complexity: "high"
+
+    branch: "feat/3.4-workflow-builder"
+    executor: "@dev"
+    qualityGate: "@qa"
+
+    wave: 2
+    track: "A"
+    parallel: true
+
+    dependencies: ["3.1", "3.2", "3.3"]
+    blockers: []
+
+    keyFiles:
+      - "src/automations/workflows/"
+      - "src/api/automations/"
+      - "src/ui/components/WorkflowBuilder/"
+      - "tests/automations/workflows.test.ts"
+
+    riskLevel: "high"
+    integrationPoints:
+      - "DAG visualization (React)"
+      - "Backward compatibility with Wave 2"
+      - "Complex branching logic"
+
+  # WAVE 2, TRACK B
+  "3.5":
+    id: "3.5"
+    file: "3.5.story.md"
+    title: "Automation Execution History & Audit Log"
+    epic: "EPIC-3-WAVE-3"
+    storyPoints: 8
+    type: "observability"
+    priority: "high"
+    complexity: "medium"
+
+    branch: "feat/3.5-execution-history"
+    executor: "@dev"
+    qualityGate: "@qa"
+
+    wave: 2
+    track: "B"
+    parallel: true
+
+    dependencies: ["3.1"]
+    blockers: []
+
+    keyFiles:
+      - "src/automations/audit/"
+      - "src/api/executions/"
+      - "src/db/migrations/"
+      - "tests/automations/audit.test.ts"
+
+    riskLevel: "medium"
+    integrationPoints:
+      - "Non-blocking async logging"
+      - "Large-scale query performance"
+
+  # WAVE 2, TRACK C
+  "3.6":
+    id: "3.6"
+    file: "3.6.story.md"
+    title: "Real-Time Execution Dashboard & Analytics"
+    epic: "EPIC-3-WAVE-3"
+    storyPoints: 13
+    type: "ui_enhancement"
+    priority: "high"
+    complexity: "high"
+
+    branch: "feat/3.6-dashboard-analytics"
+    executor: "@dev"
+    qualityGate: "@qa"
+
+    wave: 2
+    track: "C"
+    parallel: true
+
+    dependencies: ["3.2", "3.5"]
+    blockers: []
+
+    keyFiles:
+      - "src/ui/pages/Dashboard/"
+      - "src/api/analytics/"
+      - "tests/ui/dashboard.test.tsx"
+
+    riskLevel: "medium"
+    integrationPoints:
+      - "WebSocket real-time updates"
+      - "Performance at scale (10K+ executions)"
+
+  # WAVE 3
+  "3.7":
+    id: "3.7"
+    file: "3.7.story.md"
+    title: "Rate Limiting, Concurrency Control & Error Recovery"
+    epic: "EPIC-3-WAVE-3"
+    storyPoints: 8
+    type: "scaling"
+    priority: "high"
+    complexity: "medium"
+
+    branch: "feat/3.7-rate-limiting-scaling"
+    executor: "@dev"
+    qualityGate: "@qa"
+
+    wave: 3
+    track: "primary"
+    parallel: false
+
+    dependencies: ["3.1", "3.2", "3.3", "3.4"]
+    blockers: []
+
+    keyFiles:
+      - "src/automations/scaling/"
+      - "src/db/migrations/"
+      - "tests/automations/scaling.test.ts"
+
+    riskLevel: "high"
+    integrationPoints:
+      - "Load test: 10K concurrent executions"
+      - "Resource utilization monitoring"
+
+---
+
+# WAVES DEFINITION
+waves:
+
+  # WAVE 1: Foundation & Core Reliability (Weeks 1-8)
+  1:
+    name: "Foundation & Core Reliability"
+    description: "Execution engine foundation + webhook reliability + cron scheduling"
+    timeline: "Weeks 1-8"
+    status: "pending"
+    parallel: true
+
+    stories: ["3.1", "3.2", "3.3"]
+    tracks:
+      A:
+        name: "Execution Engine & Webhook Reliability"
+        stories: ["3.1", "3.2"]
+        parallel: false
+        description: "Sequential: 3.1 foundation, then 3.2 depends on it"
+
+      B:
+        name: "Scheduled Automations"
+        stories: ["3.3"]
+        parallel: true
+        description: "Parallel to Track A (independent scheduler)"
+
+    # Merge strategy after wave completion
+    merge:
+      order: ["3.1", "3.2", "3.3"]
+      conflictRisk: "low"
+      notes: "Separate codebases (execution/, webhooks/, scheduler/). Minimal conflict risk."
+      tag: "wave-1-complete"
+
+    # Quality gate for this wave
+    gate:
+      agent: "@architect"
+      focus: "Cross-story integration, architecture consistency, backward compatibility"
+      criteria:
+        - "Story 3.1: Execution engine tested, 95% coverage"
+        - "Story 3.2: DLQ tested, 99% delivery reliability verified"
+        - "Story 3.3: Scheduler passing reliability test"
+        - "All integration tests passing"
+        - "Wave 2 automations execute without modification"
+        - "No performance regression"
+
+  # WAVE 2: Advanced Features & Observability (Weeks 7-12)
+  2:
+    name: "Advanced Features & Observability"
+    description: "Multi-step workflows + execution history + real-time dashboard"
+    timeline: "Weeks 7-12"
+    status: "pending"
+    parallel: true
+    dependencies: [1]
+
+    stories: ["3.4", "3.5", "3.6"]
+    tracks:
+      A:
+        name: "Multi-Step Workflow Builder"
+        stories: ["3.4"]
+        parallel: true
+
+      B:
+        name: "Execution History & Audit Logging"
+        stories: ["3.5"]
+        parallel: true
+
+      C:
+        name: "Real-Time Dashboard & Analytics"
+        stories: ["3.6"]
+        parallel: true
+
+    merge:
+      order: ["3.4", "3.5", "3.6"]
+      conflictRisk: "low"
+      notes: "All in separate subsystems (workflows, audit, UI). Can merge in any order."
+      tag: "wave-2-complete"
+
+    gate:
+      agent: "@architect"
+      focus: "Feature completeness, E2E testing, performance benchmarks"
+      criteria:
+        - "Story 3.4: Workflow DAG visualization tested, backward compatible"
+        - "Story 3.5: Audit logs searchable, export working"
+        - "Story 3.6: Dashboard real-time updates within 2 seconds"
+        - "All E2E tests passing"
+        - "Performance stable (P99 latency ±20% baseline)"
+
+  # WAVE 3: Scaling & Integration (Weeks 13-14)
+  3:
+    name: "Scaling, Integration Testing & Deployment Prep"
+    description: "Rate limiting + concurrency control + load testing + staging deployment"
+    timeline: "Weeks 13-14"
+    status: "pending"
+    parallel: false
+    dependencies: [2]
+
+    stories: ["3.7"]
+
+    merge:
+      order: ["3.7"]
+      conflictRisk: "low"
+      notes: "Final story, no conflicts expected"
+      tag: "wave-3-complete"
+
+    gate:
+      agent: "@architect"
+      focus: "Production readiness, scaling verification, deployment plan"
+      criteria:
+        - "Story 3.7: Rate limiting implemented, concurrency controls verified"
+        - "Load test: 10K concurrent executions passing"
+        - "Stress test: No memory leaks, system stable under sustained load"
+        - "Staging deployment successful and stable for 48 hours"
+        - "Rollback plan documented and tested"
+        - "SRE sign-off on production readiness"
+
+---
+
+# FINAL GATE
+finalGate:
+  name: "Epic Completion Gate"
+  agent: "@architect"
+  focus: "Epic-level sign-off, 99.9% webhook reliability verified, all success metrics met"
+  criteria:
+    - "All 7 stories DONE and tested"
+    - "All 3 wave gates APPROVED"
+    - "99.9% webhook delivery reliability verified"
+    - "10,000+ concurrent executions support confirmed"
+    - "Zero breaking changes to Wave 2 automations"
+    - "95%+ test coverage for new code"
+    - "Security audit completed"
+    - "Documentation complete (user guides, API docs, runbooks)"
+    - "Support team trained on new features"
+    - "Communication plan executed (release notes, changelog)"
+
+  tag: "epic-3-complete"
+  postCompletion:
+    retrospective: true
+    retrospectiveAgent: "@aios-master"
+    generateReport: true
+
+---
+
+# BUG VERIFICATION (Optional)
+bugVerification:
+  enabled: false
+  bugs: []
+
+---
+
+# EXECUTION METADATA
+metadata:
+  version: "1.0.0"
+  createdBy: "Morgan (PM)"
+  createdAt: "2026-03-02T00:00:00Z"
+  lastUpdated: "2026-03-02T00:00:00Z"
+
+  # Executor assignments
+  executors:
+    dev: "@dev"
+    qa: "@qa"
+    architect: "@architect"
+    devops: "@devops"
+    po: "@po"
+
+  # State file location (auto-generated)
+  stateFile: ".aios/epic-EPIC-3-WAVE-3-state.yaml"
+
+  # Next action
+  nextAction: "@pm *execute-epic docs/EPIC-3-WAVE-3-EXECUTION.yaml"
+
+---
+
+# EXECUTION CHECKLIST
+preExecutionChecklist:
+  - [ ] All 7 story files exist in docs/stories/3.*.story.md
+  - [ ] PRD reviewed and approved by @po
+  - [ ] Team capacity confirmed (3 engineers available)
+  - [ ] Git working tree clean (no uncommitted changes)
+  - [ ] Database schema changes reviewed by @data-engineer
+  - [ ] Architecture design reviewed by @architect
+  - [ ] Staging environment ready
+  - [ ] Rollback plan prepared
+
+---
+
+# DOCUMENTATION REFERENCES
+references:
+  prd: "docs/prd-wave-3.md"
+  planning: "docs/EPIC-3-WAVE-3.yaml"
+
+  storyFiles:
+    - "docs/stories/3.1.story.md"
+    - "docs/stories/3.2.story.md"
+    - "docs/stories/3.3.story.md"
+    - "docs/stories/3.4.story.md"
+    - "docs/stories/3.5.story.md"
+    - "docs/stories/3.6.story.md"
+    - "docs/stories/3.7.story.md"
+
+  templates:
+    - ".aios-core/development/workflows/epic-orchestration.yaml"
+    - ".aios-core/development/workflows/development-cycle.yaml"
+
+---
+
+# NOTES FOR EXECUTION
+notes: |
+  This execution plan is ready for:
+
+  ```
+  @pm *execute-epic docs/EPIC-3-WAVE-3-EXECUTION.yaml
+  ```
+
+  Command will:
+  1. Validate all story files exist
+  2. Initialize epic state file
+  3. Begin Wave 1 execution (parallel tracks: A & B)
+  4. Run each story through full development-cycle (@po validate → @dev implement → @qa test → @devops push)
+  5. Execute wave gates between waves
+  6. Complete final gate and generate completion report
+
+  **Mode:** interactive (human checkpoint between waves)
+  **Duration:** ~2-8 hours of execution time (scheduled work across 14 weeks)
+  **Token cost:** ~5,000-20,000 tokens per story cycle
+
+  To resume after interruption:
+  ```
+  @pm *execute-epic docs/EPIC-3-WAVE-3-EXECUTION.yaml continue
+  ```
+
+  To check progress:
+  ```
+  @pm *execute-epic docs/EPIC-3-WAVE-3-EXECUTION.yaml status
+  ```
