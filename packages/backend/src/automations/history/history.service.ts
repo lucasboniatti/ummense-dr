@@ -1,6 +1,7 @@
 import { Database } from '@/types/database';
 import { createClient } from '@supabase/supabase-js';
 import { SanitizationService } from './sanitization.service';
+import { S3ArchivalService } from './s3-archival.service';
 
 export interface ExecutionHistoryQuery {
   userId: string;
@@ -295,6 +296,7 @@ export class ExecutionHistoryService {
 
   /**
    * Clean up old execution histories based on retention policy
+   * If archive_enabled, records are archived to S3 BEFORE deletion (data safety first)
    */
   async cleanupOldExecutions() {
     // Get all users' retention policies
@@ -308,33 +310,59 @@ export class ExecutionHistoryService {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - policy.retention_days);
 
-      // TODO: Archive to S3 if enabled
-      // if (policy.archive_enabled) {
-      //   await archiveToS3(...)
-      // }
-
-      // Delete old execution histories and their steps
+      // Fetch old executions (full records for archival, not just IDs)
       const { data: oldExecutions } = await this.db
         .from('execution_histories')
-        .select('id')
+        .select('*')
         .eq('user_id', policy.user_id)
         .lt('created_at', cutoffDate.toISOString());
 
-      if (oldExecutions && oldExecutions.length > 0) {
-        const execIds = oldExecutions.map((e) => e.id);
-
-        // Delete steps first
-        await this.db
-          .from('execution_steps')
-          .delete()
-          .in('execution_id', execIds);
-
-        // Delete executions
-        await this.db
-          .from('execution_histories')
-          .delete()
-          .in('id', execIds);
+      if (!oldExecutions || oldExecutions.length === 0) {
+        continue;
       }
+
+      // Archive to S3 before deletion (if enabled)
+      if (policy.archive_enabled && policy.archive_bucket) {
+        const archivalService = new S3ArchivalService({
+          bucket: policy.archive_bucket,
+          region: process.env.S3_REGION || 'us-east-1',
+        });
+
+        const archiveResult = await archivalService.archiveExecutionRecords(
+          oldExecutions,
+          policy.user_id
+        );
+
+        if (!archiveResult.success) {
+          // Data safety first: skip deletion if archival failed
+          console.error(
+            `[Retention] S3 archival failed for user ${policy.user_id}: ${archiveResult.error}. Skipping deletion to preserve data.`
+          );
+          continue;
+        }
+
+        console.log(
+          `[Retention] Archived ${archiveResult.recordCount} records for user ${policy.user_id} to S3 (${archiveResult.compressedSize} bytes compressed)`
+        );
+      }
+
+      const execIds = oldExecutions.map((e) => e.id);
+
+      // Delete steps first (referential integrity)
+      await this.db
+        .from('execution_steps')
+        .delete()
+        .in('execution_id', execIds);
+
+      // Delete executions (only after successful archival if enabled)
+      await this.db
+        .from('execution_histories')
+        .delete()
+        .in('id', execIds);
+
+      console.log(
+        `[Retention] Deleted ${execIds.length} expired executions for user ${policy.user_id}`
+      );
     }
   }
 
@@ -379,13 +407,14 @@ export class ExecutionHistoryService {
         .lte('created_at', filters.dateRange.end.toISOString());
     }
 
-    // Apply full-text search using plainto_tsquery for phrase matching
+    // Apply full-text search using Supabase textSearch with plainto_tsquery
     // plainto_tsquery handles spaces and special characters gracefully
     const { data, error, count } = await q
-      .rpc('search_executions', {
-        search_query: searchTerm,
-        user_id: query.userId,
+      .textSearch('search_vector', searchTerm, {
+        type: 'plain',
+        config: 'english',
       })
+      .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -438,11 +467,11 @@ export class ExecutionHistoryService {
       q = q.eq('automation_id', automationId);
     }
 
-    // Apply full-text search
+    // Apply full-text search using Supabase textSearch with plainto_tsquery
     const { data, count, error } = await q
-      .rpc('search_audit_logs', {
-        search_query: searchTerm,
-        user_id: userId,
+      .textSearch('search_vector', searchTerm, {
+        type: 'plain',
+        config: 'english',
       })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);

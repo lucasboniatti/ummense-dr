@@ -11,7 +11,7 @@ describe('SanitizationService', () => {
     it('should redact password patterns (password=value format)', () => {
       const input = 'Database connection failed. password=MySecurePassword123';
       const result = SanitizationService.sanitizeString(input);
-      expect(result).toBe('Database connection failed. [REDACTED]');
+      expect(result).toBe('Database connection failed. password=[REDACTED]');
       expect(result).not.toContain('MySecurePassword123');
     });
 

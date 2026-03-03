@@ -5,7 +5,7 @@ handoff:
   to_agent: architect
   to_agent_name: Aria (Architect)
   timestamp: "2026-03-03T16:45:00Z"
-  consumed: false
+  consumed: true
 
 story_context:
   story_id: "3.5.1"
