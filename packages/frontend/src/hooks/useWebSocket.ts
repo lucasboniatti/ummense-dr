@@ -26,10 +26,21 @@ export function useWebSocket(): WebSocketContextType {
   const reconnectDelayRef = useRef<number>(3000); // Start with 3s
   const subscribedChannelsRef = useRef<Set<string>>(new Set());
 
-  // Get WebSocket URL from environment or default
-  const wsUrl = typeof window !== 'undefined'
-    ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
-    : 'ws://localhost:9001';
+  // HIGH #1: Get WebSocket URL and endpoint from environment variables
+  const getWebSocketUrl = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return 'ws://localhost:9001/ws';
+    }
+
+    // Build base URL with protocol and host
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const baseUrl = `${protocol}//${window.location.host}`;
+
+    // Get endpoint path from environment variable or use default
+    const endpointPath = process.env.NEXT_PUBLIC_WEBSOCKET_ENDPOINT || '/ws';
+
+    return `${baseUrl}${endpointPath}`;
+  }, []);
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -37,7 +48,8 @@ export function useWebSocket(): WebSocketContextType {
     }
 
     try {
-      const ws = new WebSocket(`${wsUrl}/ws`);
+      const wsUrl = getWebSocketUrl();
+      const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log('[WebSocket] Connected');
@@ -95,7 +107,7 @@ export function useWebSocket(): WebSocketContextType {
       console.error('[WebSocket] Connection failed:', err);
       setIsConnected(false);
     }
-  }, [wsUrl]);
+  }, [getWebSocketUrl]);
 
   const subscribe = useCallback(
     (channel: string) => {

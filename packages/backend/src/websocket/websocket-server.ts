@@ -8,8 +8,81 @@ interface WSClient {
   ws: WebSocket;
   userId: string;
   channel: string;
-  heartbeat: NodeJS.Timer;
+  heartbeat: NodeJS.Timeout;
   lastActivity: number;
+}
+
+// Circuit breaker state machine
+enum CircuitState {
+  CLOSED = 'closed',      // Accepting requests
+  OPEN = 'open',          // Rejecting requests
+  HALF_OPEN = 'half-open' // Testing recovery
+}
+
+interface CircuitBreakerConfig {
+  failureThreshold: number;
+  successThreshold: number;
+  timeout: number;
+}
+
+class RedisCircuitBreaker {
+  private state = CircuitState.CLOSED;
+  private failureCount = 0;
+  private successCount = 0;
+  private lastFailureTime = 0;
+  private config: CircuitBreakerConfig;
+
+  constructor(config: CircuitBreakerConfig) {
+    this.config = config;
+  }
+
+  recordSuccess(): void {
+    this.failureCount = 0;
+
+    if (this.state === CircuitState.HALF_OPEN) {
+      this.successCount++;
+      if (this.successCount >= this.config.successThreshold) {
+        logger.info('[CircuitBreaker] Circuit closed - Redis recovered');
+        this.state = CircuitState.CLOSED;
+        this.successCount = 0;
+      }
+    }
+  }
+
+  recordFailure(): void {
+    this.lastFailureTime = Date.now();
+    this.failureCount++;
+    this.successCount = 0;
+
+    if (this.state === CircuitState.CLOSED && this.failureCount >= this.config.failureThreshold) {
+      logger.warn(`[CircuitBreaker] Circuit open - Redis failed ${this.failureCount} times`);
+      this.state = CircuitState.OPEN;
+    }
+  }
+
+  canExecute(): boolean {
+    if (this.state === CircuitState.CLOSED) {
+      return true;
+    }
+
+    if (this.state === CircuitState.OPEN) {
+      const elapsed = Date.now() - this.lastFailureTime;
+      if (elapsed >= this.config.timeout) {
+        logger.info('[CircuitBreaker] Circuit half-open - testing Redis recovery');
+        this.state = CircuitState.HALF_OPEN;
+        this.successCount = 0;
+        return true;
+      }
+      return false;
+    }
+
+    // HALF_OPEN - allow single attempt
+    return true;
+  }
+
+  getState(): CircuitState {
+    return this.state;
+  }
 }
 
 export class ExecutionWebSocketServer {
@@ -19,26 +92,67 @@ export class ExecutionWebSocketServer {
   private redisSubscriber: Redis | null = null;
   private redisPublisher: Redis | null = null;
   private inMemorySubscriptions = new Map<string, Set<string>>();
+  private circuitBreaker: RedisCircuitBreaker;
   private config: {
     port: number;
     heartbeatInterval: number;
+    heartbeatAdaptive: boolean;
     idleTimeout: number;
     redisEnabled: boolean;
     redisUrl: string;
+    corsOrigins: string[];
+    rateLimit: {
+      messagesPerSecond: number;
+      windowMs: number;
+    };
   };
 
   constructor(config?: Partial<typeof ExecutionWebSocketServer.prototype.config>) {
     this.config = {
       port: parseInt(process.env.WEBSOCKET_PORT || '9001'),
       heartbeatInterval: parseInt(process.env.WEBSOCKET_HEARTBEAT || '30000'),
+      heartbeatAdaptive: process.env.WEBSOCKET_HEARTBEAT_ADAPTIVE === 'true',
       idleTimeout: parseInt(process.env.WEBSOCKET_IDLE_TIMEOUT || '300000'),
       redisEnabled: process.env.REDIS_ENABLED === 'true',
       redisUrl: process.env.REDIS_URL || 'redis://localhost',
+      corsOrigins: this.parseCorsOrigins(process.env.WEBSOCKET_CORS_ORIGINS),
+      rateLimit: {
+        messagesPerSecond: parseInt(process.env.WEBSOCKET_RATE_LIMIT_MPS || '10'),
+        windowMs: parseInt(process.env.WEBSOCKET_RATE_LIMIT_WINDOW || '1000'),
+      },
       ...config,
     };
 
+    // Initialize circuit breaker for Redis
+    this.circuitBreaker = new RedisCircuitBreaker({
+      failureThreshold: parseInt(process.env.REDIS_CB_FAILURE_THRESHOLD || '5'),
+      successThreshold: parseInt(process.env.REDIS_CB_SUCCESS_THRESHOLD || '2'),
+      timeout: parseInt(process.env.REDIS_CB_TIMEOUT || '30000'),
+    });
+
     this.httpServer = createServer();
     this.wss = new WebSocketServer({ server: this.httpServer });
+  }
+
+  private parseCorsOrigins(corsEnv?: string): string[] {
+    if (!corsEnv) {
+      // Default: allow localhost and same-origin
+      return ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1'];
+    }
+    return corsEnv.split(',').map(origin => origin.trim());
+  }
+
+  private validateCorsOrigin(origin: string | undefined): boolean {
+    if (!origin) return true; // Allow no origin header (non-browser clients)
+    return this.config.corsOrigins.some(allowed => {
+      // Simple wildcard matching
+      if (allowed === '*') return true;
+      if (allowed.endsWith('*')) {
+        const base = allowed.slice(0, -1);
+        return origin.startsWith(base);
+      }
+      return origin === allowed;
+    });
   }
 
   async initialize(): Promise<void> {
@@ -73,6 +187,14 @@ export class ExecutionWebSocketServer {
 
   private async handleConnection(ws: WebSocket, req: any): Promise<void> {
     try {
+      // HIGH #2: Validate CORS origin before processing connection
+      const origin = req.headers.origin;
+      if (!this.validateCorsOrigin(origin)) {
+        logger.warn(`[WebSocket] CORS origin rejected: ${origin}`);
+        ws.close(1008, 'CORS policy violation');
+        return;
+      }
+
       // Authenticate user from JWT token
       const userId = await authenticateUser(req);
       if (!userId) {
@@ -83,12 +205,30 @@ export class ExecutionWebSocketServer {
       const channel = `execution-updates:${userId}`;
       const clientId = `${userId}-${Date.now()}-${Math.random()}`;
 
-      // Create client record
+      // MEDIUM: Create client record with rate limiting and adaptive heartbeat tracking
+      let messageCount = 0;
+      let rateCheckTime = Date.now();
+
       const client: WSClient = {
         ws,
         userId,
         channel,
-        heartbeat: setInterval(() => ws.ping(), this.config.heartbeatInterval),
+        // MEDIUM: Adaptive heartbeat - start with configured interval
+        heartbeat: setInterval(() => {
+          if (this.config.heartbeatAdaptive) {
+            // Adaptive logic: increase interval if no recent activity
+            const timeSinceLastActivity = Date.now() - client.lastActivity;
+            const adaptiveInterval = timeSinceLastActivity > 30000
+              ? this.config.heartbeatInterval * 2  // Double interval if idle >30s
+              : this.config.heartbeatInterval;
+
+            // Adjust heartbeat interval dynamically
+            clearInterval(client.heartbeat);
+            client.heartbeat = setInterval(() => ws.ping(), adaptiveInterval);
+          } else {
+            ws.ping();
+          }
+        }, this.config.heartbeatInterval),
         lastActivity: Date.now(),
       };
 
@@ -111,7 +251,33 @@ export class ExecutionWebSocketServer {
       // Handle messages from client
       ws.on('message', (data: Buffer) => {
         client.lastActivity = Date.now();
-        logger.debug(`[WebSocket] Message from ${clientId}:`, data.toString());
+
+        // MEDIUM: Rate limiting - check messages per second
+        const now = Date.now();
+        if (now - rateCheckTime > this.config.rateLimit.windowMs) {
+          messageCount = 0;
+          rateCheckTime = now;
+        }
+
+        messageCount++;
+        if (messageCount > this.config.rateLimit.messagesPerSecond) {
+          logger.warn(`[WebSocket] Rate limit exceeded for ${clientId}: ${messageCount} messages in ${this.config.rateLimit.windowMs}ms`);
+          ws.close(1008, 'Rate limit exceeded');
+          return;
+        }
+
+        try {
+          // MEDIUM: Input validation - ensure message is valid JSON
+          const message = JSON.parse(data.toString());
+          if (!message.type) {
+            logger.warn(`[WebSocket] Invalid message format from ${clientId}: missing type field`);
+            return;
+          }
+          logger.debug(`[WebSocket] Message from ${clientId}:`, message);
+        } catch (error) {
+          logger.warn(`[WebSocket] Invalid message format from ${clientId}:`, error);
+          ws.close(1008, 'Invalid message format');
+        }
       });
 
       // Handle pong (heartbeat response)
@@ -180,15 +346,25 @@ export class ExecutionWebSocketServer {
       timestamp: new Date().toISOString(),
     });
 
-    if (this.config.redisEnabled && this.redisPublisher) {
+    // HIGH #3: Circuit breaker pattern - check if Redis operation allowed
+    if (this.config.redisEnabled && this.redisPublisher && this.circuitBreaker.canExecute()) {
       try {
         await this.redisPublisher.publish(channel, message);
+        this.circuitBreaker.recordSuccess();
       } catch (error) {
         logger.error(`[WebSocket] Failed to publish via Redis: ${channel}`, error);
-        // Fallback to in-memory
+        this.circuitBreaker.recordFailure();
+
+        // Fallback to in-memory broadcasting
+        logger.info(`[WebSocket] Falling back to in-memory broadcast for ${channel}`);
         this.broadcastToUser(userId, message);
       }
+    } else if (this.config.redisEnabled && !this.circuitBreaker.canExecute()) {
+      // Circuit breaker is OPEN - skip Redis, use in-memory fallback
+      logger.warn(`[WebSocket] Circuit breaker OPEN for Redis - using in-memory fallback for ${channel}`);
+      this.broadcastToUser(userId, message);
     } else {
+      // Redis disabled - use in-memory directly
       this.broadcastToUser(userId, message);
     }
   }
