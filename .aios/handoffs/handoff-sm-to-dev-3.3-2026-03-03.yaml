@@ -1,0 +1,158 @@
+# Handoff Artifact: Scrum Master → Dev
+# Story 3.3: Scheduled Automations & Time-Based Triggers
+
+handoff:
+  from_agent: River (Scrum Master)
+  to_agent: Dex (Dev)
+  timestamp: "2026-03-03T13:00:00Z"
+  consumed: true
+  consumed_at: "2026-03-03T13:15:00Z"
+
+story_context:
+  story_id: "3.3"
+  story_title: "Scheduled Automations & Cron Support"
+  story_status: "Ready for Review"
+  story_points: 8
+  priority: "P0 (Highest)"
+  created_branch: "feature/3.3-scheduled-automations"
+
+epic_context:
+  epic_id: "EPIC-3-WAVE-3"
+  epic_title: "Wave 3: Enterprise Automations"
+  stories_completed: 2
+  total_stories: 7
+  completion_percentage: "~29%"
+  next_story_after_3_3: "3.4 (Multi-Step Workflow Execution)"
+
+user_story: |
+  "As a user managing recurring tasks, I want to schedule automations to run
+   on a recurring basis using cron expressions, so that I can automate daily
+   reports, weekly syncs, and monthly cleanups without manual intervention."
+
+acceptance_criteria:
+  - "AC#1 [CRITICAL]: Automation editor supports Scheduled trigger with cron input"
+  - "AC#2 [HIGH]: Cron expressions validated at save with preview of next 3 executions"
+  - "AC#3 [HIGH]: Scheduler evaluates cron at 60s intervals with ±2 min precision"
+  - "AC#4 [HIGH]: Audit log records scheduled_time, execution_time, drift_seconds"
+  - "AC#5 [MEDIUM]: Enable/disable schedule without data loss"
+  - "AC#6 [MEDIUM]: UI shows 'Next scheduled: Tuesday 2:30 PM'"
+  - "AC#7 [MEDIUM]: Skipped executions logged (scheduler down) but not retried"
+
+technical_approach:
+  backend_services:
+    - SchedulerService: evaluateCron, getNextExecutions, validateCron, processDueSchedules
+    - SchedulerJob: background task running every 60 seconds
+    - Schedule API routes + controller
+  frontend_components:
+    - CronExpressionInput (with validation and preview)
+    - CronPresets (hourly, daily 9am, weekly, monthly shortcuts)
+    - Schedule list view with enable/disable toggle
+  database_changes:
+    - NEW: automation_schedules table (cron_expression, timezone, enabled, etc)
+    - EXTEND: automation_executions (add scheduled_time, execution_drift_seconds)
+    - Index: (enabled, next_execution_at) for scheduler queries
+
+dependencies:
+  hard_dependencies:
+    - "Story 3.1 (Execution Engine): ✅ MERGED and deployed"
+    - "Node.js cron-parser library (npm install)"
+    - "Database schema with RLS (already configured)"
+  soft_dependencies:
+    - "Story 3.2 (Webhooks): Context for error handling patterns"
+    - "Story 3.7 (Rate Limiting): Will affect scheduler load (future)"
+
+files_to_create:
+  backend:
+    - "packages/backend/src/automations/scheduler/scheduler.service.ts"
+    - "packages/backend/src/automations/scheduler/scheduler-job.ts"
+    - "packages/backend/src/db/models/schedule.model.ts"
+    - "packages/backend/src/api/automations/schedule.routes.ts"
+    - "packages/backend/src/api/automations/schedule.controller.ts"
+  frontend:
+    - "packages/frontend/src/components/CronExpressionInput.tsx"
+    - "packages/frontend/src/components/CronPresets.tsx"
+    - "packages/frontend/src/services/scheduler.service.ts"
+    - "packages/frontend/src/pages/automations/edit/[id].tsx (MODIFY)"
+  tests:
+    - "packages/backend/src/__tests__/scheduler.service.test.ts"
+    - "packages/backend/src/__tests__/scheduler.integration.test.ts"
+    - "packages/backend/src/__tests__/scheduler-load.test.ts"
+  database:
+    - "supabase/migrations/20260302_create_schedule_tables.sql"
+  documentation:
+    - "docs/guides/cron-expression-guide.md"
+
+testing_requirements:
+  unit_tests:
+    - "Cron validation: valid/invalid expressions"
+    - "Cron evaluation: expression matches current time"
+    - "Next execution preview: returns next 3 times"
+    - "Timezone handling: respects user's timezone"
+    - "Drift calculation: within ±2 minutes"
+  integration_tests:
+    - "Schedule creation and save"
+    - "Schedule execution at correct time"
+    - "Skipped execution logging (scheduler unavailable)"
+    - "Enable/disable toggle"
+    - "Concurrent schedules"
+    - "Timezone variance"
+  load_tests:
+    - "1000+ schedules processed per cycle"
+    - "Cron evaluation: <10ms per expression"
+    - "Database updates: <100ms for 100 updates"
+  target_coverage: "95%+ for critical paths"
+
+quality_gates:
+  coderabbit: "Required - pre-review automated scan"
+  lint: "Must pass - npm run lint"
+  typecheck: "Must pass - npm run typecheck"
+  test: "Must pass - npm run test"
+  coverage: "95%+ target for scheduler service"
+  story_validation: "All 7 AC implemented and verified"
+
+implementation_notes:
+  - "Scheduler runs every 60 seconds - non-blocking async processing"
+  - "Use cron-parser npm package for battle-tested cron evaluation"
+  - "Timezone handling is CRITICAL - users expect local time schedules"
+  - "Skipped executions are logged but NOT retried (no catch-up behavior)"
+  - "Drift tracking helps diagnose timing precision issues"
+  - "next_execution_at is precomputed (not calculated on every request)"
+  - "Wave 2 compatibility: ensure scheduled automations work like manual triggers"
+  - "Consider scheduler resilience: handle database connection failures gracefully"
+
+assignment:
+  assigned_to: "Dex (Dev Agent)"
+  assigned_date: "2026-03-03"
+  target_completion: "3-4 days (8 story points)"
+  qa_reviewer: "Quinn (QA Agent)"
+
+next_steps_for_dev:
+  - "1. Create feature branch (already done: feature/3.3-scheduled-automations)"
+  - "2. Install cron-parser: npm install cron-parser"
+  - "3. Create database migration (automation_schedules table)"
+  - "4. Implement SchedulerService with cron evaluation"
+  - "5. Implement SchedulerJob (background task)"
+  - "6. Create API routes and controller"
+  - "7. Add UI components (CronExpressionInput, CronPresets)"
+  - "8. Write unit, integration, and load tests"
+  - "9. Create documentation"
+  - "10. Run pre-push quality gates and request QA review"
+
+blockers: []
+risks:
+  - "Timezone handling complexity (mitigate: use cron-parser library)"
+  - "Scheduler reliability (mitigate: error logging, graceful degradation)"
+  - "Performance with 1000+ schedules (mitigate: load tests, indexing)"
+
+recommendations:
+  - "Start with SchedulerService - it's the core logic"
+  - "Implement unit tests as you go (TDD approach)"
+  - "Test with multiple timezones early"
+  - "Use Story 3.1's ExecutionService as reference for consistency"
+  - "Document cron expression guide for end-users"
+
+---
+Generated by: River (Scrum Master)
+Ready for: Dex (Dev)
+Story: 3.3
+Branch: feature/3.3-scheduled-automations
