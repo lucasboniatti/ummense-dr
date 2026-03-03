@@ -1,0 +1,76 @@
+handoff:
+  from_agent: dev
+  to_agent: qa
+  timestamp: "2026-03-02T00:30:00Z"
+  consumed: false
+
+story_context:
+  story_id: "3.1"
+  story_path: "docs/stories/3.1.story.md"
+  story_status: "Ready for Review"
+  current_task: "QA Gate Review"
+  branch: "feature/3.1-execution-engine-refactor"
+  epic: "EPIC-3-WAVE-3"
+
+decisions:
+  - "ExecutionService uses async handlers for extensibility"
+  - "Context is frozen (Object.freeze) to prevent side effects"
+  - "Wave 2 automations transparently converted via convertLegacyAutomation()"
+  - "Database uses JSONB for flexible error context storage"
+  - "RLS policies cascade from automation_executions to automation_steps"
+  - "Performance baseline: P99 <500ms, context <10ms, async DB inserts"
+
+files_modified:
+  - "packages/backend/src/automations/execution/execution-context.ts" (NEW)
+  - "packages/backend/src/automations/execution/execution.service.ts" (NEW)
+  - "packages/backend/src/automations/execution/legacy-adapter.ts" (NEW)
+  - "packages/backend/src/db/models/execution.model.ts" (NEW)
+  - "packages/backend/src/__tests__/execution.service.test.ts" (NEW)
+  - "packages/backend/src/__tests__/legacy-automation.integration.test.ts" (NEW)
+  - "packages/backend/src/__tests__/execution-performance.test.ts" (NEW)
+  - "supabase/migrations/20260302_create_execution_tables.sql" (NEW)
+  - "docs/architecture/execution-engine-guide.md" (NEW)
+  - "docs/stories/3.1.story.md" (MODIFIED - updated checkboxes, status)
+
+blockers: []
+
+next_action: "*qa-gate 3.1"
+
+qa_focus_areas:
+  - "Backwards compatibility: Verify Wave 2 automations execute identically"
+  - "Error handling: Check error_context JSONB stores stack traces + state"
+  - "Database schema: Validate RLS policies, indexes, constraints"
+  - "Test coverage: Confirm 95%+ target met by unit/integration/performance tests"
+  - "Context immutability: Verify freezeContext prevents mutations"
+  - "Performance: Validate P99 latency <500ms from performance tests"
+
+implementation_notes: |
+  Story 3.1 implements the core execution engine for Wave 3. This is the
+  foundation upon which all subsequent Wave 3 stories (3.2-3.7) depend.
+
+  Key Points for QA:
+  1. ExecutionService.executeWorkflow() orchestrates sequential step execution
+  2. ExecutionContext is immutable (frozen) to prevent side effects
+  3. LegacyAdapter converts Wave 2 automations transparently
+  4. Database schema includes RLS policies for user-level access control
+  5. All 12 tasks completed with comprehensive test coverage
+
+  The implementation satisfies all 8 acceptance criteria and includes:
+  - 350+ lines of unit tests
+  - 280+ lines of integration tests
+  - 380+ lines of performance tests
+  - Complete architectural documentation
+
+  No blockers identified. Ready for QA gate review.
+
+git_commits:
+  - "1b2ea1f - feat: implement execution engine foundation for Wave 3 [Story 3.1]"
+  - "a435f3e - docs: update Story 3.1 completion checklist and set status to Ready for Review [Story 3.1]"
+
+approval_checklist:
+  - [ ] QA: Backwards compatibility tests pass
+  - [ ] QA: Error handling tests pass
+  - [ ] QA: Database schema validated
+  - [ ] QA: Test coverage verified (95%+)
+  - [ ] QA: Performance tests pass
+  - [ ] DevOps: Ready for push/PR workflow
