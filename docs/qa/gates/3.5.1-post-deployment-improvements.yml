@@ -1,0 +1,124 @@
+schema: 1
+story: '3.5.1'
+story_title: 'Post-Deployment Execution History Improvements'
+gate: CONCERNS
+status_reason: >
+  Implementation is architecturally sound with fixes from @architect quality gate
+  (commit e77587c). 4 of 5 concerns resolved. However, ALL test suites use 
+  simulated/mock data instead of real database or browser integration, which 
+  means the story's quality assertions cannot be independently verified. 
+  The E2E tests specifically claim Playwright usage but use Jest with mock objects.
+  Non-blocking for merge but must be addressed before Story 3.6.
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-03-03T14:34:06Z'
+
+quality_score: 70  # 100 - (10*3 CONCERNS) = 70
+
+expires: '2026-03-17T14:34:06Z'
+
+top_issues:
+  - id: QA-3.5.1-001
+    severity: medium
+    category: test_architecture
+    title: 'All test suites use simulated data — no real integration tests'
+    description: >
+      All 5 test files (history-sanitization, history-search, s3-archival, 
+      history.e2e, history-performance) validate against mock/hardcoded data 
+      objects rather than connecting to a real Supabase/PostgreSQL instance.
+      Performance benchmarks measure in-memory array operations, not actual 
+      database query latency. This means the <100ms search target on 100K 
+      records is unverified.
+    files:
+      - packages/backend/src/__tests__/history-search.test.ts
+      - packages/backend/src/__tests__/history-performance.test.ts
+      - packages/backend/src/__tests__/s3-archival.test.ts
+    suggested_owner: dev
+    action: 'Create integration test suite against test Supabase instance with seeded data'
+
+  - id: QA-3.5.1-002
+    severity: medium
+    category: test_architecture
+    title: 'E2E tests are mock-based Jest, not actual Playwright browser tests'
+    description: >
+      history.e2e.test.ts declares "3 Playwright scenarios" but uses Jest with 
+      hardcoded data structures. No browser is opened, no page.goto(), no 
+      page.click(), no page.waitForSelector(). The file contains a comment 
+      "Mock Playwright tests (in production, use @playwright/test)" which 
+      confirms this is intentional placeholder code.
+    files:
+      - packages/backend/src/__tests__/history.e2e.test.ts
+    suggested_owner: dev
+    action: 'Convert to real @playwright/test with browser automation before Story 3.6'
+
+  - id: QA-3.5.1-003
+    severity: low
+    category: code_quality
+    title: 'Frontend autocomplete uses hardcoded suggestions instead of API'
+    description: >
+      ExecutionHistoryTable.tsx line 89 hardcodes autocomplete suggestions 
+      ['timeout', 'database error', 'connection failed', 'validation error'] 
+      instead of calling getSearchSuggestions() API. The backend method exists 
+      and works.
+    files:
+      - packages/frontend/src/components/ExecutionHistoryTable.tsx
+    suggested_owner: dev
+    action: 'Wire autocomplete to getSearchSuggestions() API endpoint'
+
+evidence:
+  tests_reviewed: 5
+  test_files:
+    - history-sanitization.test.ts  # 270 lines, 15+ test cases
+    - history-search.test.ts        # 373 lines, 20+ test cases
+    - s3-archival.test.ts           # 317 lines, 15+ test cases
+    - history.e2e.test.ts           # 372 lines, 19 assertions (mock-based)
+    - history-performance.test.ts   # 363 lines, 5 benchmarks (simulated)
+  risks_identified: 3
+  architect_gate: 'APPROVED (commit e77587c — 4 of 5 concerns fixed)'
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]  # All 5 ACs have code implementation
+    ac_gaps: []                    # No implementation gaps
+    test_gaps:
+      - 'AC1: E2E tests simulated, not real Playwright'
+      - 'AC3: Performance benchmarks measure in-memory, not actual DB'
+      - 'AC5: S3 archival integration test against real/mocked S3 missing'
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: >
+      Sanitization patterns cover 12 sensitive data types. Regex /g stateful 
+      bug fixed (commit e77587c). Pre-save approach is correct (immutable once 
+      stored). Label prefix now preserved for debugging context (password=[REDACTED]).
+  performance:
+    status: CONCERNS
+    notes: >
+      All 5 performance benchmarks have targets defined and code paths exist,
+      but benchmarks measure in-memory array operations, not actual PostgreSQL
+      queries. The claimed <100ms on 100K records cannot be verified without 
+      a real database integration test.
+  reliability:
+    status: PASS
+    notes: >
+      S3 archival correctly wired into cleanupOldExecutions() with data safety 
+      first approach (skip deletion if archival fails). Error handling is 
+      comprehensive with non-throwing return objects.
+  maintainability:
+    status: PASS
+    notes: >
+      Clean service architecture with SanitizationService, S3ArchivalService,
+      and ExecutionHistoryService. Well-documented (626-line guide). Pattern 
+      definitions stored as structured objects with comments.
+
+recommendations:
+  immediate:
+    - action: 'Create at least 1 real Playwright E2E test before Story 3.6'
+      refs: ['packages/backend/src/__tests__/history.e2e.test.ts']
+    - action: 'Wire frontend autocomplete to getSearchSuggestions() API'
+      refs: ['packages/frontend/src/components/ExecutionHistoryTable.tsx']
+  future:
+    - action: 'Add integration tests against test Supabase with seeded data'
+      refs: ['packages/backend/src/__tests__/history-search.test.ts']
+    - action: 'Add real S3 integration test using localstack or moto'
+      refs: ['packages/backend/src/__tests__/s3-archival.test.ts']
+    - action: 'Add GitHub/GitLab/Stripe token patterns to sanitization'
+      refs: ['packages/backend/src/automations/history/sanitization.service.ts']

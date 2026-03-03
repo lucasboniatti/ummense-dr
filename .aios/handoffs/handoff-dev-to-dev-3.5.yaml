@@ -1,0 +1,196 @@
+handoff:
+  from_agent: dev
+  to_agent: dev
+  timestamp: "2026-03-03T14:45:00Z"
+  consumed: true
+
+  story_context:
+    story_id: "3.5"
+    story_path: "docs/stories/3.5.story.md"
+    story_title: "Automation Execution History & Audit Log"
+    story_status: "Approved"
+    story_points: 8
+    priority: "P1 (High)"
+    branch: "main"
+
+    epic: "EPIC-3-WAVE-3"
+    epic_status: "In Progress (3.3 Done, 3.4 Done, 3.5 Next)"
+
+  story_overview:
+    description: |
+      Fullstack story implementing execution history, audit logging, and retention policies
+      for the multi-step automation engine (Story 3.1).
+
+    complexity: "High - Database + Backend Services + Frontend"
+    acceptance_criteria: 6 (1 CRITICAL, 2 HIGH, 3 MEDIUM)
+    total_tasks: 16 (Database 4, Backend 6, Frontend 4, Testing 2)
+
+  implementation_strategy:
+    phases:
+      - phase: 1
+        name: "Database Layer"
+        duration_estimate: "30 min"
+        tasks: ["Design schemas", "Create migrations", "Setup indexes"]
+
+      - phase: 2
+        name: "Backend Services"
+        duration_estimate: "2 hours"
+        tasks: ["ExecutionHistoryService", "Audit middleware", "Routes/Controller", "Unit+Integration tests"]
+
+      - phase: 3
+        name: "Frontend"
+        duration_estimate: "1.5 hours"
+        tasks: ["History list page", "Detail page", "Error panel", "Audit log viewer"]
+
+      - phase: 4
+        name: "Testing & Documentation"
+        duration_estimate: "30 min"
+        tasks: ["Performance tests", "Documentation guide"]
+
+  architectural_decisions:
+    - decision: "Extend Story 3.1 schema"
+      rationale: "ExecutionService already handles execution tracking; this story adds observability layer"
+      details: "Reuse automation_executions + automation_steps tables, add audit_logs + user_retention_policies"
+
+    - decision: "Async audit logging"
+      rationale: "Non-blocking audit writes prevent performance degradation"
+      details: "Use async DB inserts via middleware; capture user_id, action, changes, ip_address, user_agent"
+
+    - decision: "Composite indexes for performance"
+      rationale: "Story 3.1 established indexing strategy; apply to history queries"
+      details: "Create (user_id, automation_id, status) and (created_at DESC) indexes"
+
+    - decision: "Background retention cleanup"
+      rationale: "Nightly job prevents concurrent execution impact"
+      details: "Run at 2 AM UTC; archive to S3 if enabled; delete old records per policy"
+
+  technical_context:
+    database:
+      extends: "Story 3.1 (Execution Engine)"
+      new_tables: ["audit_logs", "user_retention_policies"]
+      migrations_path: "supabase/migrations/"
+
+    backend:
+      framework: "Node.js/Express"
+      language: "TypeScript"
+      database_client: "Knex.js"
+      test_framework: "Jest"
+      services_location: "packages/backend/src/automations/history/"
+
+    frontend:
+      framework: "React"
+      location: "packages/frontend/src/pages/automations/"
+      components_location: "packages/frontend/src/components/"
+
+    code_quality:
+      coderabbit: "enabled (light mode: 2 iterations, CRITICAL only)"
+      pre_commit: "required before marking story complete"
+      self_healing: "auto-fix CRITICAL issues, document HIGH in Dev Notes"
+
+  execution_mode:
+    selected: "Interactive"
+    reasoning: |
+      Complex fullstack story with multiple architecture decisions.
+      Interactive mode allows decision checkpoints at:
+      - Schema design (composite indexes strategy)
+      - Backend patterns (middleware vs interceptor for audit logging)
+      - Frontend UI approach (paginated table vs infinite scroll)
+      - Testing strategy (unit/integration priority)
+
+  next_action:
+    command: "*develop 3.5"
+    mode: "interactive"
+    first_phase: "Database Layer"
+    first_task: "Design audit log schema and retention policy"
+
+    detailed_steps:
+      1: "Read full story file (docs/stories/3.5.story.md)"
+      2: "Confirm task understanding (16 tasks across 4 phases)"
+      3: "Begin Phase 1: Database schema design"
+      4: "Create migration for audit_logs table"
+      5: "Create migration for user_retention_policies table"
+      6: "Add indexes for performance"
+      7: "Write schema tests"
+      8: "Mark database tasks complete, move to Phase 2"
+
+  critical_dependencies:
+    - Story 3.1 (Execution Engine) - Already complete
+    - Story 3.2 (Webhook Reliability) - Can integrate in parallel
+    - Database migration framework - Supabase CLI
+
+  files_already_modified:
+    - docs/stories/3.5.story.md (added Executor Assignment section)
+    - docs/stories/3.5.story.md (added Architecture Integration section)
+    - docs/stories/3.5.story.md (enriched Dev Notes with architecture context)
+
+  dev_agent_record_status:
+    agent_model_used: "Claude Haiku 4.5"
+    debug_log_references: "None yet"
+    completion_notes: |
+      Story analyzed, approved by PO, ready for Phase 1 (Database) implementation.
+      All tasks and ACs understood. Proceeding in interactive mode with decision checkpoints.
+
+    file_list_status: "Will be updated as implementation progresses"
+    change_log_status: "Will be updated with implementation notes"
+
+  resume_instructions:
+    context_needed: "Full story context (Dev Notes + Technical Notes + Architecture Integration)"
+    prerequisite_done: "Story validation (PO approved), Executor Assignment added (@dev, @architect)"
+    git_status: "main branch, no uncommitted changes related to this story"
+    start_point: "Phase 1 - Database Layer"
+
+  blockers_and_gotchas:
+    - gotcha: "Story 3.1 uses automation_executions + automation_steps tables"
+      action: "This story EXTENDS those, doesn't recreate. Use ALTER TABLE or careful migration."
+
+    - gotcha: "Audit logs must be IMMUTABLE (no edit/delete)"
+      action: "Enforce at DB level (no UPDATE/DELETE triggers), document in RLS policies"
+
+    - gotcha: "Retention policies are USER-CONFIGURABLE (90-2190 days)"
+      action: "Default 90 days, but allow per-user override via settings UI"
+
+    - gotcha: "CodeRabbit self-healing is REQUIRED before marking story complete"
+      action: "Run wsl bash -c '~/.local/bin/coderabbit --prompt-only -t uncommitted' before Done"
+
+  related_stories:
+    depends_on: ["3.1 (Execution Engine)"]
+    blocks: ["3.6 (Real-Time Dashboard)", "3.4 (Scheduled Automations)"]
+    parallel: ["3.2 (Webhook Reliability)"]
+
+  quick_reference:
+    story_file: "docs/stories/3.5.story.md"
+    acceptance_criteria: "6 ACs (1 CRITICAL, 2 HIGH, 3 MEDIUM)"
+    total_tasks: "16 (all detailed in story file)"
+    executor: "@dev (Dex)"
+    quality_gate: "@architect"
+    quality_tools: ["coderabbit", "playwright", "supabase-cli"]
+
+    command_to_resume: "*develop 3.5"
+
+  summary:
+    |
+    STORY 3.5: Automation Execution History & Audit Log
+
+    STATUS: Approved ✅ - Ready for @dev implementation
+
+    SCOPE:
+    - Database: 3 new tables (audit_logs, retention_policies) extending Story 3.1
+    - Backend: ExecutionHistoryService + audit middleware + retention job
+    - Frontend: 4 new pages (history, detail, audit log, settings)
+    - Testing: Unit, integration, performance tests
+
+    EXECUTION:
+    - Mode: Interactive (decision checkpoints throughout)
+    - Phases: Database (30m) → Backend (2h) → Frontend (1.5h) → Testing (30m)
+    - Quality: CodeRabbit self-healing required before Done
+    - Branch: main (no feature branch needed)
+
+    NEXT STEPS:
+    1. Activate @dev agent
+    2. Run: *develop 3.5
+    3. Confirm task understanding
+    4. Begin Phase 1: Database layer
+
+    FULL CONTEXT AVAILABLE IN:
+    - Story file: docs/stories/3.5.story.md (Dev Notes, Architecture Integration, Technical Notes)
+    - Architecture: docs/architecture/execution-engine-guide.md (Story 3.1 foundational patterns)
