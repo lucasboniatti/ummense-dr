@@ -1,64 +1,65 @@
 import React, { useState } from 'react';
+import { FormInput } from './composite/FormField';
+import { Button } from './ui/Button';
 
 interface TaskFormProps {
-  cardId: number;
-  onSubmit?: (task: {
-    title: string;
-    priority: string;
-    dueDate?: string;
-  }) => void;
+  onSubmit?: (task: any) => void;
+  onCancel?: () => void;
+  initialData?: any;
 }
 
-export function TaskForm({ cardId, onSubmit }: TaskFormProps) {
-  const [title, setTitle] = useState('');
-  const [priority, setPriority] = useState('P3');
-  const [dueDate, setDueDate] = useState('');
+export function TaskForm({ onSubmit, onCancel, initialData }: TaskFormProps) {
+  const [formData, setFormData] = useState(initialData || { name: '', description: '', priority: 'medium' });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim()) {
-      onSubmit?.({ title, priority, dueDate });
-      setTitle('');
-      setDueDate('');
-      setPriority('P3');
+    setLoading(true);
+    try {
+      onSubmit?.(formData);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 bg-gray-50 rounded-lg">
-      <div className="mb-2">
-        <input
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="Task title"
-          className="w-full px-2 py-1 text-sm border rounded"
-          required
-        />
-      </div>
-      <div className="flex gap-2 mb-2">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+      <FormInput
+        label="Task Name"
+        type="text"
+        value={formData.name}
+        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+        required
+      />
+
+      <FormInput
+        label="Description"
+        type="text"
+        value={formData.description}
+        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+      />
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neutral-700">Priority</label>
         <select
-          value={priority}
-          onChange={e => setPriority(e.target.value)}
-          className="flex-1 px-2 py-1 text-sm border rounded"
+          value={formData.priority}
+          onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
-          <option value="P1">P1 - High</option>
-          <option value="P2">P2 - Medium</option>
-          <option value="P3">P3 - Low</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
         </select>
-        <input
-          type="date"
-          value={dueDate}
-          onChange={e => setDueDate(e.target.value)}
-          className="flex-1 px-2 py-1 text-sm border rounded"
-        />
       </div>
-      <button
-        type="submit"
-        className="w-full px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Add Task
-      </button>
+
+      <div className="flex gap-3 justify-end">
+        <Button variant="ghost" onClick={onCancel} type="button">
+          Cancel
+        </Button>
+        <Button variant="primary" type="submit" disabled={loading}>
+          {loading ? 'Saving...' : 'Save Task'}
+        </Button>
+      </div>
     </form>
   );
 }

@@ -1,41 +1,49 @@
 import React, { useState } from 'react';
+import { FormInput } from './composite/FormField';
+import { Button } from './ui/Button';
 
 interface SignupFormProps {
-  onSuccess?: (token: string) => void;
+  onSuccess?: (user: any) => void;
   onError?: (error: string) => void;
 }
 
 export function SignupForm({ onSuccess, onError }: SignupFormProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
+  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', name: '' });
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors([]);
+    setError('');
     setLoading(true);
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: formData.email, password: formData.password, name: formData.name }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        const errorMessages = data.errors || [data.error];
-        setErrors(errorMessages);
-        onError?.(errorMessages[0]);
-        return;
+        throw new Error(data.error || 'Signup failed');
       }
 
       const data = await response.json();
-      onSuccess?.(data.token);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      setErrors([message]);
+      onSuccess?.(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
       onError?.(message);
     } finally {
       setLoading(false);
@@ -43,48 +51,19 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Sign Up</h2>
+    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-6">
+      <h2 className="text-2xl font-bold">Sign Up</h2>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Email</label>
-        <input
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded"
-          placeholder="your@email.com"
-          required
-        />
-      </div>
+      <FormInput label="Name" type="text" name="name" value={formData.name} onChange={handleChange} required />
+      <FormInput label="Email" type="email" name="email" value={formData.email} onChange={handleChange} required />
+      <FormInput label="Password" type="password" name="password" value={formData.password} onChange={handleChange} required />
+      <FormInput label="Confirm Password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded"
-          placeholder="Min 8 chars, letter + number"
-          required
-        />
-      </div>
+      {error && <div className="p-3 bg-error-100 border border-error-400 text-error-700 rounded-md text-sm">{error}</div>}
 
-      {errors.length > 0 && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {errors.map((error, i) => (
-            <p key={i}>{error}</p>
-          ))}
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
-      >
-        {loading ? 'Loading...' : 'Sign Up'}
-      </button>
+      <Button type="submit" disabled={loading} className="w-full" variant="primary">
+        {loading ? 'Creating Account...' : 'Sign Up'}
+      </Button>
     </form>
   );
 }
