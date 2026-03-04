@@ -113,7 +113,7 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
               {showWebhookHelp ? 'Hide help' : 'Show webhook help'}
             </button>
             {showWebhookHelp && (
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-neutral-700">
+              <div className="bg-primary-50 border border-primary-200 rounded-md p-3 text-xs text-neutral-700">
                 <p className="font-semibold mb-1">Webhook Guide:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Send POST requests to your URL to trigger automations</li>

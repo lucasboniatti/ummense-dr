@@ -33,7 +33,7 @@ export const PauseResumeControls: React.FC = () => {
 
     return (
         <div className="bg-white p-4 rounded-lg shadow-md border border-neutral-200 mt-4">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Queue Controls</h3>
+            <h3 className="text-lg font-semibold mb-4 text-neutral-800">Queue Controls</h3>
 
             <div className="flex flex-wrap gap-3">
                 <button
@@ -47,7 +47,7 @@ export const PauseResumeControls: React.FC = () => {
                 <button
                     onClick={() => handleAction('resume')}
                     disabled={loadingAction !== null}
-                    className="bg-success-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
+                    className="bg-success-500 hover:bg-success-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
                 >
                     {loadingAction === 'resume' ? 'Resuming...' : 'Resume Queue'}
                 </button>
@@ -62,7 +62,7 @@ export const PauseResumeControls: React.FC = () => {
             </div>
 
             {message && (
-                <div className={`mt-4 p-3 rounded text-sm font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                <div className={`mt-4 p-3 rounded text-sm font-medium ${message.type === 'success' ? 'bg-success-50 text-success-700' : 'bg-error-50 text-error-700'}`}>
                     {message.text}
                 </div>
             )}

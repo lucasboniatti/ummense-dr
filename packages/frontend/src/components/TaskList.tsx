@@ -19,7 +19,7 @@ export function TaskList({ tasks, onTaskClick, onTaskComplete }: TaskListProps) 
   const priorityColors: Record<string, string> = {
     P1: 'bg-red-100 text-red-800',
     P2: 'bg-yellow-100 text-warning-800',
-    P3: 'bg-blue-100 text-blue-800',
+    P3: 'bg-primary-100 text-primary-800',
   };
 
   const sortedTasks = [...tasks].sort((a, b) => {

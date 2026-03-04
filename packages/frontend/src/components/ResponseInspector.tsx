@@ -71,7 +71,7 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
             onClick={() => setActiveTab('body')}
             className={`py-2 px-3 font-medium text-sm border-b-2 ${
               activeTab === 'body'
-                ? 'border-blue-500 text-primary-600'
+                ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-neutral-600 hover:text-neutral-900'
             }`}
           >
@@ -81,7 +81,7 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
             onClick={() => setActiveTab('headers')}
             className={`py-2 px-3 font-medium text-sm border-b-2 ${
               activeTab === 'headers'
-                ? 'border-blue-500 text-primary-600'
+                ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-neutral-600 hover:text-neutral-900'
             }`}
           >

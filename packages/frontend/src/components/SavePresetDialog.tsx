@@ -179,7 +179,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
           {/* Error Message */}
           {error && (
             <div
-              className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200"
+              className="p-3 bg-error-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200"
               data-testid="save-preset-error"
               role="alert"
             >
@@ -201,7 +201,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
           <button
             onClick={handleSave}
             disabled={isSaving || !name.trim()}
-            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-blue-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="save-preset-save-btn"
           >
             {isSaving ? 'Saving...' : 'Save Preset'}

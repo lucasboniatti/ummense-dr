@@ -108,14 +108,14 @@ export const DeliveryGraph: React.FC<DeliveryGraphProps> = ({ webhookId }) => {
           </LineChart>
         </ResponsiveContainer>
       ) : (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-neutral-500">
           No delivery data available yet
         </div>
       )}
 
       <button
         onClick={loadMetrics}
-        className="mt-4 text-sm text-blue-600 hover:text-blue-700"
+        className="mt-4 text-sm text-primary-600 hover:text-primary-700"
       >
         ↻ Refresh
       </button>

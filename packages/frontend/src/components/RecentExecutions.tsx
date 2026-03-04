@@ -25,7 +25,7 @@ const getStatusBadgeColor = (status: string): string => {
     case 'pending':
       return 'bg-yellow-100 text-warning-800';
     default:
-      return 'bg-neutral-100 text-gray-800';
+      return 'bg-neutral-100 text-neutral-800';
   }
 };
 
@@ -69,7 +69,7 @@ export const RecentExecutions: React.FC<RecentExecutionsProps> = ({ executions }
                 {new Date(execution.triggered_at).toLocaleDateString()} {new Date(execution.triggered_at).toLocaleTimeString()}
               </td>
               <td className="px-4 py-3 text-sm">
-                <Link href={`/dashboard/automations/${execution.execution_id}`} className="text-primary-600 hover:text-blue-800 font-medium">
+                <Link href={`/dashboard/automations/${execution.execution_id}`} className="text-primary-600 hover:text-primary-800 font-medium">
                   View →
                 </Link>
               </td>
