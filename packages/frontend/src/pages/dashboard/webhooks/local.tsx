@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import type { GetServerSideProps } from 'next';
+import { useEffect, useState } from 'react';
 import { webhookService } from '../../../services/webhook.service';
 
 interface WebhookRow {
@@ -6,6 +7,14 @@ interface WebhookRow {
   url: string;
   description?: string;
   enabled: boolean;
+}
+
+type HealthState = 'ok' | 'error';
+
+interface LocalWebhooksPageProps {
+  backendBase: string;
+  initialHealth: HealthState;
+  initialHealthError: string | null;
 }
 
 const fallbackWebhooks: WebhookRow[] = [
@@ -17,31 +26,71 @@ const fallbackWebhooks: WebhookRow[] = [
   },
 ];
 
-export default function LocalWebhooksPage() {
-  const [health, setHealth] = useState<'loading' | 'ok' | 'error'>('loading');
-  const [healthError, setHealthError] = useState<string | null>(null);
-  const [webhooks, setWebhooks] = useState<WebhookRow[]>([]);
-  const [flowError, setFlowError] = useState<string | null>(null);
+const DEFAULT_BACKEND_BASE = 'http://127.0.0.1:3001';
 
-  const backendBase = useMemo(
-    () => process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001',
-    []
+async function checkBackendHealth(backendBase: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4000);
+
+  try {
+    const response = await fetch(`${backendBase}/health`, {
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      return {
+        initialHealth: 'error' as const,
+        initialHealthError: `Backend retornou HTTP ${response.status} em ${backendBase}.`,
+      };
+    }
+
+    return {
+      initialHealth: 'ok' as const,
+      initialHealthError: null,
+    };
+  } catch (error) {
+    return {
+      initialHealth: 'error' as const,
+      initialHealthError: `Backend indisponível em ${backendBase}. Verifique: npm run dev:backend`,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export const getServerSideProps: GetServerSideProps<
+  LocalWebhooksPageProps
+> = async () => {
+  const backendBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_BACKEND_BASE;
+
+  const health = await checkBackendHealth(backendBase);
+
+  return {
+    props: {
+      backendBase,
+      ...health,
+    },
+  };
+};
+
+export default function LocalWebhooksPage({
+  backendBase,
+  initialHealth,
+  initialHealthError,
+}: LocalWebhooksPageProps) {
+  const [health, setHealth] = useState<HealthState>(initialHealth);
+  const [healthError, setHealthError] = useState<string | null>(
+    initialHealthError
   );
+  const [webhooks, setWebhooks] = useState<WebhookRow[]>(fallbackWebhooks);
+  const [flowError, setFlowError] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
-      try {
-        const response = await fetch(`${backendBase}/health`);
-        if (!response.ok) {
-          throw new Error(`Health returned HTTP ${response.status}`);
-        }
-        setHealth('ok');
-      } catch (error) {
-        setHealth('error');
-        setHealthError(
-          `Backend indisponível em ${backendBase}. Verifique: npm run dev:backend`
-        );
-      }
+      const nextHealth = await checkBackendHealth(backendBase);
+      setHealth(nextHealth.initialHealth);
+      setHealthError(nextHealth.initialHealthError);
 
       try {
         const result = await webhookService.listWebhooks();
@@ -71,7 +120,6 @@ export default function LocalWebhooksPage() {
 
       <section style={{ marginTop: 16 }}>
         <h2>Backend Health</h2>
-        {health === 'loading' && <p>Validando health...</p>}
         {health === 'ok' && <p style={{ color: '#0a7f24' }}>OK</p>}
         {health === 'error' && (
           <p style={{ color: '#b42318' }}>
