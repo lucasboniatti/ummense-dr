@@ -1,49 +1,24 @@
 import React from 'react';
+import { Badge } from './ui/Badge';
 
 interface DeliveryStatusBadgeProps {
-  status: 'success' | 'failed' | 'pending' | 'dead_lettered' | 'processing';
-  className?: string;
+  status: 'success' | 'failed' | 'pending' | 'cancelled';
 }
 
-const statusConfig = {
-  success: {
-    bg: 'bg-green-100',
-    text: 'text-green-800',
-    label: 'Entregue',
-  },
-  failed: {
-    bg: 'bg-red-100',
-    text: 'text-red-800',
-    label: 'Falhou',
-  },
-  pending: {
-    bg: 'bg-blue-100',
-    text: 'text-blue-800',
-    label: 'Aguardando',
-  },
-  dead_lettered: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-800',
-    label: 'Descartado',
-  },
-  processing: {
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-800',
-    label: 'Processando',
-  },
-};
+export function DeliveryStatusBadge({ status }: DeliveryStatusBadgeProps) {
+  const variant = {
+    success: 'success',
+    failed: 'destructive',
+    pending: 'default',
+    cancelled: 'outline',
+  }[status] as any;
 
-export const DeliveryStatusBadge: React.FC<DeliveryStatusBadgeProps> = ({
-  status,
-  className,
-}) => {
-  const config = statusConfig[status];
+  const label = {
+    success: '✓ Delivered',
+    failed: '✗ Failed',
+    pending: '⏳ Pending',
+    cancelled: '⊘ Cancelled',
+  }[status];
 
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text} ${className || ''}`}
-    >
-      {config.label}
-    </span>
-  );
-};
+  return <Badge variant={variant}>{label}</Badge>;
+}

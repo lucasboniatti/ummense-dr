@@ -1,120 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import { integrationService } from '../services/integration.service';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from './ui/Dialog';
+import { FormInput } from './composite/FormField';
+import { Button } from './ui/Button';
 
 interface DiscordConnectModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConnect?: (token: string) => void;
 }
 
-export function DiscordConnectModal({
-  isOpen,
-  onClose,
-  onSuccess,
-}: DiscordConnectModalProps) {
+export function DiscordConnectModal({ open, onOpenChange, onConnect }: DiscordConnectModalProps) {
+  const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [authUrl, setAuthUrl] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      generateAuthUrl();
+  const handleConnect = async () => {
+    if (!token.trim()) {
+      setError('Token is required');
+      return;
     }
-  }, [isOpen]);
 
-  const generateAuthUrl = async () => {
     setLoading(true);
-    setError(null);
+    setError('');
 
     try {
-      const { auth_url } = await integrationService.getDiscordAuthUrl();
-      setAuthUrl(auth_url);
+      const response = await fetch('/api/integrations/discord', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to connect Discord');
+      }
+
+      onConnect?.(token);
+      setToken('');
+      onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao gerar URL de autenticação');
+      setError(err instanceof Error ? err.message : 'Connection failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleConnect = () => {
-    if (authUrl) {
-      // Store window reference to track callback
-      const width = 500;
-      const height = 600;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-
-      const authWindow = window.open(
-        authUrl,
-        'DiscordAuth',
-        `width=${width},height=${height},left=${left},top=${top}`
-      );
-
-      if (authWindow) {
-        const checkWindow = setInterval(() => {
-          if (authWindow.closed) {
-            clearInterval(checkWindow);
-            // Refresh integrations on success
-            if (onSuccess) {
-              onSuccess();
-            }
-          }
-        }, 1000);
-      }
-    }
-  };
-
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-4">Conectar Discord</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Connect Discord</DialogTitle>
+        </DialogHeader>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded text-red-800 text-sm">
-            {error}
-          </div>
-        )}
-
-        <div className="mb-6">
-          <p className="text-gray-600 mb-4">
-            Clique no botão abaixo para autorizar a integração com seu servidor Discord.
+        <DialogBody className="space-y-4">
+          <p className="text-sm text-neutral-600">
+            Enter your Discord Bot Token for notifications.
           </p>
 
-          <div className="bg-gray-100 p-4 rounded mb-4">
-            <p className="text-sm text-gray-600">
-              <strong>O que você está autorizando:</strong>
-            </p>
-            <ul className="text-sm text-gray-600 mt-2 ml-4 list-disc">
-              <li>Enviar mensagens em canais selecionados</li>
-              <li>Fazer upload de arquivos e imagens</li>
-              <li>Listar canais do servidor</li>
-              <li>Criar embeds e mensagens formatadas</li>
-            </ul>
-          </div>
+          <FormInput
+            label="Bot Token"
+            type="password"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            placeholder="MTA4NzY..."
+            error={error}
+          />
+        </DialogBody>
 
-          {authUrl && (
-            <button
-              onClick={handleConnect}
-              disabled={loading}
-              className="w-full px-4 py-3 bg-discord-color text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity font-medium"
-              style={{ backgroundColor: '#5865F2' }}
-            >
-              {loading ? 'Preparando...' : 'Conectar com Discord'}
-            </button>
-          )}
-        </div>
-
-        <button
-          onClick={onClose}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleConnect} disabled={loading}>
+            {loading ? 'Connecting...' : 'Connect'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

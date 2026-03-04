@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/CardUI';
+import { Badge } from './ui/Badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from './ui/Dialog';
 
 interface ExecutionTrace {
   rule_id: string;
@@ -22,125 +25,193 @@ interface ExecutionTrace {
 
 interface ExecutionDetailModalProps {
   execution: ExecutionTrace;
+  isOpen?: boolean;
   onClose?: () => void;
 }
 
-const getStatusColor = (status: string): string => {
+const getStatusVariant = (status: string) => {
   switch (status) {
     case 'success':
-      return 'text-green-600 bg-green-50';
+      return 'success';
     case 'failed':
-      return 'text-red-600 bg-red-50';
+      return 'destructive';
     case 'pending':
-      return 'text-yellow-600 bg-yellow-50';
+      return 'warning';
     default:
-      return 'text-gray-600 bg-gray-50';
+      return 'default';
   }
 };
 
-export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ execution, onClose }) => {
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className={`p-6 rounded-lg border ${getStatusColor(execution.status)}`}>
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold">{execution.rule_name}</h2>
-            <p className="text-sm mt-1 opacity-75">Execution ID: {execution.execution_id || 'N/A'}</p>
+export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ execution, isOpen = true, onClose }) => {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['config']));
+
+  const toggleSection = (section: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(section)) {
+      newExpanded.delete(section);
+    } else {
+      newExpanded.add(section);
+    }
+    setExpandedSections(newExpanded);
+  };
+
+  const content = (
+    <div className="space-y-4">
+      {/* Header Summary */}
+      <Card className={`border-2 ${execution.status === 'success' ? 'border-success-300' : execution.status === 'failed' ? 'border-error-300' : 'border-warning-300'}`}>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <CardTitle className="text-lg">{execution.rule_name}</CardTitle>
+            <Badge variant={getStatusVariant(execution.status)}>
+              {execution.status.toUpperCase()}
+            </Badge>
           </div>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="text-gray-600 hover:text-gray-900 text-2xl"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p className="text-xs opacity-75">Status</p>
-            <p className="text-lg font-semibold capitalize">{execution.status}</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-xs uppercase font-semibold text-neutral-700">Duration</p>
+              <p className="font-semibold">{execution.execution_time_ms}ms</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase font-semibold text-neutral-700">Triggered</p>
+              <p className="text-xs">{new Date(execution.triggered_at).toLocaleString()}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-xs uppercase font-semibold text-neutral-700">Webhook</p>
+              <p className="font-mono text-xs truncate">{execution.webhook_url}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs opacity-75">Duration</p>
-            <p className="text-lg font-semibold">{execution.execution_time_ms}ms</p>
-          </div>
-          <div>
-            <p className="text-xs opacity-75">Triggered</p>
-            <p className="text-sm">{new Date(execution.triggered_at).toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-xs opacity-75">Webhook</p>
-            <p className="text-sm truncate">{execution.webhook_url}</p>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Rule Config */}
       {execution.rule_config && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold mb-4">Rule Configuration</h3>
-          <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-auto max-h-48">
-            {JSON.stringify(execution.rule_config, null, 2)}
-          </pre>
+        <div className="border border-neutral-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => toggleSection('config')}
+            className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
+          >
+            <span>{expandedSections.has('config') ? '▼' : '▶'}</span>
+            <span>Rule Configuration</span>
+          </button>
+          {expandedSections.has('config') && (
+            <div className="p-4 bg-neutral-50">
+              <pre className="text-xs bg-neutral-900 text-neutral-100 p-3 rounded overflow-x-auto">
+                {JSON.stringify(execution.rule_config, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       )}
 
       {/* Conditions */}
       {execution.conditions && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold mb-4">Conditions Evaluated</h3>
-          <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-auto max-h-48">
-            {JSON.stringify(execution.conditions, null, 2)}
-          </pre>
+        <div className="border border-neutral-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => toggleSection('conditions')}
+            className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
+          >
+            <span>{expandedSections.has('conditions') ? '▼' : '▶'}</span>
+            <span>Conditions Evaluated</span>
+          </button>
+          {expandedSections.has('conditions') && (
+            <div className="p-4 bg-neutral-50">
+              <pre className="text-xs bg-neutral-900 text-neutral-100 p-3 rounded overflow-x-auto">
+                {JSON.stringify(execution.conditions, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       )}
 
       {/* Actions Taken */}
       {execution.actions && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold mb-4">Actions Executed</h3>
-          <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-auto max-h-48">
-            {JSON.stringify(execution.actions, null, 2)}
-          </pre>
+        <div className="border border-neutral-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => toggleSection('actions')}
+            className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
+          >
+            <span>{expandedSections.has('actions') ? '▼' : '▶'}</span>
+            <span>Actions Executed</span>
+          </button>
+          {expandedSections.has('actions') && (
+            <div className="p-4 bg-neutral-50">
+              <pre className="text-xs bg-neutral-900 text-neutral-100 p-3 rounded overflow-x-auto">
+                {JSON.stringify(execution.actions, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       )}
 
       {/* Error Trace */}
       {execution.error_trace && (
-        <div className="bg-red-50 rounded-lg border border-red-200 p-6">
-          <h3 className="text-lg font-semibold text-red-900 mb-4">Error Details</h3>
-          <pre className="bg-white p-4 rounded-lg text-sm text-red-800 overflow-auto max-h-48">
-            {execution.error_trace}
-          </pre>
+        <div className="border-2 border-error-300 bg-error-50 rounded-lg overflow-hidden">
+          <button
+            onClick={() => toggleSection('error')}
+            className="w-full px-4 py-2 bg-error-100 text-left font-semibold text-error-900 hover:bg-error-200 flex items-center gap-2"
+          >
+            <span>{expandedSections.has('error') ? '▼' : '▶'}</span>
+            <span>Error Details</span>
+          </button>
+          {expandedSections.has('error') && (
+            <div className="p-4">
+              <pre className="text-xs bg-neutral-900 text-error-100 p-3 rounded overflow-x-auto">
+                {execution.error_trace}
+              </pre>
+            </div>
+          )}
         </div>
       )}
 
       {/* Retry History */}
       {execution.retry_history && execution.retry_history.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold mb-4">Retry History</h3>
-          <div className="space-y-3">
-            {execution.retry_history.map((attempt, idx) => (
-              <div key={idx} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">Attempt {attempt.attempt}</span>
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                    attempt.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {attempt.status}
-                  </span>
+        <div className="border border-neutral-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => toggleSection('retry')}
+            className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
+          >
+            <span>{expandedSections.has('retry') ? '▼' : '▶'}</span>
+            <span>Retry History ({execution.retry_history.length})</span>
+          </button>
+          {expandedSections.has('retry') && (
+            <div className="p-4 space-y-3">
+              {execution.retry_history.map((attempt, idx) => (
+                <div key={idx} className="border border-neutral-200 rounded p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-sm">Attempt {attempt.attempt}</span>
+                    <Badge variant={attempt.status === 'success' ? 'success' : 'destructive'}>
+                      {attempt.status.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-neutral-600">{new Date(attempt.timestamp).toLocaleString()}</p>
+                  {attempt.error && <p className="text-xs text-error-700 mt-1">{attempt.error}</p>}
                 </div>
-                <p className="text-xs text-gray-600">{new Date(attempt.timestamp).toLocaleString()}</p>
-                {attempt.error && (
-                  <p className="text-sm text-red-600 mt-2">{attempt.error}</p>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
+
+  // If used as a dialog
+  if (isOpen !== undefined) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{execution.rule_name} - Execution Details</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            {content}
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // If used as inline content
+  return content;
 };

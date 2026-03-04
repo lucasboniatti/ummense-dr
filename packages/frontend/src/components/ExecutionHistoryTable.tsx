@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './composite/Table';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 
 interface ExecutionRecord {
   id: string;
@@ -56,16 +59,16 @@ export function ExecutionHistoryTable({
     endDate: '',
   });
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string) => {
     switch (status) {
       case 'success':
-        return 'text-green-600 bg-green-50';
+        return 'success';
       case 'failed':
-        return 'text-red-600 bg-red-50';
+        return 'destructive';
       case 'skipped':
-        return 'text-gray-600 bg-gray-50';
+        return 'default';
       default:
-        return 'text-gray-600 bg-gray-50';
+        return 'default';
     }
   };
 
@@ -113,17 +116,17 @@ export function ExecutionHistoryTable({
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => searchTerm && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
               {searchTime !== undefined && (
-                <span className="absolute right-3 top-2.5 text-xs text-gray-500">
+                <span className="absolute right-3 top-2.5 text-xs text-neutral-500">
                   {searchTime}ms
                 </span>
               )}
 
               {/* Autocomplete Suggestions */}
               {showSuggestions && searchSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-md shadow-lg z-10">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-md shadow-lg z-10">
                   {searchSuggestions.map((suggestion, idx) => (
                     <div
                       key={idx}
@@ -131,7 +134,7 @@ export function ExecutionHistoryTable({
                         handleSearch(suggestion);
                         setShowSuggestions(false);
                       }}
-                      className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
+                      className="px-4 py-2 hover:bg-neutral-50 cursor-pointer text-sm text-neutral-700"
                     >
                       {suggestion}
                     </div>
@@ -141,25 +144,26 @@ export function ExecutionHistoryTable({
             </div>
 
             {/* Advanced Filters Toggle */}
-            <button
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="px-3 py-2 border rounded-md text-sm text-gray-700 hover:bg-gray-50 transition"
               title="Filtros avançados"
             >
               ⚙ Filtros
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Advanced Filters */}
         {showAdvancedFilters && (
-          <div className="grid grid-cols-4 gap-3 p-3 bg-gray-50 border rounded-md">
+          <div className="grid grid-cols-4 gap-3 p-4 bg-neutral-100 border border-neutral-200 rounded-lg">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) => handleFilterChange({ ...filters, status: e.target.value })}
-                className="w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
               >
                 <option value="">Todos</option>
                 <option value="success">✓ Sucesso</option>
@@ -169,126 +173,114 @@ export function ExecutionHistoryTable({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Data Inicial</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Data Inicial</label>
               <input
                 type="date"
                 value={filters.startDate}
                 onChange={(e) => handleFilterChange({ ...filters, startDate: e.target.value })}
-                className="w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Data Final</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Data Final</label>
               <input
                 type="date"
                 value={filters.endDate}
                 onChange={(e) => handleFilterChange({ ...filters, endDate: e.target.value })}
-                className="w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Resultados: {total}
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                Resultados
               </label>
-              <div className="text-sm text-gray-600 mt-1">{total} execuções</div>
+              <div className="text-sm text-neutral-700 font-semibold">{total} execuções</div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="overflow-x-auto border rounded-lg">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                ID Execução
-              </th>
-              <th
-                className="px-6 py-3 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+      <div className="border border-neutral-200 rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID Execução</TableHead>
+              <TableHead
+                className="cursor-pointer hover:bg-neutral-100"
                 onClick={() => onSort?.('timestamp')}
               >
                 Data/Hora {sortBy === 'timestamp' && '↓'}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Automação
-              </th>
-              <th
-                className="px-6 py-3 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+              </TableHead>
+              <TableHead>Automação</TableHead>
+              <TableHead
+                className="cursor-pointer hover:bg-neutral-100"
                 onClick={() => onSort?.('status')}
               >
                 Status {sortBy === 'status' && '↓'}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Tipo Gatilho
-              </th>
-              <th
-                className="px-6 py-3 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+              </TableHead>
+              <TableHead>Tipo Gatilho</TableHead>
+              <TableHead
+                className="cursor-pointer hover:bg-neutral-100"
                 onClick={() => onSort?.('duration')}
               >
                 Duração {sortBy === 'duration' && '↓'}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {executions.map((execution) => (
-              <tr
+              <TableRow
                 key={execution.id}
-                className="hover:bg-gray-50 cursor-pointer transition"
+                className="cursor-pointer"
                 onClick={() => onRowClick(execution.id)}
               >
-                <td className="px-6 py-3 text-sm text-gray-900 font-mono">
-                  {execution.id.substring(0, 8)}...
-                </td>
-                <td className="px-6 py-3 text-sm text-gray-900">
+                <TableCell className="font-mono text-xs">{execution.id.substring(0, 8)}...</TableCell>
+                <TableCell className="text-sm">
                   {format(new Date(execution.started_at), 'dd MMM yyyy HH:mm:ss', {
                     locale: ptBR,
                   })}
-                </td>
-                <td className="px-6 py-3 text-sm text-gray-900">
-                  {execution.automation_name || 'N/A'}
-                </td>
-                <td className="px-6 py-3 text-sm">
-                  <span className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(execution.status)}`}>
+                </TableCell>
+                <TableCell className="text-sm">{execution.automation_name || 'N/A'}</TableCell>
+                <TableCell>
+                  <Badge variant={getStatusVariant(execution.status)}>
                     {getStatusLabel(execution.status)}
-                  </span>
-                </td>
-                <td className="px-6 py-3 text-sm text-gray-900 capitalize">
-                  {execution.trigger_type}
-                </td>
-                <td className="px-6 py-3 text-sm text-gray-900">
-                  {execution.duration_ms ? `${execution.duration_ms}ms` : '-'}
-                </td>
-              </tr>
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-sm capitalize">{execution.trigger_type}</TableCell>
+                <TableCell className="text-sm">{execution.duration_ms ? `${execution.duration_ms}ms` : '-'}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-neutral-600">
           Mostrando {offset + 1} a {Math.min(offset + limit, total)} de {total} execuções
         </div>
-        <div className="flex gap-2">
-          <button
+        <div className="flex gap-2 items-center">
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => onPageChange(Math.max(0, offset - limit))}
             disabled={offset === 0}
-            className="px-4 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
             ← Anterior
-          </button>
-          <div className="text-sm text-gray-600 flex items-center px-4">
+          </Button>
+          <div className="text-sm text-neutral-600 min-w-32 text-center">
             Página {currentPage} de {totalPages}
           </div>
-          <button
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => onPageChange(Math.min(offset + limit, (totalPages - 1) * limit))}
             disabled={currentPage >= totalPages}
-            className="px-4 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
             Próxima →
-          </button>
+          </Button>
         </div>
       </div>
     </div>

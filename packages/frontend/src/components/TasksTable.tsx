@@ -1,4 +1,6 @@
 import React from 'react';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './composite/Table';
+import { Badge } from './ui/Badge';
 
 interface Task {
   id: number;
@@ -15,63 +17,66 @@ interface TasksTableProps {
 }
 
 export function TasksTable({ tasks, onSort, sortColumn }: TasksTableProps) {
-  const priorityColors: Record<string, string> = {
-    P1: 'bg-red-100 text-red-800',
-    P2: 'bg-yellow-100 text-yellow-800',
-    P3: 'bg-blue-100 text-blue-800',
+  const priorityVariant = (priority: string) => {
+    switch (priority) {
+      case 'P1':
+        return 'destructive';
+      case 'P2':
+        return 'warning';
+      case 'P3':
+        return 'default';
+      default:
+        return 'default';
+    }
   };
 
+  const sortIcon = (column: string) => sortColumn === column ? ' ↓' : '';
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse border border-gray-300">
-        <thead className="bg-gray-100">
-          <tr>
-            <th
-              className="border p-2 text-left cursor-pointer hover:bg-gray-200"
+    <div className="border border-neutral-200 rounded-lg overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead
+              className="cursor-pointer hover:bg-neutral-100"
               onClick={() => onSort?.('title')}
             >
-              Title {sortColumn === 'title' && '↓'}
-            </th>
-            <th
-              className="border p-2 text-left cursor-pointer hover:bg-gray-200"
+              Title{sortIcon('title')}
+            </TableHead>
+            <TableHead
+              className="cursor-pointer hover:bg-neutral-100"
               onClick={() => onSort?.('priority')}
             >
-              Priority {sortColumn === 'priority' && '↓'}
-            </th>
-            <th
-              className="border p-2 text-left cursor-pointer hover:bg-gray-200"
+              Priority{sortIcon('priority')}
+            </TableHead>
+            <TableHead
+              className="cursor-pointer hover:bg-neutral-100"
               onClick={() => onSort?.('dueDate')}
             >
-              Due Date {sortColumn === 'dueDate' && '↓'}
-            </th>
-            <th className="border p-2 text-left">Status</th>
-          </tr>
-        </thead>
-        <tbody>
+              Due Date{sortIcon('dueDate')}
+            </TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {tasks.map(task => (
-            <tr key={task.id} className="hover:bg-gray-50">
-              <td className="border p-2">{task.title}</td>
-              <td className="border p-2">
-                <span className={`px-2 py-1 rounded text-xs font-semibold ${priorityColors[task.priority]}`}>
+            <TableRow key={task.id}>
+              <TableCell className="font-semibold">{task.title}</TableCell>
+              <TableCell>
+                <Badge variant={priorityVariant(task.priority)}>
                   {task.priority}
-                </span>
-              </td>
-              <td className="border p-2">{task.dueDate || '-'}</td>
-              <td className="border p-2">
-                <span
-                  className={`px-2 py-1 rounded text-xs ${
-                    task.status === 'completed'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {task.status}
-                </span>
-              </td>
-            </tr>
+                </Badge>
+              </TableCell>
+              <TableCell className="text-sm text-neutral-600">{task.dueDate || '-'}</TableCell>
+              <TableCell>
+                <Badge variant={task.status === 'completed' ? 'success' : 'default'}>
+                  {task.status === 'completed' ? '✓ Done' : 'Open'}
+                </Badge>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

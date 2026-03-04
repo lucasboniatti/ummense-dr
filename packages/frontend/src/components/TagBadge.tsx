@@ -1,33 +1,17 @@
 import React from 'react';
+import { Badge } from './ui/Badge';
 
 interface TagBadgeProps {
   name: string;
-  color: string;
+  color?: string;
   onRemove?: () => void;
-  removable?: boolean;
 }
 
-export function TagBadge({
-  name,
-  color,
-  onRemove,
-  removable = false,
-}: TagBadgeProps) {
+export function TagBadge({ name, color = '#0284c7', onRemove }: TagBadgeProps) {
   return (
-    <span
-      className="inline-flex items-center gap-1 px-2 py-1 rounded text-white text-sm"
-      style={{ backgroundColor: color }}
-    >
+    <Badge style={{ backgroundColor: color }} className="text-white gap-2 cursor-pointer">
       {name}
-      {removable && (
-        <button
-          onClick={onRemove}
-          className="ml-1 font-bold hover:opacity-75"
-          aria-label={`Remove ${name} tag`}
-        >
-          ×
-        </button>
-      )}
-    </span>
+      {onRemove && <button onClick={onRemove} className="ml-1">✕</button>}
+    </Badge>
   );
 }

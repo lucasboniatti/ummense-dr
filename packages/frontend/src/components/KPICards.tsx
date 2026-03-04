@@ -1,47 +1,43 @@
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/CardUI';
+import { Badge } from './ui/Badge';
 
-interface KPICardsProps {
-  metrics: {
-    rulesCount: number;
-    webhooksCount: number;
-    eventsProcessed24h: number;
-    successRate: number;
-    avgExecutionTimeMs: number;
-  };
+interface KPIData {
+  label: string;
+  value: string;
+  trend?: string;
+  trendType?: 'up' | 'down' | 'neutral';
 }
 
-export const KPICards: React.FC<KPICardsProps> = ({ metrics }) => {
+interface KPICardsProps {
+  data: KPIData[];
+  columns?: 2 | 3 | 4;
+}
+
+export function KPICards({ data, columns = 4 }: KPICardsProps) {
+  const gridClass = {
+    2: 'grid-cols-1 md:grid-cols-2',
+    3: 'grid-cols-1 md:grid-cols-3',
+    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
+  }[columns];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-      {/* Total Rules */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <p className="text-sm text-gray-600">Total Rules</p>
-        <p className="text-3xl font-bold mt-2">{metrics.rulesCount}</p>
-      </div>
-
-      {/* Total Webhooks */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <p className="text-sm text-gray-600">Total Webhooks</p>
-        <p className="text-3xl font-bold mt-2">{metrics.webhooksCount}</p>
-      </div>
-
-      {/* Events Processed (24h) */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <p className="text-sm text-gray-600">Events (24h)</p>
-        <p className="text-3xl font-bold mt-2">{metrics.eventsProcessed24h}</p>
-      </div>
-
-      {/* Success Rate */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <p className="text-sm text-gray-600">Success Rate</p>
-        <p className="text-3xl font-bold mt-2">{metrics.successRate.toFixed(1)}%</p>
-      </div>
-
-      {/* Avg Execution Time */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <p className="text-sm text-gray-600">Avg Time</p>
-        <p className="text-3xl font-bold mt-2">{metrics.avgExecutionTimeMs.toFixed(0)}ms</p>
-      </div>
+    <div className={`grid gap-4 ${gridClass}`}>
+      {data.map((kpi, idx) => (
+        <Card key={idx}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">{kpi.label}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-2xl font-bold">{kpi.value}</div>
+            {kpi.trend && (
+              <Badge variant={kpi.trendType === 'up' ? 'success' : kpi.trendType === 'down' ? 'error' : 'default'}>
+                {kpi.trendType === 'up' ? '↑' : kpi.trendType === 'down' ? '↓' : '→'} {kpi.trend}
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
-};
+}
