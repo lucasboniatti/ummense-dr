@@ -34,8 +34,8 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
             <span
               className={`text-sm font-mono px-2 py-1 rounded ${
                 isSuccess
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'
+                  ? 'bg-success-100 text-success-800'
+                  : 'bg-error-100 text-error-800'
               }`}
             >
               {response.statusCode}

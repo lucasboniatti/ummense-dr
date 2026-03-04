@@ -17,8 +17,8 @@ interface TaskListProps {
 
 export function TaskList({ tasks, onTaskClick, onTaskComplete }: TaskListProps) {
   const priorityColors: Record<string, string> = {
-    P1: 'bg-red-100 text-red-800',
-    P2: 'bg-yellow-100 text-warning-800',
+    P1: 'bg-error-100 text-error-800',
+    P2: 'bg-warning-100 text-warning-800',
     P3: 'bg-primary-100 text-primary-800',
   };
 

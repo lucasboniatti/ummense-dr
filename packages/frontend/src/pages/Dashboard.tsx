@@ -90,8 +90,8 @@ export function Dashboard() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead className="bg-gray-100">
+        <table className="w-full border-collapse border border-neutral-300">
+          <thead className="bg-neutral-100">
             <tr>
               <th className="border p-2 text-left">Title</th>
               <th className="border p-2 text-left">Card</th>
@@ -102,17 +102,17 @@ export function Dashboard() {
           </thead>
           <tbody>
             {filteredTasks.map(task => (
-              <tr key={task.id} className="hover:bg-gray-50">
+              <tr key={task.id} className="hover:bg-neutral-50">
                 <td className="border p-2">{task.title}</td>
                 <td className="border p-2">{task.card}</td>
                 <td className="border p-2">
                   <span
                     className={`px-2 py-1 rounded text-xs font-semibold ${
                       task.priority === 'P1'
-                        ? 'bg-red-100 text-red-800'
+                        ? 'bg-error-100 text-error-800'
                         : task.priority === 'P2'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-blue-100 text-blue-800'
+                        ? 'bg-warning-100 text-warning-800'
+                        : 'bg-primary-100 text-primary-800'
                     }`}
                   >
                     {task.priority}
@@ -123,8 +123,8 @@ export function Dashboard() {
                   <span
                     className={`px-2 py-1 rounded text-xs ${
                       task.status === 'completed'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                        ? 'bg-success-100 text-success-800'
+                        : 'bg-neutral-100 text-neutral-800'
                     }`}
                   >
                     {task.status}

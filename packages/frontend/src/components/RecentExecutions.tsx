@@ -19,11 +19,11 @@ interface RecentExecutionsProps {
 const getStatusBadgeColor = (status: string): string => {
   switch (status) {
     case 'success':
-      return 'bg-green-100 text-green-800';
+      return 'bg-success-100 text-success-800';
     case 'failed':
-      return 'bg-red-100 text-red-800';
+      return 'bg-error-100 text-error-800';
     case 'pending':
-      return 'bg-yellow-100 text-warning-800';
+      return 'bg-warning-100 text-warning-800';
     default:
       return 'bg-neutral-100 text-neutral-800';
   }

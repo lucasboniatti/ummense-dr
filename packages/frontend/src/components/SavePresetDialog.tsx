@@ -179,7 +179,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
           {/* Error Message */}
           {error && (
             <div
-              className="p-3 bg-error-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200"
+              className="p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg text-sm text-error-800 dark:text-error-200"
               data-testid="save-preset-error"
               role="alert"
             >

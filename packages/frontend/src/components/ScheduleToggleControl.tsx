@@ -91,7 +91,7 @@ export const ScheduleToggleControl: React.FC<ScheduleToggleControlProps> = ({
             checked={enabled}
             onChange={handleToggle}
             disabled={isLoading$}
-            className={`w-5 h-5 rounded border-neutral-300 text-green-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-5 h-5 rounded border-neutral-300 text-success-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
           />
           {isLoading$ && (
             <span className="text-xs text-neutral-400">
@@ -109,7 +109,7 @@ export const ScheduleToggleControl: React.FC<ScheduleToggleControlProps> = ({
 
         {/* Disabled Indicator */}
         {!enabled && (
-          <div className="mt-2 text-xs text-yellow-600 bg-warning-50 px-2 py-1 rounded border border-warning-200">
+          <div className="mt-2 text-xs text-warning-600 bg-warning-50 px-2 py-1 rounded border border-warning-200">
             Schedule paused
           </div>
         )}

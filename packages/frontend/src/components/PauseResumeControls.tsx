@@ -39,7 +39,7 @@ export const PauseResumeControls: React.FC = () => {
                 <button
                     onClick={() => handleAction('pause')}
                     disabled={loadingAction !== null}
-                    className="bg-warning-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
+                    className="bg-warning-500 hover:bg-warning-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
                 >
                     {loadingAction === 'pause' ? 'Pausing...' : 'Pause Queue'}
                 </button>
