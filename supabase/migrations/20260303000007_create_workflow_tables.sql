@@ -1,13 +1,14 @@
 -- Story 3.4: Multi-Step Workflow Builder & Conditional Logic
 -- Create workflow definition and execution tracking tables
 
--- Enable UUID extension if not already enabled
+-- Enable UUID generators if not already enabled
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Table: workflow_definitions
 -- Stores the DAG structure and conditional logic for each workflow
 CREATE TABLE IF NOT EXISTS workflow_definitions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   automation_id UUID NOT NULL,
   workflow_name VARCHAR(255) NOT NULL,
   workflow_description TEXT,
@@ -40,7 +41,7 @@ CREATE INDEX IF NOT EXISTS idx_workflow_definitions_created_at ON workflow_defin
 -- Table: workflow_step_executions
 -- Detailed audit log for each step execution (for observation and debugging)
 CREATE TABLE IF NOT EXISTS workflow_step_executions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   execution_id UUID NOT NULL,
   workflow_id UUID NOT NULL,
 
@@ -89,7 +90,7 @@ CREATE INDEX IF NOT EXISTS idx_step_executions_created_at ON workflow_step_execu
 -- Table: workflow_templates
 -- Save/load workflow definitions as reusable templates
 CREATE TABLE IF NOT EXISTS workflow_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   template_name VARCHAR(255) NOT NULL,
   template_description TEXT,
 

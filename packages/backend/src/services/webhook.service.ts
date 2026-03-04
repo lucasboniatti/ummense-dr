@@ -204,11 +204,13 @@ export const webhookService = {
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', webhookId)
       .eq('user_id', userId)
-      .is('deleted_at', null);
+      .is('deleted_at', null)
+      .select('id')
+      .maybeSingle();
 
     if (error) throw error;
 
-    return data && data.length > 0;
+    return Boolean(data);
   },
 
   /**

@@ -2,6 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { webhookService } from '../services/webhook.service';
 import { AppError } from '../utils/errors';
 
+function firstParam(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+}
+
 export const webhookController = {
   /**
    * GET /api/webhooks
@@ -24,7 +31,10 @@ export const webhookController = {
   async getWebhookDetail(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const webhookId = req.params.id;
+      const webhookId = firstParam(req.params.id);
+      if (!webhookId) {
+        throw new AppError('Webhook id is required', 400);
+      }
 
       const webhook = await webhookService.getWebhookDetail(userId, webhookId);
       if (!webhook) {
@@ -72,7 +82,10 @@ export const webhookController = {
   async updateWebhook(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const webhookId = req.params.id;
+      const webhookId = firstParam(req.params.id);
+      if (!webhookId) {
+        throw new AppError('Webhook id is required', 400);
+      }
       const updateData = req.body;
 
       const webhook = await webhookService.updateWebhook(
@@ -97,7 +110,10 @@ export const webhookController = {
   async deleteWebhook(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const webhookId = req.params.id;
+      const webhookId = firstParam(req.params.id);
+      if (!webhookId) {
+        throw new AppError('Webhook id is required', 400);
+      }
 
       const success = await webhookService.deleteWebhook(userId, webhookId);
       if (!success) {
@@ -118,7 +134,10 @@ export const webhookController = {
   async testWebhook(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const webhookId = req.params.id;
+      const webhookId = firstParam(req.params.id);
+      if (!webhookId) {
+        throw new AppError('Webhook id is required', 400);
+      }
       const { event_type = 'task:created', payload } = req.body;
 
       const result = await webhookService.testWebhook(
@@ -142,7 +161,10 @@ export const webhookController = {
   async getDeliveryHistory(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const webhookId = req.params.id;
+      const webhookId = firstParam(req.params.id);
+      if (!webhookId) {
+        throw new AppError('Webhook id is required', 400);
+      }
       const {
         status,
         startDate,
@@ -160,8 +182,8 @@ export const webhookController = {
           startDate: startDate as string | undefined,
           endDate: endDate as string | undefined,
           search: search as string | undefined,
-          limit: Math.min(parseInt(limit as string) || 50, 500),
-          offset: parseInt(offset as string) || 0,
+          limit: Math.min(parseInt(firstParam(limit as any) || '50', 10), 500),
+          offset: parseInt(firstParam(offset as any) || '0', 10) || 0,
         }
       );
 
@@ -178,7 +200,10 @@ export const webhookController = {
   async getDeliveryMetrics(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const webhookId = req.params.id;
+      const webhookId = firstParam(req.params.id);
+      if (!webhookId) {
+        throw new AppError('Webhook id is required', 400);
+      }
 
       const metrics = await webhookService.getDeliveryMetrics(
         userId,
