@@ -16,6 +16,9 @@ dist/
 build/
 *.log
 logs/
+*.tsbuildinfo
+.next/
+packages/*/.next/
 
 # IDE & OS (AIOS)
 .DS_Store
