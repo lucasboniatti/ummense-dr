@@ -13,6 +13,7 @@
 - [x] UAT P0/P1 concluído com evidência documentada
 - [x] Runbook operacional publicado
 - [x] Handoff final registrado
+- [x] Tag RC local criada: `local-rc-20260304`
 
 ## Decision
 

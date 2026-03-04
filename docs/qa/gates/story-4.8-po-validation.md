@@ -10,6 +10,7 @@
 - Runbook operacional local publicado.
 - Checklist go/no-go preenchido com decisão explícita.
 - Evidências de qualidade e UAT vinculadas ao handoff final do Epic 4.
+- Tag RC local criada no repositório: `local-rc-20260304`.
 
 ## Product Decision
 
