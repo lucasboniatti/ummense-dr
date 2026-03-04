@@ -32,14 +32,14 @@ export const PauseResumeControls: React.FC = () => {
     };
 
     return (
-        <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 mt-4">
+        <div className="bg-white p-4 rounded-lg shadow-md border border-neutral-200 mt-4">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Queue Controls</h3>
 
             <div className="flex flex-wrap gap-3">
                 <button
                     onClick={() => handleAction('pause')}
                     disabled={loadingAction !== null}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
+                    className="bg-warning-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
                 >
                     {loadingAction === 'pause' ? 'Pausing...' : 'Pause Queue'}
                 </button>
@@ -47,7 +47,7 @@ export const PauseResumeControls: React.FC = () => {
                 <button
                     onClick={() => handleAction('resume')}
                     disabled={loadingAction !== null}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
+                    className="bg-success-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
                 >
                     {loadingAction === 'resume' ? 'Resuming...' : 'Resume Queue'}
                 </button>
@@ -55,7 +55,7 @@ export const PauseResumeControls: React.FC = () => {
                 <button
                     onClick={() => handleAction('clear')}
                     disabled={loadingAction !== null}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow font-medium transition-colors ml-auto disabled:opacity-50"
+                    className="bg-error-500 hover:bg-error-600 text-white px-4 py-2 rounded shadow font-medium transition-colors ml-auto disabled:opacity-50"
                 >
                     {loadingAction === 'clear' ? 'Clearing...' : 'Clear Queue'}
                 </button>

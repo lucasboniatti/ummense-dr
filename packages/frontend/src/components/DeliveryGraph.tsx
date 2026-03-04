@@ -57,16 +57,16 @@ export const DeliveryGraph: React.FC<DeliveryGraphProps> = ({ webhookId }) => {
   };
 
   if (loading && data.length === 0) {
-    return <div className="text-center py-8 text-gray-600">Loading delivery metrics...</div>;
+    return <div className="text-center py-8 text-neutral-600">Loading delivery metrics...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-8 text-red-600">Error loading metrics: {error}</div>;
+    return <div className="text-center py-8 text-error-600">Error loading metrics: {error}</div>;
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold mb-4">Delivery Metrics (Last 24 Hours)</h3>
+    <div className="bg-white rounded-lg border border-neutral-200 p-6">
+      <h3 className="text-lg font-semibold mb-4 text-neutral-900">Delivery Metrics (Last 24 Hours)</h3>
 
       {data.length > 0 ? (
         <ResponsiveContainer width="100%" height={300}>

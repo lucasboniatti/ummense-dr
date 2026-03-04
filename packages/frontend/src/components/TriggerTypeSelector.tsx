@@ -51,10 +51,10 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-6 bg-white rounded-lg border border-gray-200 p-6">
+    <div className="space-y-6 bg-white rounded-lg border border-neutral-200 p-6">
       {/* Trigger Type Selection */}
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-3">
+        <label className="block text-sm font-semibold text-neutral-900 mb-3">
           Trigger Type
         </label>
         <div className="flex gap-4">
@@ -68,7 +68,7 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
               disabled={disabled}
               className="w-4 h-4"
             />
-            <span className="text-sm font-medium text-gray-700">Webhook (Event-Driven)</span>
+            <span className="text-sm font-medium text-neutral-700">Webhook (Event-Driven)</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -80,10 +80,10 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
               disabled={disabled}
               className="w-4 h-4"
             />
-            <span className="text-sm font-medium text-gray-700">Scheduled (Recurring)</span>
+            <span className="text-sm font-medium text-neutral-700">Scheduled (Recurring)</span>
           </label>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-neutral-500 mt-2">
           {value.type === 'webhook'
             ? 'Automation triggers when a webhook is received'
             : 'Automation triggers on a recurring schedule using cron expressions'}
@@ -93,7 +93,7 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
       {/* Webhook Configuration */}
       {value.type === 'webhook' && (
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
+          <label className="block text-sm font-semibold text-neutral-900 mb-2">
             Webhook URL
           </label>
           <div className="space-y-2">
@@ -103,17 +103,17 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
               value={value.webhookUrl || ''}
               onChange={(e) => handleWebhookUrlChange(e.target.value)}
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-neutral-50 disabled:text-neutral-500"
             />
             <button
               type="button"
               onClick={() => setShowWebhookHelp(!showWebhookHelp)}
-              className="text-xs text-blue-600 hover:text-blue-700"
+              className="text-xs text-primary-600 hover:text-primary-700"
             >
               {showWebhookHelp ? 'Hide help' : 'Show webhook help'}
             </button>
             {showWebhookHelp && (
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-gray-700">
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-neutral-700">
                 <p className="font-semibold mb-1">Webhook Guide:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Send POST requests to your URL to trigger automations</li>
@@ -130,14 +130,14 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
       {value.type === 'scheduled' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-sm font-semibold text-neutral-900 mb-2">
               Timezone
             </label>
             <select
               value={value.timezone || 'UTC'}
               onChange={(e) => handleTimezoneChange(e.target.value)}
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-neutral-50"
             >
               <option value="UTC">UTC</option>
               <option value="America/New_York">America/New_York (EST/EDT)</option>
@@ -154,7 +154,7 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
 
           {/* Cron Presets */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-sm font-semibold text-neutral-900 mb-2">
               Quick Presets (Optional)
             </label>
             <CronPresets onSelect={handleCronChange} />

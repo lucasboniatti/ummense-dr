@@ -23,9 +23,9 @@ const getStatusBadgeColor = (status: string): string => {
     case 'failed':
       return 'bg-red-100 text-red-800';
     case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-yellow-100 text-warning-800';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-neutral-100 text-gray-800';
   }
 };
 
@@ -46,30 +46,30 @@ export const RecentExecutions: React.FC<RecentExecutionsProps> = ({ executions }
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
-        <thead className="bg-gray-50 border-b border-gray-200">
+        <thead className="bg-neutral-50 border-b border-neutral-200">
           <tr>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Rule</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Duration</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Time</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Details</th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Rule</th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Status</th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Duration</th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Time</th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Details</th>
           </tr>
         </thead>
         <tbody>
           {executions.map((execution) => (
-            <tr key={execution.execution_id} className="border-b border-gray-200 hover:bg-gray-50">
-              <td className="px-4 py-3 text-sm font-medium text-gray-900">{execution.rule_name}</td>
+            <tr key={execution.execution_id} className="border-b border-neutral-200 hover:bg-neutral-50">
+              <td className="px-4 py-3 text-sm font-medium text-neutral-900">{execution.rule_name}</td>
               <td className="px-4 py-3">
                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(execution.status)}`}>
                   {getStatusLabel(execution.status)}
                 </span>
               </td>
-              <td className="px-4 py-3 text-sm text-gray-600">{execution.execution_time_ms}ms</td>
-              <td className="px-4 py-3 text-sm text-gray-600">
+              <td className="px-4 py-3 text-sm text-neutral-600">{execution.execution_time_ms}ms</td>
+              <td className="px-4 py-3 text-sm text-neutral-600">
                 {new Date(execution.triggered_at).toLocaleDateString()} {new Date(execution.triggered_at).toLocaleTimeString()}
               </td>
               <td className="px-4 py-3 text-sm">
-                <Link href={`/dashboard/automations/${execution.execution_id}`} className="text-blue-600 hover:text-blue-800 font-medium">
+                <Link href={`/dashboard/automations/${execution.execution_id}`} className="text-primary-600 hover:text-blue-800 font-medium">
                   View →
                 </Link>
               </td>

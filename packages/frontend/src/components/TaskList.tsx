@@ -18,7 +18,7 @@ interface TaskListProps {
 export function TaskList({ tasks, onTaskClick, onTaskComplete }: TaskListProps) {
   const priorityColors: Record<string, string> = {
     P1: 'bg-red-100 text-red-800',
-    P2: 'bg-yellow-100 text-yellow-800',
+    P2: 'bg-yellow-100 text-warning-800',
     P3: 'bg-blue-100 text-blue-800',
   };
 
@@ -34,7 +34,7 @@ export function TaskList({ tasks, onTaskClick, onTaskComplete }: TaskListProps) 
       {sortedTasks.map(task => (
         <div
           key={task.id}
-          className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-400 cursor-pointer"
+          className="flex items-center p-3 bg-white rounded-lg border border-neutral-200 hover:border-neutral-400 cursor-pointer"
           onClick={() => onTaskClick?.(task)}
         >
           <input
@@ -49,11 +49,11 @@ export function TaskList({ tasks, onTaskClick, onTaskComplete }: TaskListProps) 
           <span className={`${priorityColors[task.priority]} px-2 py-1 rounded text-xs font-semibold mr-3`}>
             {task.priority}
           </span>
-          <span className={task.status === 'completed' ? 'line-through text-gray-500' : ''}>
+          <span className={task.status === 'completed' ? 'line-through text-neutral-500' : ''}>
             {task.title}
           </span>
           {task.dueDate && (
-            <span className="ml-auto text-sm text-gray-600">{task.dueDate}</span>
+            <span className="ml-auto text-sm text-neutral-600">{task.dueDate}</span>
           )}
         </div>
       ))}

@@ -153,30 +153,30 @@ export default function DashboardContainer() {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6 lg:p-8"
+      className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-4 md:p-6 lg:p-8"
       data-testid="dashboard-container"
     >
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">
               Analytics Dashboard
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-neutral-600 dark:text-neutral-400 mt-1">
               Real-time execution metrics and trends
             </p>
           </div>
           <div className="flex items-center gap-4">
             {/* WebSocket Connection Badge */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
               <div
                 className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-green-500' : 'bg-gray-400'
+                  isConnected ? 'bg-success-500' : 'bg-neutral-400'
                 }`}
               />
               <span
-                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
                 data-testid="websocket-status"
               >
                 {isConnected ? 'Connected' : 'Disconnected'}
@@ -185,7 +185,7 @@ export default function DashboardContainer() {
             {/* Export Button */}
             <button
               onClick={handleExportCSV}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 font-medium transition-colors"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 font-medium transition-colors"
               aria-label="Export dashboard data as CSV"
             >
               Export CSV
@@ -195,7 +195,7 @@ export default function DashboardContainer() {
 
         {/* Error Message */}
         {error && (
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
+          <div className="p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm text-warning-800 dark:text-warning-200">
             {error}
           </div>
         )}
@@ -207,7 +207,7 @@ export default function DashboardContainer() {
           className="flex items-center justify-center h-64"
           data-testid="dashboard-loading"
         >
-          <div className="text-gray-600 dark:text-gray-400">Loading metrics...</div>
+          <div className="text-neutral-600 dark:text-neutral-400">Loading metrics...</div>
         </div>
       )}
 

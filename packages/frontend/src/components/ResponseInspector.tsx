@@ -43,23 +43,23 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-1 hover:bg-neutral-100 rounded"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Status & Timing */}
-        <div className="px-4 py-2 bg-gray-50 border-b text-sm">
+        <div className="px-4 py-2 bg-neutral-50 border-b text-sm">
           <div className="flex gap-6">
             <div>
-              <span className="text-gray-600">Status: </span>
+              <span className="text-neutral-600">Status: </span>
               <span className="font-mono font-semibold">
                 {response.statusMessage}
               </span>
             </div>
             <div>
-              <span className="text-gray-600">Tempo: </span>
+              <span className="text-neutral-600">Tempo: </span>
               <span className="font-mono font-semibold">{response.elapsed}ms</span>
             </div>
           </div>
@@ -71,8 +71,8 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
             onClick={() => setActiveTab('body')}
             className={`py-2 px-3 font-medium text-sm border-b-2 ${
               activeTab === 'body'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+                ? 'border-blue-500 text-primary-600'
+                : 'border-transparent text-neutral-600 hover:text-neutral-900'
             }`}
           >
             Corpo
@@ -81,8 +81,8 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
             onClick={() => setActiveTab('headers')}
             className={`py-2 px-3 font-medium text-sm border-b-2 ${
               activeTab === 'headers'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+                ? 'border-blue-500 text-primary-600'
+                : 'border-transparent text-neutral-600 hover:text-neutral-900'
             }`}
           >
             Headers
@@ -92,7 +92,7 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
         {/* Content */}
         <div className="overflow-auto flex-1 p-4">
           {activeTab === 'body' ? (
-            <pre className="font-mono text-sm bg-gray-50 p-3 rounded overflow-auto max-h-96 border">
+            <pre className="font-mono text-sm bg-neutral-50 p-3 rounded overflow-auto max-h-96 border">
               {(() => {
                 try {
                   return JSON.stringify(JSON.parse(response.body), null, 2);
@@ -106,10 +106,10 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
               {Object.entries(response.headers).map(([key, value]) => (
                 <div
                   key={key}
-                  className="font-mono text-sm bg-gray-50 p-2 rounded border"
+                  className="font-mono text-sm bg-neutral-50 p-2 rounded border"
                 >
-                  <span className="font-semibold text-blue-600">{key}: </span>
-                  <span className="text-gray-900">{value as string}</span>
+                  <span className="font-semibold text-primary-600">{key}: </span>
+                  <span className="text-neutral-900">{value as string}</span>
                 </div>
               ))}
             </div>
@@ -117,10 +117,10 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 p-4 border-t bg-gray-50">
+        <div className="flex justify-end gap-2 p-4 border-t bg-neutral-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium"
+            className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 text-sm font-medium"
           >
             Fechar
           </button>

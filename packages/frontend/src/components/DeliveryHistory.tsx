@@ -74,14 +74,14 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
         <div className="relative">
           <Search
             size={18}
-            className="absolute left-3 top-2.5 text-gray-400"
+            className="absolute left-3 top-2.5 text-neutral-400"
           />
           <input
             type="text"
             placeholder="Buscar por ID do evento ou tipo..."
             value={filters.search || ''}
             onChange={(e) => updateSearch(e.target.value || undefined)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
 
@@ -91,7 +91,7 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
           <select
             value={filters.status || ''}
             onChange={(e) => updateStatus(e.target.value || undefined)}
-            className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1 border border-neutral-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">Todos os Status</option>
             <option value="success">Entregue</option>
@@ -106,21 +106,21 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
               onClick={() => setQuickDateRange('last24h')}
               className={`px-3 py-1 text-sm rounded ${
                 filters.startDate
-                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                  : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                  ? 'bg-primary-100 text-primary-700 border border-primary-300'
+                  : 'bg-neutral-100 text-neutral-700 border border-neutral-300 hover:bg-neutral-200'
               }`}
             >
               Últimas 24h
             </button>
             <button
               onClick={() => setQuickDateRange('last7d')}
-              className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+              className="px-3 py-1 text-sm rounded bg-neutral-100 text-neutral-700 border border-neutral-300 hover:bg-neutral-200"
             >
               Últimos 7d
             </button>
             <button
               onClick={() => setQuickDateRange('last30d')}
-              className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+              className="px-3 py-1 text-sm rounded bg-neutral-100 text-neutral-700 border border-neutral-300 hover:bg-neutral-200"
             >
               Últimos 30d
             </button>
@@ -130,7 +130,7 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+              className="px-3 py-1 text-sm rounded bg-neutral-100 text-neutral-700 border border-neutral-300 hover:bg-neutral-200"
             >
               Limpar Filtros
             </button>
@@ -139,7 +139,7 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
       </div>
 
       {/* Results Summary */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-neutral-600">
         {loading ? (
           'Carregando...'
         ) : (
@@ -147,39 +147,39 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
             {deliveries.length > 0 ? (
               `Mostrando ${deliveries.length} de ${total} entregas`
             ) : (
-              <span className="text-gray-400">Nenhuma entrega encontrada</span>
+              <span className="text-neutral-400">Nenhuma entrega encontrada</span>
             )}
           </>
         )}
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto border border-gray-200 rounded-md">
+      <div className="overflow-x-auto border border-neutral-200 rounded-md">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-neutral-50 border-b border-neutral-200">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-700">
+              <th className="px-4 py-3 text-left font-medium text-neutral-700">
                 Status
               </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-700">
+              <th className="px-4 py-3 text-left font-medium text-neutral-700">
                 Tipo de Evento
               </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-700">
+              <th className="px-4 py-3 text-left font-medium text-neutral-700">
                 Tentativa
               </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-700">
+              <th className="px-4 py-3 text-left font-medium text-neutral-700">
                 Código HTTP
               </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-700">
+              <th className="px-4 py-3 text-left font-medium text-neutral-700">
                 Data/Hora
               </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-700"></th>
+              <th className="px-4 py-3 text-left font-medium text-neutral-700"></th>
             </tr>
           </thead>
           <tbody>
             {deliveries.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-neutral-500">
                   Nenhuma entrega encontrada
                 </td>
               </tr>
@@ -187,26 +187,26 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
               deliveries.map((delivery) => (
                 <tr
                   key={delivery.id}
-                  className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-neutral-200 hover:bg-neutral-50 cursor-pointer"
                   onClick={() => onDeliveryClick?.(delivery)}
                 >
                   <td className="px-4 py-3">
                     <DeliveryStatusBadge status={delivery.status} />
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                  <td className="px-4 py-3 font-mono text-xs text-neutral-600">
                     {delivery.event_type}
                   </td>
-                  <td className="px-4 py-3 text-gray-700">
+                  <td className="px-4 py-3 text-neutral-700">
                     {delivery.attempt_count}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                  <td className="px-4 py-3 font-mono text-xs text-neutral-600">
                     {delivery.response_status_code || '-'}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-neutral-600">
                     {formatDate(delivery.created_at)}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <ChevronRight size={16} className="text-gray-400" />
+                    <ChevronRight size={16} className="text-neutral-400" />
                   </td>
                 </tr>
               ))

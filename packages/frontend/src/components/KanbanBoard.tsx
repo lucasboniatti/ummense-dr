@@ -63,11 +63,11 @@ export function KanbanBoard() {
       {columns.map(column => (
         <div
           key={column.id}
-          className="flex-shrink-0 w-80 bg-gray-100 rounded-lg p-4"
+          className="flex-shrink-0 w-80 bg-neutral-100 rounded-lg p-4 border border-neutral-200"
           onDragOver={handleDragOver}
           onDrop={() => handleDrop(column.id)}
         >
-          <h3 className="text-lg font-bold mb-4">{column.name}</h3>
+          <h3 className="text-lg font-bold mb-4 text-neutral-900">{column.name}</h3>
           <div className="space-y-2">
             {column.cards.map(card => (
               <div

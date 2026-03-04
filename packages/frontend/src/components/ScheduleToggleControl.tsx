@@ -42,39 +42,39 @@ export const ScheduleToggleControl: React.FC<ScheduleToggleControlProps> = ({
 
   return (
     <div
-      className={`flex items-center justify-between p-4 border border-gray-200 rounded-lg ${
-        enabled ? 'bg-white' : 'bg-gray-50'
+      className={`flex items-center justify-between p-4 border border-neutral-200 rounded-lg ${
+        enabled ? 'bg-white' : 'bg-neutral-50'
       }`}
     >
       {/* Schedule Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-2">
-          <h3 className={`text-sm font-semibold ${enabled ? 'text-gray-900' : 'text-gray-500'}`}>
+          <h3 className={`text-sm font-semibold ${enabled ? 'text-neutral-900' : 'text-neutral-500'}`}>
             {scheduleName}
           </h3>
-          <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
+          <span className="inline-block px-2 py-1 text-xs font-medium bg-neutral-100 text-neutral-700 rounded">
             {cronExpression}
           </span>
         </div>
 
         {/* Timezone */}
-        <p className={`text-xs ${enabled ? 'text-gray-600' : 'text-gray-400'}`}>
+        <p className={`text-xs ${enabled ? 'text-neutral-600' : 'text-neutral-400'}`}>
           Timezone: <span className="font-mono">{timezone}</span>
         </p>
 
         {/* Execution Times */}
-        <div className="mt-2 space-y-1 text-xs text-gray-500">
+        <div className="mt-2 space-y-1 text-xs text-neutral-500">
           {nextExecutionAt && (
             <p>
               Next execution:{' '}
-              <span className={enabled ? 'text-gray-700 font-medium' : 'text-gray-400'}>
+              <span className={enabled ? 'text-neutral-700 font-medium' : 'text-neutral-400'}>
                 {new Date(nextExecutionAt).toLocaleString()}
               </span>
             </p>
           )}
           {lastExecutionAt && (
             <p>
-              Last execution: <span className="text-gray-600">{new Date(lastExecutionAt).toLocaleString()}</span>
+              Last execution: <span className="text-neutral-600">{new Date(lastExecutionAt).toLocaleString()}</span>
             </p>
           )}
         </div>
@@ -83,7 +83,7 @@ export const ScheduleToggleControl: React.FC<ScheduleToggleControlProps> = ({
       {/* Toggle Switch */}
       <div className="flex-shrink-0 ml-4">
         <label className="flex items-center gap-2 cursor-pointer">
-          <span className="text-xs font-medium text-gray-700">
+          <span className="text-xs font-medium text-neutral-700">
             {enabled ? 'Enabled' : 'Disabled'}
           </span>
           <input
@@ -91,10 +91,10 @@ export const ScheduleToggleControl: React.FC<ScheduleToggleControlProps> = ({
             checked={enabled}
             onChange={handleToggle}
             disabled={isLoading$}
-            className={`w-5 h-5 rounded border-gray-300 text-green-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-5 h-5 rounded border-neutral-300 text-green-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
           />
           {isLoading$ && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-neutral-400">
               <svg className="inline w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path
@@ -109,7 +109,7 @@ export const ScheduleToggleControl: React.FC<ScheduleToggleControlProps> = ({
 
         {/* Disabled Indicator */}
         {!enabled && (
-          <div className="mt-2 text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded border border-yellow-200">
+          <div className="mt-2 text-xs text-yellow-600 bg-warning-50 px-2 py-1 rounded border border-warning-200">
             Schedule paused
           </div>
         )}
