@@ -3,25 +3,49 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFoo
 import { Button } from './ui/Button';
 
 interface TestWebhookModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  webhookUrl: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  webhookUrl?: string;
+  // Legacy props kept for compatibility with existing pages
+  webhookId?: string;
+  onClose?: () => void;
+  onSuccess?: () => void;
   onTest?: () => void;
 }
 
-export function TestWebhookModal({ open, onOpenChange, webhookUrl, onTest }: TestWebhookModalProps) {
+export function TestWebhookModal({
+  open,
+  onOpenChange,
+  webhookUrl,
+  webhookId,
+  onClose,
+  onSuccess,
+  onTest,
+}: TestWebhookModalProps) {
+  const resolvedOpen = open ?? true;
+  const close = () => {
+    onOpenChange?.(false);
+    onClose?.();
+  };
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
   const handleTest = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/webhooks/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: webhookUrl }),
-      });
+      const response = webhookId
+        ? await fetch(`/api/webhooks/${webhookId}/test`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          })
+        : await fetch('/api/webhooks/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: webhookUrl }),
+          });
       setResult(await response.json());
+      onSuccess?.();
       onTest?.();
     } finally {
       setLoading(false);
@@ -29,7 +53,7 @@ export function TestWebhookModal({ open, onOpenChange, webhookUrl, onTest }: Tes
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={resolvedOpen} onOpenChange={(next) => (next ? onOpenChange?.(next) : close())}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Test Webhook</DialogTitle>
@@ -37,7 +61,15 @@ export function TestWebhookModal({ open, onOpenChange, webhookUrl, onTest }: Tes
 
         <DialogBody className="space-y-4">
           <p className="text-sm text-neutral-600">
-            URL: <span className="font-mono text-xs">{webhookUrl}</span>
+            {webhookUrl ? (
+              <>
+                URL: <span className="font-mono text-xs">{webhookUrl}</span>
+              </>
+            ) : (
+              <>
+                Webhook ID: <span className="font-mono text-xs">{webhookId}</span>
+              </>
+            )}
           </p>
 
           {result && (
@@ -48,7 +80,7 @@ export function TestWebhookModal({ open, onOpenChange, webhookUrl, onTest }: Tes
         </DialogBody>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" onClick={close}>
             Close
           </Button>
           <Button variant="primary" onClick={handleTest} disabled={loading}>

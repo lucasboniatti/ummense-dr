@@ -4,12 +4,29 @@ import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
 
 interface DiscordConnectModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  // Legacy props kept for compatibility with existing pages
+  isOpen?: boolean;
+  onClose?: () => void;
+  onSuccess?: () => void;
   onConnect?: (token: string) => void;
 }
 
-export function DiscordConnectModal({ open, onOpenChange, onConnect }: DiscordConnectModalProps) {
+export function DiscordConnectModal({
+  open,
+  onOpenChange,
+  isOpen,
+  onClose,
+  onSuccess,
+  onConnect,
+}: DiscordConnectModalProps) {
+  const resolvedOpen = open ?? isOpen ?? false;
+  const close = () => {
+    onOpenChange?.(false);
+    onClose?.();
+  };
+
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,8 +52,9 @@ export function DiscordConnectModal({ open, onOpenChange, onConnect }: DiscordCo
       }
 
       onConnect?.(token);
+      onSuccess?.();
       setToken('');
-      onOpenChange(false);
+      close();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connection failed');
     } finally {
@@ -45,7 +63,7 @@ export function DiscordConnectModal({ open, onOpenChange, onConnect }: DiscordCo
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={resolvedOpen} onOpenChange={(next) => (next ? onOpenChange?.(next) : close())}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Connect Discord</DialogTitle>
@@ -67,7 +85,7 @@ export function DiscordConnectModal({ open, onOpenChange, onConnect }: DiscordCo
         </DialogBody>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={close}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleConnect} disabled={loading}>

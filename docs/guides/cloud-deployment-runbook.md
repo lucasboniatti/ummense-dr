@@ -39,6 +39,7 @@ Required env vars:
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `JWT_SECRET`
+- `CORS_ALLOWED_ORIGINS` (ex.: `https://ummense-dr-frontend.vercel.app`)
 - `NODE_ENV=production`
 
 Deploy:
@@ -48,6 +49,7 @@ vercel link --yes --project ummense-dr-backend --cwd packages/backend
 
 vercel deploy --prod --yes --cwd packages/backend \
   -e NODE_ENV=production \
+  -e CORS_ALLOWED_ORIGINS=https://ummense-dr-frontend.vercel.app \
   -e SUPABASE_URL=<supabase_url> \
   -e SUPABASE_ANON_KEY=<supabase_anon_key> \
   -e SUPABASE_SERVICE_ROLE_KEY=<supabase_service_role_key> \

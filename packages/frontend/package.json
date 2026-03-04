@@ -6,9 +6,9 @@
     "dev": "next dev -p ${PORT:-3000}",
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
-    "lint": "node -e \"console.log('Frontend lint scaffolded in Story 4.1. Full rules in Story 4.6.')\"",
-    "typecheck": "node -e \"console.log('Frontend typecheck scaffolded in Story 4.1. Full checks in Story 4.6.')\"",
-    "test": "node -e \"console.log('Frontend test scaffolded in Story 4.1. Expanded suite in Story 4.6.')\""
+    "lint": "eslint \"src/**/*.{ts,tsx,js,jsx,mjs}\"",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "node --test src/__tests__/next-config.smoke.test.mjs"
   },
   "dependencies": {
     "@supabase/auth-helpers-react": "^0.5.0",

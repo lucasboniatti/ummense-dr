@@ -68,3 +68,10 @@ Regra explicita de parsing para atalhos com `$`:
 - `@squad-creator`, `/squad-creator`, `$squad-creator`, `/squad-creator.md` -> `.aios-core/development/agents/squad-creator.md`
 - `@aios-master`, `/aios-master`, `$aios-master`, `/aios-master.md` -> `.aios-core/development/agents/aios-master.md`
 <!-- AIOS-MANAGED-END: shortcuts -->
+
+## User Preference (pt-BR)
+
+- Sempre que o usuario pedir `*help`, responder em portugues (pt-BR).
+- Em `*help`, sempre listar:
+  - o comando
+  - o que ele faz, de forma clara e direta

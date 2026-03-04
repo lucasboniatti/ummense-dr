@@ -6,7 +6,7 @@
 export interface AnalyticsEvent {
   event: string;
   category: string;
-  timestamp: string;
+  timestamp?: string;
   userId?: string;
   webhookId?: string;
   metadata?: Record<string, any>;

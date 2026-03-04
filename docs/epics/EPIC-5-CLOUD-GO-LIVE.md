@@ -2,7 +2,7 @@
 
 **Epic ID:** EPIC-5-CLOUD-GO-LIVE
 **Wave:** Wave 5 (Public Deployment)
-**Status:** Done (1/1 stories closed)
+**Status:** Done (2/2 stories closed)
 **Created:** 2026-03-04
 **Priority:** CRITICAL (P0)
 
@@ -23,6 +23,7 @@ O Epic 4 encerrou o hardening local e o handoff operacional para uso em ambiente
 ## Stories
 
 1. ✅ **Story 5.1** - Cloud Deployment Pipeline + Public URLs + Production Smoke (Done)
+2. ✅ **Story 5.2** - Production Hardening (Security + Real Quality Gates) (Done)
 
 ---
 
@@ -33,6 +34,8 @@ O Epic 4 encerrou o hardening local e o handoff operacional para uso em ambiente
 - [x] Banco Supabase remoto com migrations aplicadas.
 - [x] Variáveis críticas de ambiente configuradas em produção.
 - [x] Smoke test público (health + rota crítica + listagem autenticada) evidenciado.
+- [x] Gates de qualidade reais e rastreáveis (`lint`, `typecheck`, `test`) ativos.
+- [x] Hardening de segurança aplicado (CORS allowlist + JWT verify no WebSocket).
 
 ---
 
@@ -40,3 +43,4 @@ O Epic 4 encerrou o hardening local e o handoff operacional para uso em ambiente
 
 - **2026-03-04:** Epic criado por `@sm/@master` para transição de local-only para cloud publicável.
 - **2026-03-04:** Story 5.1 concluída com deploy público em Vercel + Supabase cloud. Epic fechado 1/1.
+- **2026-03-04:** Story 5.2 concluída com hardening de segurança e qualidade. Epic fechado 2/2.

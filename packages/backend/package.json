@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
-    "build": "node -e \"console.log('Backend build script scaffolded in Story 4.1.')\"",
-    "lint": "node -e \"console.log('Backend lint scaffolded in Story 4.1. Full rules in Story 4.6.')\"",
-    "typecheck": "node -e \"console.log('Backend typecheck scaffolded in Story 4.1. Full checks in Story 4.6.')\"",
-    "test": "node -e \"console.log('Backend test scaffolded in Story 4.1. Expanded suite in Story 4.6.')\""
+    "build": "tsc --project tsconfig.quality.json --noEmit",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"api/**/*.ts\"",
+    "typecheck": "tsc --project tsconfig.quality.json --noEmit",
+    "test": "tsx --test src/__tests__/auth.service.security.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

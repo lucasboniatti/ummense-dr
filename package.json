@@ -33,5 +33,9 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.5.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.23.0",
+    "@typescript-eslint/parser": "^8.30.0"
   }
 }

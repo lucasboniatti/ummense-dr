@@ -1,13 +1,55 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import { webhookRoutes } from './routes/webhook.routes';
 import { analyticsRoutes } from './routes/analytics.routes';
 
 const app: Express = express();
 
+const localCorsDefaults = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:3010',
+  'http://127.0.0.1:3010',
+];
+
+function getAllowedOrigins(): string[] {
+  const configured = (process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (configured.length > 0) {
+    return configured;
+  }
+
+  return process.env.NODE_ENV === 'production' ? [] : localCorsDefaults;
+}
+
+const corsOptions: CorsOptions = {
+  origin(origin, callback) {
+    const allowedOrigins = getAllowedOrigins();
+
+    if (!origin) {
+      // Allow non-browser clients (curl, health checks, internal calls).
+      callback(null, true);
+      return;
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`CORS origin not allowed: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {

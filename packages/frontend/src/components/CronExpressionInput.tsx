@@ -6,6 +6,7 @@ interface CronExpressionInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   error?: string;
+  disabled?: boolean;
 }
 
 export function CronExpressionInput({
@@ -13,6 +14,7 @@ export function CronExpressionInput({
   onChange,
   placeholder = '0 0 * * *',
   error,
+  disabled = false,
 }: CronExpressionInputProps) {
   const cronExamples = [
     { label: 'Every minute', value: '* * * * *' },
@@ -32,6 +34,7 @@ export function CronExpressionInput({
         placeholder={placeholder}
         error={error}
         hint="Use standard cron syntax (minute hour day month weekday)"
+        disabled={disabled}
       />
 
       <div className="space-y-2">
@@ -42,6 +45,7 @@ export function CronExpressionInput({
               key={ex.value}
               type="button"
               onClick={() => onChange(ex.value)}
+              disabled={disabled}
               className="px-2 py-1 text-xs bg-neutral-100 hover:bg-neutral-200 rounded border border-neutral-300 transition-colors"
             >
               {ex.label}

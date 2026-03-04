@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/server.ts",
+    "src/app.ts",
+    "src/config/env.ts",
+    "src/lib/supabase.ts",
+    "src/middleware/auth.middleware.ts",
+    "src/controllers/webhook.controller.ts",
+    "src/routes/webhook.routes.ts",
+    "src/routes/analytics.routes.ts",
+    "src/services/webhook.service.ts",
+    "src/services/auth.service.ts",
+    "api/index.ts"
+  ]
+}

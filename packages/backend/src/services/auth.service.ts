@@ -3,6 +3,8 @@
  * Validates JWT tokens and extracts user information from WebSocket requests
  */
 
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import { getRequiredEnvVar } from '../config/env';
 import { logger } from '../utils/logger';
 
 /**
@@ -21,28 +23,28 @@ export async function authenticateUser(req: any): Promise<string | null> {
       return null;
     }
 
-    // Extract token from "Bearer {token}" format
-    const token = authHeader.replace('Bearer ', '');
+    const token = extractBearerToken(authHeader);
 
     if (!token) {
-      logger.warn('[Auth] Empty authorization token');
+      logger.warn('[Auth] Invalid authorization header format');
       return null;
     }
 
-    // TODO: Validate JWT token against Supabase or other auth provider
-    // For now, extract user ID from token payload
-    // In production, use: supabase.auth.getUser(token)
+    const payload = jwt.verify(token, getRequiredEnvVar('JWT_SECRET')) as JwtPayload & {
+      id?: string | number;
+      user_id?: string;
+      uid?: string;
+    };
 
-    // Placeholder: Extract user ID from custom header or token
-    const userId = req.headers['x-user-id'] || extractUserIdFromToken(token);
+    const userId = payload.id || payload.sub || payload.user_id || payload.uid;
 
     if (!userId) {
       logger.warn('[Auth] Invalid token: no user ID found');
       return null;
     }
 
-    logger.debug(`[Auth] Authenticated user: ${userId}`);
-    return userId;
+    logger.debug(`[Auth] Authenticated user: ${String(userId)}`);
+    return String(userId);
   } catch (error) {
     logger.error('[Auth] Authentication error:', error);
     return null;
@@ -50,28 +52,18 @@ export async function authenticateUser(req: any): Promise<string | null> {
 }
 
 /**
- * Extract user ID from JWT token payload
- * Assumes standard JWT structure: header.payload.signature
+ * Extract token from standard Authorization header
  *
- * @param token JWT token
- * @returns User ID or null
+ * @param authHeader Authorization header value
+ * @returns Bearer token or null
  */
-function extractUserIdFromToken(token: string): string | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    // Decode payload (second part)
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-
-    // Try common user ID fields
-    return payload.sub || payload.user_id || payload.uid || null;
-  } catch (error) {
-    logger.debug('[Auth] Failed to extract user ID from token:', error);
+function extractBearerToken(authHeader: string): string | null {
+  if (!authHeader.toLowerCase().startsWith('bearer ')) {
     return null;
   }
+
+  const token = authHeader.slice(7).trim();
+  return token || null;
 }
 
 /**
@@ -83,21 +75,7 @@ function extractUserIdFromToken(token: string): string | null {
  */
 export function validateToken(token: string): boolean {
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return false;
-    }
-
-    // Check expiration
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-    const now = Math.floor(Date.now() / 1000);
-
-    if (payload.exp && payload.exp < now) {
-      logger.warn('[Auth] Token expired');
-      return false;
-    }
-
-    // TODO: Verify signature with secret key
+    jwt.verify(token, getRequiredEnvVar('JWT_SECRET'));
     return true;
   } catch (error) {
     logger.debug('[Auth] Token validation failed:', error);

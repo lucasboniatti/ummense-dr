@@ -134,7 +134,6 @@ export class ConditionalEvaluator {
     // Create function with strict comparison operators only
     // This prevents code injection
     try {
-      // eslint-disable-next-line no-new-func
       const fn = new Function(`return ${evalExpr}`);
       return fn() as boolean;
     } catch (error) {
