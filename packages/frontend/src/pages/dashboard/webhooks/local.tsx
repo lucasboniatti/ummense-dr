@@ -176,95 +176,82 @@ export default function LocalWebhooksPage({
   };
 
   return (
-    <main style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>Webhooks - Fluxo Crítico Local</h1>
-      <p>
-        Esta página valida boot local do dashboard e renderização do fluxo de
-        Webhooks com dados locais.
-      </p>
+    <main className="p-6 font-sans space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Webhooks - Fluxo Crítico Local</h1>
+        <p className="text-neutral-700">
+          Esta página valida boot local do dashboard e renderização do fluxo de
+          Webhooks com dados locais.
+        </p>
+      </div>
 
-      <section style={{ marginTop: 16 }}>
-        <h2>Backend Health</h2>
-        {health === 'ok' && <p style={{ color: '#0a7f24' }}>OK</p>}
+      <section className="space-y-2">
+        <h2 className="text-xl font-semibold">Backend Health</h2>
+        {health === 'ok' && <p className="text-success-700 font-semibold">✓ OK</p>}
         {health === 'error' && (
-          <p style={{ color: '#b42318' }}>
-            {healthError || 'Falha ao validar health do backend.'}
+          <p className="text-error-700 font-semibold">
+            ✗ {healthError || 'Falha ao validar health do backend.'}
           </p>
         )}
       </section>
 
-      <section style={{ marginTop: 24 }}>
-        <h2>Token de Teste (Opcional)</h2>
-        <p>
-          Cole um JWT local para listar webhooks reais do usuário. Sem token,
-          a página usa fallback local.
-        </p>
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            flexWrap: 'wrap',
-            marginTop: 8,
-            marginBottom: 16,
-          }}
-        >
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-xl font-semibold mb-1">Token de Teste (Opcional)</h2>
+          <p className="text-neutral-700 text-sm">
+            Cole um JWT local para listar webhooks reais do usuário. Sem token,
+            a página usa fallback local.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2 items-center">
           <input
             type="text"
             value={tokenInput}
             onChange={(event) => setTokenInput(event.target.value)}
             placeholder="Cole aqui o token JWT de teste"
-            style={{
-              flex: '1 1 600px',
-              minWidth: 300,
-              padding: '8px 10px',
-            }}
+            className="flex-1 min-w-[300px] px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
-          <button type="button" onClick={applyToken}>
+          <button type="button" onClick={applyToken} className="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-semibold hover:bg-primary-700">
             Aplicar token
           </button>
-          <button type="button" onClick={clearToken}>
+          <button type="button" onClick={clearToken} className="px-4 py-2 bg-neutral-200 text-neutral-900 rounded-md text-sm font-semibold hover:bg-neutral-300">
             Limpar token
           </button>
         </div>
 
-        <h2>Lista de Webhooks</h2>
-        {flowError && <p style={{ color: '#b54708' }}>{flowError}</p>}
-        {webhooks.length === 0 ? (
-          <p>Nenhum webhook disponível.</p>
-        ) : (
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              marginTop: 8,
-            }}
-          >
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                  ID
-                </th>
-                <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                  URL
-                </th>
-                <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {webhooks.map((hook) => (
-                <tr key={hook.id}>
-                  <td style={{ padding: '8px 0' }}>{hook.id}</td>
-                  <td style={{ padding: '8px 0' }}>{hook.url}</td>
-                  <td style={{ padding: '8px 0' }}>
-                    {hook.enabled ? 'enabled' : 'disabled'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <div>
+          <h2 className="text-xl font-semibold mb-2 mt-4">Lista de Webhooks</h2>
+          {flowError && <p className="text-warning-700 text-sm font-semibold mb-3">⚠ {flowError}</p>}
+          {webhooks.length === 0 ? (
+            <p className="text-neutral-600">Nenhum webhook disponível.</p>
+          ) : (
+            <div className="border border-neutral-200 rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-neutral-100 border-b border-neutral-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-900">ID</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-900">URL</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-900">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200">
+                  {webhooks.map((hook) => (
+                    <tr key={hook.id} className="hover:bg-neutral-50">
+                      <td className="px-4 py-3 text-sm font-mono text-neutral-900">{hook.id}</td>
+                      <td className="px-4 py-3 text-sm text-neutral-700">{hook.url}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className={hook.enabled ? 'text-success-700 font-semibold' : 'text-neutral-600'}>
+                          {hook.enabled ? '✓ enabled' : 'disabled'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );

@@ -128,14 +128,14 @@ export default function WebhooksPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-full bg-gray-200 rounded-full h-2 w-24">
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 h-2 bg-neutral-200 rounded-full overflow-hidden">
                         <div
-                          className="bg-green-500 h-2 rounded-full"
+                          className="h-2 bg-success-500 rounded-full transition-all"
                           style={{ width: `${webhook.successRate}%` }}
-                        ></div>
+                        />
                       </div>
-                      <span className="text-sm text-gray-600">{webhook.successRate.toFixed(1)}%</span>
+                      <span className="text-sm font-semibold text-neutral-700 min-w-12">{webhook.successRate.toFixed(1)}%</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
