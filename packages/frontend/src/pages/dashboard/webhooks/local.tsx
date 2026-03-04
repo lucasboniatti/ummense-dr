@@ -1,6 +1,5 @@
 import type { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
-import { webhookService } from '../../../services/webhook.service';
 
 interface WebhookRow {
   id: string;
@@ -85,6 +84,27 @@ export default function LocalWebhooksPage({
   );
   const [webhooks, setWebhooks] = useState<WebhookRow[]>(fallbackWebhooks);
   const [flowError, setFlowError] = useState<string | null>(null);
+  const [devToken, setDevToken] = useState<string>('');
+  const [tokenInput, setTokenInput] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const tokenFromUrl = params.get('devToken');
+    const tokenFromStorage = window.localStorage.getItem('synkra_dev_token');
+    const token = tokenFromUrl || tokenFromStorage || '';
+
+    if (!token) {
+      return;
+    }
+
+    setDevToken(token);
+    setTokenInput(token);
+    window.localStorage.setItem('synkra_dev_token', token);
+  }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -92,23 +112,68 @@ export default function LocalWebhooksPage({
       setHealth(nextHealth.initialHealth);
       setHealthError(nextHealth.initialHealthError);
 
-      try {
-        const result = await webhookService.listWebhooks();
-        if (Array.isArray(result) && result.length > 0) {
-          setWebhooks(result as WebhookRow[]);
-          return;
-        }
+      if (!devToken) {
+        setFlowError(
+          'Sem token de teste. Exibindo fallback local. Cole um token JWT abaixo para listar webhooks reais.'
+        );
         setWebhooks(fallbackWebhooks);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${backendBase}/api/webhooks`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${devToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const result = (await response.json()) as WebhookRow[];
+
+        if (Array.isArray(result) && result.length > 0) {
+          setFlowError(null);
+          setWebhooks(result);
+        } else {
+          setFlowError(
+            'Token válido, mas nenhum webhook encontrado para este usuário. Exibindo fallback local.'
+          );
+          setWebhooks(fallbackWebhooks);
+        }
       } catch (error) {
         setFlowError(
-          'Não foi possível listar webhooks reais (ex.: autenticação ausente). Exibindo dados locais de fallback para smoke/UAT.'
+          'Não foi possível listar webhooks reais com o token informado. Verifique se o token está correto. Exibindo fallback local.'
         );
         setWebhooks(fallbackWebhooks);
       }
     };
 
     void run();
-  }, [backendBase]);
+  }, [backendBase, devToken]);
+
+  const applyToken = () => {
+    const token = tokenInput.trim();
+    setDevToken(token);
+
+    if (typeof window !== 'undefined') {
+      if (token) {
+        window.localStorage.setItem('synkra_dev_token', token);
+      } else {
+        window.localStorage.removeItem('synkra_dev_token');
+      }
+    }
+  };
+
+  const clearToken = () => {
+    setTokenInput('');
+    setDevToken('');
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('synkra_dev_token');
+    }
+  };
 
   return (
     <main style={{ padding: 24, fontFamily: 'sans-serif' }}>
@@ -129,6 +194,39 @@ export default function LocalWebhooksPage({
       </section>
 
       <section style={{ marginTop: 24 }}>
+        <h2>Token de Teste (Opcional)</h2>
+        <p>
+          Cole um JWT local para listar webhooks reais do usuário. Sem token,
+          a página usa fallback local.
+        </p>
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            flexWrap: 'wrap',
+            marginTop: 8,
+            marginBottom: 16,
+          }}
+        >
+          <input
+            type="text"
+            value={tokenInput}
+            onChange={(event) => setTokenInput(event.target.value)}
+            placeholder="Cole aqui o token JWT de teste"
+            style={{
+              flex: '1 1 600px',
+              minWidth: 300,
+              padding: '8px 10px',
+            }}
+          />
+          <button type="button" onClick={applyToken}>
+            Aplicar token
+          </button>
+          <button type="button" onClick={clearToken}>
+            Limpar token
+          </button>
+        </div>
+
         <h2>Lista de Webhooks</h2>
         {flowError && <p style={{ color: '#b54708' }}>{flowError}</p>}
         {webhooks.length === 0 ? (
