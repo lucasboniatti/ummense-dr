@@ -1,0 +1,24 @@
+const path = require('node:path');
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  outputFileTracingRoot: path.join(__dirname, '../..'),
+  async rewrites() {
+    const backendOrigin =
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001';
+
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendOrigin}/api/:path*`,
+      },
+      {
+        source: '/health',
+        destination: `${backendOrigin}/health`,
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;

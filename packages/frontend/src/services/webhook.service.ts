@@ -1,4 +1,5 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001';
 
 interface CreateWebhookPayload {
   url: string;
@@ -30,7 +31,7 @@ async function request(
   endpoint: string,
   options: RequestInit = {}
 ) {
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const response = await fetch(`${API_URL}/api${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,

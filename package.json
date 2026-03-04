@@ -1,0 +1,31 @@
+{
+  "name": "ummense-dr",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/backend",
+    "packages/frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev:split",
+    "dev:split": "node -e \"console.log('Split-run strategy: run npm run dev:backend and npm run dev:frontend in separate terminals.')\"",
+    "dev:backend": "npm run env:check:backend && npm run dev --workspace @ummense/backend",
+    "dev:frontend": "npm run env:check:frontend && npm run dev --workspace @ummense/frontend",
+    "infra:up": "bash ./scripts/local-infra.sh up",
+    "infra:down": "bash ./scripts/local-infra.sh down",
+    "infra:reset": "bash ./scripts/local-infra.sh reset",
+    "infra:seed": "bash ./scripts/local-infra.sh seed",
+    "infra:status": "bash ./scripts/local-infra.sh status",
+    "infra:check:redis": "node ./scripts/check-redis-connectivity.mjs",
+    "env:check": "node ./scripts/env-check.mjs --target all",
+    "env:check:backend": "node ./scripts/env-check.mjs --target backend",
+    "env:check:frontend": "node ./scripts/env-check.mjs --target frontend",
+    "env:check:infra": "node ./scripts/env-check.mjs --target infra",
+    "quality:gates": "node ./scripts/quality-gates.mjs",
+    "quality:gates:red": "GATE_FORCE_FAIL_STAGE=test node ./scripts/quality-gates.mjs",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces"
+  }
+}

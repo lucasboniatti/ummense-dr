@@ -2,6 +2,15 @@
 -- Story 3.1: Workflow Execution Engine Refactor
 -- Date: 2026-03-02
 
+-- Compatibility baseline: ensure automations table exists for local bootstrap.
+CREATE TABLE IF NOT EXISTS automations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name VARCHAR(255) DEFAULT 'Untitled Automation',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 -- Create automation_executions table (extend existing)
 CREATE TABLE IF NOT EXISTS automation_executions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -69,14 +78,17 @@ CREATE INDEX IF NOT EXISTS idx_automation_steps_step_id
 -- automation_executions RLS
 ALTER TABLE automation_executions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS automation_executions_user_read ON automation_executions;
 CREATE POLICY automation_executions_user_read
   ON automation_executions FOR SELECT
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS automation_executions_user_insert ON automation_executions;
 CREATE POLICY automation_executions_user_insert
   ON automation_executions FOR INSERT
   WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS automation_executions_user_update ON automation_executions;
 CREATE POLICY automation_executions_user_update
   ON automation_executions FOR UPDATE
   USING (user_id = auth.uid());
@@ -84,6 +96,7 @@ CREATE POLICY automation_executions_user_update
 -- automation_steps RLS (cascade from automation_executions)
 ALTER TABLE automation_steps ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS automation_steps_user_read ON automation_steps;
 CREATE POLICY automation_steps_user_read
   ON automation_steps FOR SELECT
   USING (
@@ -94,6 +107,7 @@ CREATE POLICY automation_steps_user_read
     )
   );
 
+DROP POLICY IF EXISTS automation_steps_user_insert ON automation_steps;
 CREATE POLICY automation_steps_user_insert
   ON automation_steps FOR INSERT
   WITH CHECK (

@@ -1,4 +1,6 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001';
+const API_URL = `${API_BASE_URL}/api`;
 
 export interface SlackIntegration {
   id: string;

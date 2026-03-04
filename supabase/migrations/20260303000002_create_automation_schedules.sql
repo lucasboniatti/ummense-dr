@@ -36,7 +36,8 @@ ADD COLUMN IF NOT EXISTS execution_drift_seconds INT CHECK (execution_drift_seco
 -- Enable RLS on automation_schedules
 ALTER TABLE automation_schedules ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS automation_schedules_user_read
+DROP POLICY IF EXISTS automation_schedules_user_read ON automation_schedules;
+CREATE POLICY automation_schedules_user_read
   ON automation_schedules FOR SELECT
   USING (
     EXISTS (
@@ -46,7 +47,8 @@ CREATE POLICY IF NOT EXISTS automation_schedules_user_read
     )
   );
 
-CREATE POLICY IF NOT EXISTS automation_schedules_user_insert
+DROP POLICY IF EXISTS automation_schedules_user_insert ON automation_schedules;
+CREATE POLICY automation_schedules_user_insert
   ON automation_schedules FOR INSERT
   WITH CHECK (
     EXISTS (
@@ -56,7 +58,8 @@ CREATE POLICY IF NOT EXISTS automation_schedules_user_insert
     )
   );
 
-CREATE POLICY IF NOT EXISTS automation_schedules_user_update
+DROP POLICY IF EXISTS automation_schedules_user_update ON automation_schedules;
+CREATE POLICY automation_schedules_user_update
   ON automation_schedules FOR UPDATE
   USING (
     EXISTS (
@@ -66,7 +69,8 @@ CREATE POLICY IF NOT EXISTS automation_schedules_user_update
     )
   );
 
-CREATE POLICY IF NOT EXISTS automation_schedules_user_delete
+DROP POLICY IF EXISTS automation_schedules_user_delete ON automation_schedules;
+CREATE POLICY automation_schedules_user_delete
   ON automation_schedules FOR DELETE
   USING (
     EXISTS (
@@ -105,7 +109,8 @@ CREATE INDEX IF NOT EXISTS idx_scheduler_audit_logs_schedule_id
 ALTER TABLE scheduler_audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Allow reading own schedule audit logs
-CREATE POLICY IF NOT EXISTS scheduler_audit_logs_user_read
+DROP POLICY IF EXISTS scheduler_audit_logs_user_read ON scheduler_audit_logs;
+CREATE POLICY scheduler_audit_logs_user_read
   ON scheduler_audit_logs FOR SELECT
   USING (
     EXISTS (
@@ -117,7 +122,8 @@ CREATE POLICY IF NOT EXISTS scheduler_audit_logs_user_read
   );
 
 -- Policy: Allow inserting audit logs (append-only)
-CREATE POLICY IF NOT EXISTS scheduler_audit_logs_user_insert
+DROP POLICY IF EXISTS scheduler_audit_logs_user_insert ON scheduler_audit_logs;
+CREATE POLICY scheduler_audit_logs_user_insert
   ON scheduler_audit_logs FOR INSERT
   WITH CHECK (
     EXISTS (
@@ -129,12 +135,14 @@ CREATE POLICY IF NOT EXISTS scheduler_audit_logs_user_insert
   );
 
 -- Policy: Prevent updates (immutable table)
-CREATE POLICY IF NOT EXISTS scheduler_audit_logs_no_update
+DROP POLICY IF EXISTS scheduler_audit_logs_no_update ON scheduler_audit_logs;
+CREATE POLICY scheduler_audit_logs_no_update
   ON scheduler_audit_logs FOR UPDATE
   USING (false);
 
 -- Policy: Prevent deletes (immutable table)
-CREATE POLICY IF NOT EXISTS scheduler_audit_logs_no_delete
+DROP POLICY IF EXISTS scheduler_audit_logs_no_delete ON scheduler_audit_logs;
+CREATE POLICY scheduler_audit_logs_no_delete
   ON scheduler_audit_logs FOR DELETE
   USING (false);
 

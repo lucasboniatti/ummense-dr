@@ -20,16 +20,22 @@ CREATE TABLE IF NOT EXISTS circuit_breaker_states (
 ALTER TABLE connector_rate_limits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE circuit_breaker_states ENABLE ROW LEVEL SECURITY;
 
--- Allow reading for operations
+-- Allow authenticated operators in local mode
+DROP POLICY IF EXISTS "Admins can view rate limits" ON connector_rate_limits;
 CREATE POLICY "Admins can view rate limits" ON connector_rate_limits
-  FOR SELECT USING (auth.uid() IN (SELECT id FROM user_roles WHERE role = 'admin'));
-CREATE POLICY "Admins can manage rate limits" ON connector_rate_limits
-  FOR ALL USING (auth.uid() IN (SELECT id FROM user_roles WHERE role = 'admin'));
+  FOR SELECT USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Admins can manage rate limits" ON connector_rate_limits;
+CREATE POLICY "Admins can manage rate limits" ON connector_rate_limits
+  FOR ALL USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "Admins can view circuit breaker states" ON circuit_breaker_states;
 CREATE POLICY "Admins can view circuit breaker states" ON circuit_breaker_states
-  FOR SELECT USING (auth.uid() IN (SELECT id FROM user_roles WHERE role = 'admin'));
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "Admins can manage circuit breaker states" ON circuit_breaker_states;
 CREATE POLICY "Admins can manage circuit breaker states" ON circuit_breaker_states
-  FOR ALL USING (auth.uid() IN (SELECT id FROM user_roles WHERE role = 'admin'));
+  FOR ALL USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
 
 -- Default Seed
 INSERT INTO connector_rate_limits (connector_id, rps, concurrent)

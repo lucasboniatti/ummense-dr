@@ -14,6 +14,28 @@ CREATE TABLE IF NOT EXISTS automation_metrics (
   UNIQUE(user_id, hour_date)
 );
 
+-- Compatibility for older metric schema (Story 2.x/3.x)
+ALTER TABLE automation_metrics ADD COLUMN IF NOT EXISTS hour_date TIMESTAMP;
+ALTER TABLE automation_metrics ADD COLUMN IF NOT EXISTS success_count INT DEFAULT 0;
+ALTER TABLE automation_metrics ADD COLUMN IF NOT EXISTS failed_count INT DEFAULT 0;
+ALTER TABLE automation_metrics ADD COLUMN IF NOT EXISTS total_execution_time_ms BIGINT DEFAULT 0;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'automation_metrics'
+      AND column_name = 'metric_date'
+  ) THEN
+    EXECUTE '
+      UPDATE automation_metrics
+      SET hour_date = metric_date::timestamp
+      WHERE hour_date IS NULL
+    ';
+  END IF;
+END $$;
+
 -- Create automation_alerts table for threshold configuration
 CREATE TABLE IF NOT EXISTS automation_alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -46,27 +68,54 @@ CREATE TABLE IF NOT EXISTS automation_logs (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Compatibility for older automation_logs schema (execution_status/duration_ms)
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS webhook_id TEXT;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS execution_status TEXT;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS triggered_at TIMESTAMP DEFAULT NOW();
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS execution_time_ms INT;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS duration_ms INT;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS rule_config JSONB;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS conditions JSONB;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS actions JSONB;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS error_trace TEXT;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS retry_history JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE automation_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+UPDATE automation_logs
+SET
+  status = COALESCE(status, execution_status, 'pending'),
+  triggered_at = COALESCE(triggered_at, created_at, NOW()),
+  execution_time_ms = COALESCE(execution_time_ms, duration_ms, 0)
+WHERE status IS NULL
+   OR triggered_at IS NULL
+   OR execution_time_ms IS NULL;
+
 -- Create indexes for performance
-CREATE INDEX idx_automation_metrics_user_hour ON automation_metrics(user_id, hour_date DESC);
-CREATE INDEX idx_automation_alerts_user_rule ON automation_alerts(user_id, rule_id);
-CREATE INDEX idx_automation_logs_user_rule ON automation_logs(user_id, rule_id);
-CREATE INDEX idx_automation_logs_user_webhook ON automation_logs(user_id, webhook_id);
-CREATE INDEX idx_automation_logs_user_status ON automation_logs(user_id, status);
-CREATE INDEX idx_automation_logs_triggered_at ON automation_logs(triggered_at DESC);
-CREATE INDEX idx_automation_logs_search ON automation_logs USING gin(to_tsvector('english', error_message));
+CREATE INDEX IF NOT EXISTS idx_automation_metrics_user_hour ON automation_metrics(user_id, hour_date DESC);
+CREATE INDEX IF NOT EXISTS idx_automation_alerts_user_rule ON automation_alerts(user_id, rule_id);
+CREATE INDEX IF NOT EXISTS idx_automation_logs_user_rule ON automation_logs(user_id, rule_id);
+CREATE INDEX IF NOT EXISTS idx_automation_logs_user_webhook ON automation_logs(user_id, webhook_id);
+CREATE INDEX IF NOT EXISTS idx_automation_logs_user_status ON automation_logs(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_automation_logs_triggered_at ON automation_logs(triggered_at DESC);
+CREATE INDEX IF NOT EXISTS idx_automation_logs_search ON automation_logs USING gin(to_tsvector('english', error_message));
 
 -- Enable RLS on automation_metrics
 ALTER TABLE automation_metrics ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can only see their own metrics
+DROP POLICY IF EXISTS automation_metrics_select_own ON automation_metrics;
 CREATE POLICY automation_metrics_select_own ON automation_metrics
   FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS automation_metrics_insert_own ON automation_metrics;
 CREATE POLICY automation_metrics_insert_own ON automation_metrics
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS automation_metrics_update_own ON automation_metrics;
 CREATE POLICY automation_metrics_update_own ON automation_metrics
   FOR UPDATE
   USING (auth.uid() = user_id)
@@ -75,19 +124,23 @@ CREATE POLICY automation_metrics_update_own ON automation_metrics
 -- Enable RLS on automation_alerts
 ALTER TABLE automation_alerts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS automation_alerts_select_own ON automation_alerts;
 CREATE POLICY automation_alerts_select_own ON automation_alerts
   FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS automation_alerts_insert_own ON automation_alerts;
 CREATE POLICY automation_alerts_insert_own ON automation_alerts
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS automation_alerts_update_own ON automation_alerts;
 CREATE POLICY automation_alerts_update_own ON automation_alerts
   FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS automation_alerts_delete_own ON automation_alerts;
 CREATE POLICY automation_alerts_delete_own ON automation_alerts
   FOR DELETE
   USING (auth.uid() = user_id);
@@ -95,15 +148,18 @@ CREATE POLICY automation_alerts_delete_own ON automation_alerts
 -- Enable RLS on automation_logs
 ALTER TABLE automation_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS automation_logs_select_own ON automation_logs;
 CREATE POLICY automation_logs_select_own ON automation_logs
   FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS automation_logs_insert_own ON automation_logs;
 CREATE POLICY automation_logs_insert_own ON automation_logs
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Create function to refresh automation_metrics
+DROP FUNCTION IF EXISTS refresh_automation_metrics();
 CREATE OR REPLACE FUNCTION refresh_automation_metrics()
 RETURNS TABLE (user_id UUID, metrics_updated INT) AS $$
 DECLARE
@@ -150,6 +206,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create function to get dashboard metrics for current user
+DROP FUNCTION IF EXISTS get_dashboard_metrics(UUID);
 CREATE OR REPLACE FUNCTION get_dashboard_metrics(p_user_id UUID)
 RETURNS TABLE (
   rules_count BIGINT,
@@ -179,6 +236,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create function to get top failing rules
+DROP FUNCTION IF EXISTS get_top_failing_rules(UUID, INT);
 CREATE OR REPLACE FUNCTION get_top_failing_rules(p_user_id UUID, p_limit INT DEFAULT 10)
 RETURNS TABLE (
   rule_id TEXT,
@@ -207,6 +265,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create function to get 7-day time series
+DROP FUNCTION IF EXISTS get_time_series(UUID);
 CREATE OR REPLACE FUNCTION get_time_series(p_user_id UUID)
 RETURNS TABLE (
   date TEXT,

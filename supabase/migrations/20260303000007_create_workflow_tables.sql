@@ -118,23 +118,30 @@ ALTER TABLE workflow_step_executions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workflow_templates ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can only see workflows for their service
+DROP POLICY IF EXISTS workflow_definitions_service_policy ON workflow_definitions;
 CREATE POLICY workflow_definitions_service_policy ON workflow_definitions
   USING (
-    (SELECT service FROM automations WHERE automations.id = workflow_definitions.automation_id) = current_setting('app.current_service')
+    EXISTS (
+      SELECT 1 FROM automations
+      WHERE automations.id = workflow_definitions.automation_id
+        AND automations.user_id = auth.uid()
+    )
   );
 
+DROP POLICY IF EXISTS workflow_step_executions_service_policy ON workflow_step_executions;
 CREATE POLICY workflow_step_executions_service_policy ON workflow_step_executions
   USING (
-    (SELECT service FROM automations a
-     INNER JOIN automation_executions ae ON ae.automation_id = a.id
-     WHERE ae.id = workflow_step_executions.execution_id) = current_setting('app.current_service')
+    EXISTS (
+      SELECT 1 FROM automation_executions ae
+      WHERE ae.id = workflow_step_executions.execution_id
+        AND ae.user_id = auth.uid()
+    )
   );
 
+DROP POLICY IF EXISTS workflow_templates_service_policy ON workflow_templates;
 CREATE POLICY workflow_templates_service_policy ON workflow_templates
   USING (
-    -- Templates are created by a user for their service
-    -- This assumes users have a service context
-    true -- Adjust based on your multi-tenancy model
+    created_by = auth.uid() OR created_by IS NULL
   );
 
 -- Trigger: Update workflow_definitions.updated_at on change
@@ -146,6 +153,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_workflow_definitions_updated_at ON workflow_definitions;
 CREATE TRIGGER trigger_update_workflow_definitions_updated_at
 BEFORE UPDATE ON workflow_definitions
 FOR EACH ROW
@@ -160,6 +168,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_workflow_templates_updated_at ON workflow_templates;
 CREATE TRIGGER trigger_update_workflow_templates_updated_at
 BEFORE UPDATE ON workflow_templates
 FOR EACH ROW

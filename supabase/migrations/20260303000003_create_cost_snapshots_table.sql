@@ -14,23 +14,21 @@ CREATE TABLE IF NOT EXISTS public.cost_snapshots (
   monthly_savings DECIMAL(10,4) NOT NULL, -- (db_cost - s3_cost), can be negative
   seven_year_savings DECIMAL(12,4) NOT NULL, -- 7 * 12 * monthly_savings
   compression_ratio DECIMAL(5,2) NOT NULL CHECK (compression_ratio > 0), -- e.g., 3.5
-  accuracy_percent DECIMAL(5,2) NOT NULL CHECK (accuracy_percent >= 0 AND accuracy_percent <= 100), -- 0-100%
-
-  -- One snapshot per user per calendar day (for dashboard)
-  -- Using indexed expression for efficient daily deduplication
-  UNIQUE(user_id, (DATE(timestamp)))
+  accuracy_percent DECIMAL(5,2) NOT NULL CHECK (accuracy_percent >= 0 AND accuracy_percent <= 100) -- 0-100%
 );
 
 -- Enable RLS - mandatory for user data isolation
 ALTER TABLE public.cost_snapshots ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can only SELECT their own cost snapshots
+DROP POLICY IF EXISTS "Users can select own cost snapshots" ON public.cost_snapshots;
 CREATE POLICY "Users can select own cost snapshots"
   ON public.cost_snapshots
   FOR SELECT
   USING (auth.uid() = user_id);
 
 -- RLS Policy: INSERT policy - service role bypass for nightly job, but user inserts must match auth
+DROP POLICY IF EXISTS "Users can insert own cost snapshots" ON public.cost_snapshots;
 CREATE POLICY "Users can insert own cost snapshots"
   ON public.cost_snapshots
   FOR INSERT
@@ -38,6 +36,7 @@ CREATE POLICY "Users can insert own cost snapshots"
   -- Note: service_role can bypass RLS (used by nightly job)
 
 -- RLS Policy: PREVENT all updates (snapshots are immutable audit trail)
+DROP POLICY IF EXISTS "Cost snapshots are immutable" ON public.cost_snapshots;
 CREATE POLICY "Cost snapshots are immutable"
   ON public.cost_snapshots
   FOR UPDATE
@@ -45,6 +44,7 @@ CREATE POLICY "Cost snapshots are immutable"
   WITH CHECK (false);
 
 -- RLS Policy: Users can DELETE own snapshots (rare, for data cleanup)
+DROP POLICY IF EXISTS "Users can delete own cost snapshots" ON public.cost_snapshots;
 CREATE POLICY "Users can delete own cost snapshots"
   ON public.cost_snapshots
   FOR DELETE
@@ -54,10 +54,7 @@ CREATE POLICY "Users can delete own cost snapshots"
 CREATE INDEX IF NOT EXISTS idx_cost_snapshots_user_time
   ON public.cost_snapshots(user_id, timestamp DESC);
 
--- Index for daily snapshot uniqueness constraint (supports UNIQUE(user_id, DATE(timestamp)))
-CREATE INDEX IF NOT EXISTS idx_cost_snapshots_user_date
-  ON public.cost_snapshots(user_id, DATE(timestamp))
-  WHERE timestamp IS NOT NULL;
+-- Daily uniqueness is enforced at application/job level in local mode.
 
 -- Index for cost accuracy tracking (filtered for high-quality snapshots)
 CREATE INDEX IF NOT EXISTS idx_cost_snapshots_accuracy

@@ -23,60 +23,52 @@ CREATE TABLE IF NOT EXISTS webhook_delivery_audit_logs (
 );
 
 -- Create indexes for common queries
-CREATE INDEX idx_webhook_audit_logs_webhook_delivery_id
+CREATE INDEX IF NOT EXISTS idx_webhook_audit_logs_webhook_delivery_id
   ON webhook_delivery_audit_logs(webhook_delivery_id);
 
-CREATE INDEX idx_webhook_audit_logs_automation_id
+CREATE INDEX IF NOT EXISTS idx_webhook_audit_logs_automation_id
   ON webhook_delivery_audit_logs(automation_id);
 
-CREATE INDEX idx_webhook_audit_logs_created_at
+CREATE INDEX IF NOT EXISTS idx_webhook_audit_logs_created_at
   ON webhook_delivery_audit_logs(created_at DESC);
 
-CREATE INDEX idx_webhook_audit_logs_status
+CREATE INDEX IF NOT EXISTS idx_webhook_audit_logs_status
   ON webhook_delivery_audit_logs(status);
 
-CREATE INDEX idx_webhook_audit_logs_attempt
+CREATE INDEX IF NOT EXISTS idx_webhook_audit_logs_attempt
   ON webhook_delivery_audit_logs(automation_id, created_at DESC, attempt_number);
 
 -- Enable RLS on audit logs
 ALTER TABLE webhook_delivery_audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can only view audit logs for their automations
+DROP POLICY IF EXISTS "Users can view audit logs for their automations" ON webhook_delivery_audit_logs;
 CREATE POLICY "Users can view audit logs for their automations"
   ON webhook_delivery_audit_logs FOR SELECT
   USING (
     automation_id IN (
       SELECT id FROM automations
-      WHERE workspace_id = (
-        SELECT workspace_id FROM user_workspaces
-        WHERE user_id = auth.uid()
-        LIMIT 1
-      )
+      WHERE user_id = auth.uid()
     )
   );
 
 -- RLS Policy: Only authenticated users can insert (backend only)
+DROP POLICY IF EXISTS "Authenticated users can insert audit logs" ON webhook_delivery_audit_logs;
 CREATE POLICY "Authenticated users can insert audit logs"
   ON webhook_delivery_audit_logs FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);
 
 -- RLS Policy: Audit logs are immutable - no updates
+DROP POLICY IF EXISTS "Audit logs cannot be updated" ON webhook_delivery_audit_logs;
 CREATE POLICY "Audit logs cannot be updated"
   ON webhook_delivery_audit_logs FOR UPDATE
   USING (false);
 
 -- RLS Policy: Audit logs can only be deleted by admin/system
+DROP POLICY IF EXISTS "Only admins can delete audit logs" ON webhook_delivery_audit_logs;
 CREATE POLICY "Only admins can delete audit logs"
   ON webhook_delivery_audit_logs FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM user_workspaces uw
-      JOIN workspace_members wm ON uw.workspace_id = wm.workspace_id
-      WHERE uw.user_id = auth.uid()
-        AND wm.user_id = auth.uid()
-        AND wm.role = 'admin'
-    )
-  );
+  USING (false);
 
 -- Grant permissions
 GRANT SELECT, INSERT ON webhook_delivery_audit_logs TO authenticated;

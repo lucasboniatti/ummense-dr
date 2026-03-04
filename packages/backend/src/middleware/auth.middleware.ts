@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { getRequiredEnvVar } from '../config/env';
 
 export interface AuthRequest extends Request {
   user?: { id: number; email: string };
@@ -13,7 +14,7 @@ export function authMiddleware(
   try {
     // Try to get token from cookie first, then from Authorization header
     const token =
-      req.cookies.token ||
+      req.cookies?.token ||
       req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
@@ -21,10 +22,10 @@ export function authMiddleware(
       return;
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'your-secret-key'
-    ) as { id: number; email: string };
+    const decoded = jwt.verify(token, getRequiredEnvVar('JWT_SECRET')) as {
+      id: number;
+      email: string;
+    };
 
     req.user = decoded;
     next();

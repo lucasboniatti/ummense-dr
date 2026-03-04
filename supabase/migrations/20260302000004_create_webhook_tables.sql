@@ -22,6 +22,18 @@ CREATE TABLE IF NOT EXISTS webhook_deliveries (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+-- Compatibility for older webhook_deliveries schema
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS automation_id UUID REFERENCES automations(id) ON DELETE CASCADE;
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS execution_id UUID REFERENCES automation_executions(id) ON DELETE SET NULL;
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS webhook_id VARCHAR(2048);
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS attempt_number INT DEFAULT 1;
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS error_context JSONB;
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS payload JSONB;
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS signature VARCHAR(255);
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS response_body TEXT;
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS duration_ms INT;
+ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
 CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status_next_retry
   ON webhook_deliveries(status, next_retry_at)
   WHERE status = 'pending';
@@ -66,6 +78,7 @@ CREATE INDEX IF NOT EXISTS idx_dlq_items_created_at
 -- webhook_deliveries RLS
 ALTER TABLE webhook_deliveries ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS webhook_deliveries_user_read ON webhook_deliveries;
 CREATE POLICY webhook_deliveries_user_read
   ON webhook_deliveries FOR SELECT
   USING (
@@ -76,6 +89,7 @@ CREATE POLICY webhook_deliveries_user_read
     )
   );
 
+DROP POLICY IF EXISTS webhook_deliveries_user_insert ON webhook_deliveries;
 CREATE POLICY webhook_deliveries_user_insert
   ON webhook_deliveries FOR INSERT
   WITH CHECK (
@@ -86,6 +100,7 @@ CREATE POLICY webhook_deliveries_user_insert
     )
   );
 
+DROP POLICY IF EXISTS webhook_deliveries_user_update ON webhook_deliveries;
 CREATE POLICY webhook_deliveries_user_update
   ON webhook_deliveries FOR UPDATE
   USING (
@@ -99,6 +114,7 @@ CREATE POLICY webhook_deliveries_user_update
 -- dlq_items RLS
 ALTER TABLE dlq_items ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS dlq_items_user_read ON dlq_items;
 CREATE POLICY dlq_items_user_read
   ON dlq_items FOR SELECT
   USING (
@@ -109,6 +125,7 @@ CREATE POLICY dlq_items_user_read
     )
   );
 
+DROP POLICY IF EXISTS dlq_items_user_insert ON dlq_items;
 CREATE POLICY dlq_items_user_insert
   ON dlq_items FOR INSERT
   WITH CHECK (
@@ -119,6 +136,7 @@ CREATE POLICY dlq_items_user_insert
     )
   );
 
+DROP POLICY IF EXISTS dlq_items_user_update ON dlq_items;
 CREATE POLICY dlq_items_user_update
   ON dlq_items FOR UPDATE
   USING (

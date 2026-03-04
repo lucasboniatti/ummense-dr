@@ -14,6 +14,15 @@ CREATE TABLE IF NOT EXISTS webhooks (
   CONSTRAINT unique_user_webhook UNIQUE (user_id, url, deleted_at)
 );
 
+-- Compatibility for repositories that already had an older webhooks table
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT true;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS api_key_hash VARCHAR(255);
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS api_key_preview VARCHAR(10);
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
+
 -- Create webhook_deliveries table
 CREATE TABLE IF NOT EXISTS webhook_deliveries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -56,22 +65,22 @@ CREATE TABLE IF NOT EXISTS analytics_events (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_webhooks_user_id ON webhooks(user_id);
-CREATE INDEX idx_webhooks_created_at ON webhooks(created_at DESC);
-CREATE INDEX idx_webhooks_user_deleted ON webhooks(user_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_webhooks_user_id ON webhooks(user_id);
+CREATE INDEX IF NOT EXISTS idx_webhooks_created_at ON webhooks(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_webhooks_user_deleted ON webhooks(user_id, deleted_at);
 
-CREATE INDEX idx_webhook_deliveries_webhook_id ON webhook_deliveries(webhook_id);
-CREATE INDEX idx_webhook_deliveries_status ON webhook_deliveries(webhook_id, status);
-CREATE INDEX idx_webhook_deliveries_created_at ON webhook_deliveries(webhook_id, created_at DESC);
-CREATE INDEX idx_webhook_deliveries_webhook_date ON webhook_deliveries(webhook_id, created_at DESC, status);
+CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook_id ON webhook_deliveries(webhook_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status ON webhook_deliveries(webhook_id, status);
+CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_created_at ON webhook_deliveries(webhook_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook_date ON webhook_deliveries(webhook_id, created_at DESC, status);
 
-CREATE INDEX idx_webhook_events_webhook_id ON webhook_events(webhook_id);
-CREATE INDEX idx_webhook_events_created_at ON webhook_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_webhook_events_webhook_id ON webhook_events(webhook_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_events_created_at ON webhook_events(created_at DESC);
 
-CREATE INDEX idx_analytics_events_user_id ON analytics_events(user_id);
-CREATE INDEX idx_analytics_events_webhook_id ON analytics_events(webhook_id);
-CREATE INDEX idx_analytics_events_created_at ON analytics_events(created_at DESC);
-CREATE INDEX idx_analytics_events_name ON analytics_events(event_name);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_user_id ON analytics_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_webhook_id ON analytics_events(webhook_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_created_at ON analytics_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_name ON analytics_events(event_name);
 
 -- Enable RLS (Row Level Security)
 ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
@@ -80,19 +89,24 @@ ALTER TABLE webhook_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for webhooks
+DROP POLICY IF EXISTS "Users can view their own webhooks" ON webhooks;
 CREATE POLICY "Users can view their own webhooks" ON webhooks
   FOR SELECT USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can create webhooks" ON webhooks;
 CREATE POLICY "Users can create webhooks" ON webhooks
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can update their own webhooks" ON webhooks;
 CREATE POLICY "Users can update their own webhooks" ON webhooks
   FOR UPDATE USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can delete their own webhooks" ON webhooks;
 CREATE POLICY "Users can delete their own webhooks" ON webhooks
   FOR DELETE USING (user_id = auth.uid());
 
 -- RLS Policies for webhook_deliveries
+DROP POLICY IF EXISTS "Users can view deliveries of their webhooks" ON webhook_deliveries;
 CREATE POLICY "Users can view deliveries of their webhooks" ON webhook_deliveries
   FOR SELECT USING (
     webhook_id IN (
@@ -101,6 +115,7 @@ CREATE POLICY "Users can view deliveries of their webhooks" ON webhook_deliverie
   );
 
 -- RLS Policies for webhook_events
+DROP POLICY IF EXISTS "Users can view events of their webhooks" ON webhook_events;
 CREATE POLICY "Users can view events of their webhooks" ON webhook_events
   FOR SELECT USING (
     webhook_id IN (
@@ -108,6 +123,7 @@ CREATE POLICY "Users can view events of their webhooks" ON webhook_events
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert events for their webhooks" ON webhook_events;
 CREATE POLICY "Users can insert events for their webhooks" ON webhook_events
   FOR INSERT WITH CHECK (
     performed_by = auth.uid() AND
@@ -117,9 +133,11 @@ CREATE POLICY "Users can insert events for their webhooks" ON webhook_events
   );
 
 -- RLS Policies for analytics_events
+DROP POLICY IF EXISTS "Users can view their own analytics" ON analytics_events;
 CREATE POLICY "Users can view their own analytics" ON analytics_events
   FOR SELECT USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can insert analytics events" ON analytics_events;
 CREATE POLICY "Users can insert analytics events" ON analytics_events
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
@@ -133,6 +151,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS webhook_delivery_update_timestamp ON webhook_deliveries;
 CREATE TRIGGER webhook_delivery_update_timestamp
 AFTER INSERT OR UPDATE ON webhook_deliveries
 FOR EACH ROW
@@ -151,6 +170,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS webhook_api_key_hash ON webhooks;
 CREATE TRIGGER webhook_api_key_hash
 BEFORE INSERT ON webhooks
 FOR EACH ROW

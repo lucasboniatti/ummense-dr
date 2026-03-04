@@ -1,0 +1,29 @@
+{
+  "name": "@ummense/frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p ${PORT:-3000}",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3000}",
+    "lint": "node -e \"console.log('Frontend lint scaffolded in Story 4.1. Full rules in Story 4.6.')\"",
+    "typecheck": "node -e \"console.log('Frontend typecheck scaffolded in Story 4.1. Full checks in Story 4.6.')\"",
+    "test": "node -e \"console.log('Frontend test scaffolded in Story 4.1. Expanded suite in Story 4.6.')\""
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-react": "^0.5.0",
+    "axios": "^1.11.0",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.542.0",
+    "next": "^15.5.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "recharts": "^3.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.2"
+  }
+}

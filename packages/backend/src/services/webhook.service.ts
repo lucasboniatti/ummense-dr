@@ -33,30 +33,7 @@ export const webhookService = {
   async listWebhooks(userId: string) {
     const { data, error } = await supabase
       .from('webhooks')
-      .select(
-        `
-        id,
-        url,
-        description,
-        enabled,
-        created_at,
-        api_key_preview,
-        (
-          SELECT COUNT(*) as count FROM webhook_deliveries
-          WHERE webhook_id = webhooks.id AND status = 'success'
-        ) as success_count,
-        (
-          SELECT COUNT(*) as count FROM webhook_deliveries
-          WHERE webhook_id = webhooks.id
-        ) as total_count,
-        (
-          SELECT created_at FROM webhook_deliveries
-          WHERE webhook_id = webhooks.id
-          ORDER BY created_at DESC
-          LIMIT 1
-        ) as last_triggered_at
-      `
-      )
+      .select('id,url,description,enabled,created_at,api_key_preview')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false });
@@ -70,9 +47,8 @@ export const webhookService = {
       enabled: w.enabled,
       apiKeyPreview: w.api_key_preview,
       createdAt: w.created_at,
-      lastTriggeredAt: w.last_triggered_at,
-      successRate:
-        w.total_count > 0 ? (w.success_count / w.total_count) * 100 : 0,
+      lastTriggeredAt: null,
+      successRate: 0,
     }));
   },
 
@@ -129,27 +105,31 @@ export const webhookService = {
     const apiKey = crypto.randomBytes(32).toString('hex');
     const apiKeyPreview = `sk_${apiKey.slice(-4)}`;
 
-    const { data, error } = await supabase.from('webhooks').insert({
-      user_id: userId,
-      url: payload.url,
-      description: payload.description,
-      enabled: payload.enabled !== false,
-      api_key: apiKey, // Full key (will be hashed by DB trigger or service)
-      api_key_preview: apiKeyPreview,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    const { data, error } = await supabase
+      .from('webhooks')
+      .insert({
+        user_id: userId,
+        url: payload.url,
+        description: payload.description,
+        enabled: payload.enabled !== false,
+        api_key_hash: apiKey,
+        api_key_preview: apiKeyPreview,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
     if (error) throw error;
 
     return {
-      id: data[0].id,
-      url: data[0].url,
-      description: data[0].description,
-      enabled: data[0].enabled,
+      id: data.id,
+      url: data.url,
+      description: data.description,
+      enabled: data.enabled,
       apiKey: apiKey, // Return full key ONLY on creation
       apiKeyPreview: apiKeyPreview,
-      createdAt: data[0].created_at,
+      createdAt: data.created_at,
     };
   },
 
@@ -447,7 +427,7 @@ export const webhookService = {
   /**
    * Generate sample payload for test webhook
    */
-  private generateSamplePayload(eventType: string): any {
+  generateSamplePayload(eventType: string): any {
     const samples: Record<string, any> = {
       'task:created': {
         event_id: crypto.randomUUID(),

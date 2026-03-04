@@ -17,6 +17,14 @@ ON execution_histories USING GIN(search_vector);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_search
 ON audit_logs USING GIN(search_vector);
 
+-- Helper function for JSON to text conversion
+CREATE OR REPLACE FUNCTION jsonb_to_text(data JSONB)
+RETURNS TEXT AS $$
+  SELECT string_agg(value, ' ')
+  FROM jsonb_each_text(data)
+  WHERE value IS NOT NULL AND value != '';
+$$ LANGUAGE SQL IMMUTABLE;
+
 -- Function to update execution_histories search_vector on insert/update
 -- This function will be called by triggers
 CREATE OR REPLACE FUNCTION update_execution_histories_search_vector()
@@ -28,7 +36,8 @@ BEGIN
                           ''
                         )), 'B') ||
                         setweight(to_tsvector('english', COALESCE(
-                          (SELECT jsonb_extract_path_text(NEW.trigger_data, 'description'), '')
+                          jsonb_extract_path_text(NEW.trigger_data, 'description'),
+                          ''
                         )), 'C');
   RETURN NEW;
 END;
@@ -77,11 +86,3 @@ SET search_vector = setweight(to_tsvector('english', COALESCE(action, '')), 'A')
                       jsonb_to_text(old_values || new_values), ''
                     )), 'B')
 WHERE search_vector IS NULL;
-
--- Helper function for JSON to text conversion (if not exists)
-CREATE OR REPLACE FUNCTION jsonb_to_text(data JSONB)
-RETURNS TEXT AS $$
-  SELECT string_agg(value, ' ')
-  FROM jsonb_each_text(data)
-  WHERE value IS NOT NULL AND value != '';
-$$ LANGUAGE SQL IMMUTABLE;
