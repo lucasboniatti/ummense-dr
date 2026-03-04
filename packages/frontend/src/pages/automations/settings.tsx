@@ -80,48 +80,48 @@ export default function AutomationSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600 mt-4">Carregando configurações...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          <p className="text-neutral-600 mt-4">Carregando configurações...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Configurações de Automação</h1>
-          <p className="text-gray-600 mt-2">Gerencie as políticas de retenção do histórico</p>
+          <h1 className="text-3xl font-bold text-neutral-900">Configurações de Automação</h1>
+          <p className="text-neutral-600 mt-2">Gerencie as políticas de retenção do histórico</p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800">{error}</p>
+          <div className="bg-error-50 border border-error-200 rounded-lg p-4 mb-6">
+            <p className="text-error-800">{error}</p>
           </div>
         )}
 
         {/* Success Alert */}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-800">{success}</p>
+          <div className="bg-success-50 border border-success-200 rounded-lg p-4 mb-6">
+            <p className="text-success-800">{success}</p>
           </div>
         )}
 
         {/* Retention Policy Card */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          <h2 className="text-xl font-semibold text-neutral-900 mb-6">
             Política de Retenção de Histórico
           </h2>
 
           <div className="space-y-6">
             {/* Retention Days */}
             <div>
-              <label htmlFor="retention" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="retention" className="block text-sm font-medium text-neutral-700 mb-2">
                 Dias de Retenção
               </label>
               <div className="flex items-center gap-4">
@@ -137,11 +137,11 @@ export default function AutomationSettingsPage() {
                   }
                   className="flex-1"
                 />
-                <div className="text-2xl font-semibold text-blue-600 w-20 text-right">
+                <div className="text-2xl font-semibold text-primary-600 w-20 text-right">
                   {formData.retentionDays}
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-neutral-500 mt-2">
                 {Math.round(formData.retentionDays / 30)} meses • Mínimo: 90 dias | Máximo: 2190 dias (6 anos)
               </p>
             </div>
@@ -155,13 +155,13 @@ export default function AutomationSettingsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, archiveEnabled: e.target.checked })
                   }
-                  className="w-4 h-4 rounded border-gray-300"
+                  className="w-4 h-4 rounded border-neutral-300"
                 />
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-neutral-700">
                   Arquivar dados antigos em S3 antes de deletar
                 </span>
               </label>
-              <p className="text-sm text-gray-500 mt-2 ml-7">
+              <p className="text-sm text-neutral-500 mt-2 ml-7">
                 Os dados serão exportados para S3 antes de serem deletados, permitindo análise posterior
               </p>
             </div>
@@ -171,7 +171,7 @@ export default function AutomationSettingsPage() {
               <div>
                 <label
                   htmlFor="bucket"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-neutral-700 mb-2"
                 >
                   Bucket S3
                 </label>
@@ -183,14 +183,14 @@ export default function AutomationSettingsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, archiveBucket: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
                 />
               </div>
             )}
 
             {/* Summary */}
-            <div className="border-t pt-6 bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-blue-900">
+            <div className="border-t pt-6 bg-primary-50 rounded-lg p-4">
+              <p className="text-sm text-primary-900">
                 <strong>Resumo:</strong> Os registros de execução com mais de{' '}
                 <strong>{formData.retentionDays} dias</strong> serão deletados automaticamente
                 {formData.archiveEnabled && ' após serem arquivados em S3'}. Este processo ocorre
@@ -203,7 +203,7 @@ export default function AutomationSettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Salvando...' : 'Salvar Configurações'}
               </button>
@@ -212,9 +212,9 @@ export default function AutomationSettingsPage() {
         </div>
 
         {/* Info Box */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-2">ℹ️ Sobre Política de Retenção</h3>
-          <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+        <div className="mt-8 bg-primary-50 border border-primary-200 rounded-lg p-4">
+          <h3 className="font-semibold text-primary-900 mb-2">ℹ️ Sobre Política de Retenção</h3>
+          <ul className="text-sm text-primary-800 space-y-1 list-disc list-inside">
             <li>Os logs de auditoria NÃO são deletados (imutáveis para compliance)</li>
             <li>Apenas o histórico de execução é afetado pela política de retenção</li>
             <li>A limpeza automática ocorre diariamente às 2 AM UTC</li>

@@ -50,11 +50,11 @@ export default function WebhookDetailPage() {
   if (error || !webhook) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
           {error || 'Webhook not found'}
         </div>
         <Link href="/dashboard/webhooks">
-          <a className="text-blue-600 hover:underline mt-4 inline-flex items-center gap-2">
+          <a className="text-primary-600 hover:underline mt-4 inline-flex items-center gap-2">
             <ArrowLeft size={18} />
             Back to Webhooks
           </a>
@@ -68,42 +68,42 @@ export default function WebhookDetailPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/webhooks">
-          <a className="text-blue-600 hover:text-blue-700">
+          <a className="text-primary-600 hover:text-primary-700">
             <ArrowLeft size={24} />
           </a>
         </Link>
         <div>
           <h1 className="text-3xl font-bold">{webhook.url}</h1>
-          <p className="text-gray-600 mt-1">{webhook.description || 'No description'}</p>
+          <p className="text-neutral-600 mt-1">{webhook.description || 'No description'}</p>
         </div>
       </div>
 
       {/* Webhook Details Card */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-neutral-200 p-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="text-sm font-semibold text-gray-700">URL</label>
-            <p className="mt-1 text-gray-900">{webhook.url}</p>
+            <label className="text-sm font-semibold text-neutral-700">URL</label>
+            <p className="mt-1 text-neutral-900">{webhook.url}</p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-gray-700">API Key (Last 4 chars)</label>
-            <p className="mt-1 text-gray-900 font-mono">{webhook.apiKeyPreview}</p>
+            <label className="text-sm font-semibold text-neutral-700">API Key (Last 4 chars)</label>
+            <p className="mt-1 text-neutral-900 font-mono">{webhook.apiKeyPreview}</p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-gray-700">Status</label>
+            <label className="text-sm font-semibold text-neutral-700">Status</label>
             <p className="mt-1">
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 webhook.enabled
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-700'
+                  ? 'bg-success-100 text-success-700'
+                  : 'bg-neutral-100 text-neutral-700'
               }`}>
                 {webhook.enabled ? 'Enabled' : 'Disabled'}
               </span>
             </p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-gray-700">Created</label>
-            <p className="mt-1 text-gray-900">
+            <label className="text-sm font-semibold text-neutral-700">Created</label>
+            <p className="mt-1 text-neutral-900">
               {new Date(webhook.createdAt).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -116,7 +116,7 @@ export default function WebhookDetailPage() {
         {/* Test Button */}
         <button
           onClick={() => setShowTestModal(true)}
-          className="mt-6 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          className="mt-6 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center gap-2"
         >
           <RefreshCw size={18} />
           Test Webhook

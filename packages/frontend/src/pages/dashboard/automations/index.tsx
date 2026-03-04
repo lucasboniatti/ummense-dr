@@ -47,18 +47,18 @@ export default function AutomationDashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Automation Dashboard</h1>
-        <p className="text-gray-600 mt-1">Monitor rule performance, execution metrics, and logs</p>
+        <p className="text-neutral-600 mt-1">Monitor rule performance, execution metrics, and logs</p>
       </div>
 
       {/* Error */}
-      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
+      {error && <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded">{error}</div>}
 
       {/* KPI Cards */}
       {metrics && <KPICards metrics={metrics} />}
 
       {/* Time Series Chart */}
       {timeSeries.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-neutral-200 p-6">
           <h2 className="text-xl font-bold mb-4">7-Day Execution Breakdown</h2>
           <TimeSeriesChart data={timeSeries} />
         </div>
@@ -66,7 +66,7 @@ export default function AutomationDashboardPage() {
 
       {/* Top Failing Rules */}
       {topRules.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-neutral-200 p-6">
           <h2 className="text-xl font-bold mb-4">Top Failing Rules</h2>
           <TopFailingRules rules={topRules} />
         </div>
@@ -74,7 +74,7 @@ export default function AutomationDashboardPage() {
 
       {/* Recent Executions */}
       {recentExecs.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-neutral-200 p-6">
           <h2 className="text-xl font-bold mb-4">Recent Executions</h2>
           <RecentExecutions executions={recentExecs} />
         </div>

@@ -99,12 +99,12 @@ export default function ExecutionHistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Histórico de Execuções</h1>
-          <p className="text-gray-600 mt-2">Veja o histórico de todas as suas automações</p>
+          <h1 className="text-3xl font-bold text-neutral-900">Histórico de Execuções</h1>
+          <p className="text-neutral-600 mt-2">Veja o histórico de todas as suas automações</p>
         </div>
 
         {/* Filters */}
@@ -112,7 +112,7 @@ export default function ExecutionHistoryPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             {/* Date Range Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Período
               </label>
               <select
@@ -120,7 +120,7 @@ export default function ExecutionHistoryPage() {
                 onChange={(e) =>
                   setFilters({ ...filters, dateRange: e.target.value, offset: 0 })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
               >
                 <option value="24h">Últimas 24h</option>
                 <option value="7d">Últimos 7 dias</option>
@@ -130,7 +130,7 @@ export default function ExecutionHistoryPage() {
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Status
               </label>
               <select
@@ -138,7 +138,7 @@ export default function ExecutionHistoryPage() {
                 onChange={(e) =>
                   setFilters({ ...filters, status: e.target.value, offset: 0 })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
               >
                 <option value="">Todos</option>
                 <option value="success">Sucesso</option>
@@ -149,7 +149,7 @@ export default function ExecutionHistoryPage() {
 
             {/* Search */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Buscar
               </label>
               <input
@@ -159,7 +159,7 @@ export default function ExecutionHistoryPage() {
                 onChange={(e) =>
                   setFilters({ ...filters, searchTerm: e.target.value, offset: 0 })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
               />
             </div>
           </div>
@@ -168,13 +168,13 @@ export default function ExecutionHistoryPage() {
           <div className="flex gap-2">
             <button
               onClick={handleExportCSV}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+              className="px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700"
             >
               Exportar CSV
             </button>
             <button
               onClick={handleExportJSON}
-              className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
+              className="px-4 py-2 bg-success-600 text-white text-sm rounded-md hover:bg-success-700"
             >
               Exportar JSON
             </button>
@@ -183,16 +183,16 @@ export default function ExecutionHistoryPage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800">{error}</p>
+          <div className="bg-error-50 border border-error-200 rounded-lg p-4 mb-6">
+            <p className="text-error-800">{error}</p>
           </div>
         )}
 
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="text-gray-600 mt-4">Carregando histórico...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <p className="text-neutral-600 mt-4">Carregando histórico...</p>
           </div>
         )}
 
@@ -215,7 +215,7 @@ export default function ExecutionHistoryPage() {
         {/* Empty State */}
         {!loading && executions.length === 0 && (
           <div className="text-center py-12 bg-white rounded-lg">
-            <p className="text-gray-500">Nenhuma execução encontrada</p>
+            <p className="text-neutral-500">Nenhuma execução encontrada</p>
           </div>
         )}
       </div>

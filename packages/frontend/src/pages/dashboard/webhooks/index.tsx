@@ -71,11 +71,11 @@ export default function WebhooksPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Webhooks</h1>
-          <p className="text-gray-600 mt-1">Manage your webhook endpoints and delivery history</p>
+          <p className="text-neutral-600 mt-1">Manage your webhook endpoints and delivery history</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+          className="bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-700"
         >
           <Plus size={20} />
           New Webhook
@@ -84,45 +84,45 @@ export default function WebhooksPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
 
       {/* Webhooks Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
         {loading ? (
           <div className="text-center py-8">
             <p>Loading webhooks...</p>
           </div>
         ) : webhooks.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">No webhooks yet. Create one to get started.</p>
+            <p className="text-neutral-600">No webhooks yet. Create one to get started.</p>
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">URL</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Success Rate</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Last Triggered</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">URL</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Status</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Success Rate</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Last Triggered</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Actions</th>
               </tr>
             </thead>
             <tbody>
               {webhooks.map((webhook) => (
-                <tr key={webhook.id} className="border-b border-gray-200 hover:bg-gray-50">
+                <tr key={webhook.id} className="border-b border-neutral-200 hover:bg-neutral-50">
                   <td className="px-6 py-4">
                     <Link href={`/dashboard/webhooks/${webhook.id}`}>
-                      <a className="text-blue-600 hover:underline font-medium">{webhook.url}</a>
+                      <a className="text-primary-600 hover:underline font-medium">{webhook.url}</a>
                     </Link>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                       webhook.enabled
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-700'
+                        ? 'bg-success-100 text-success-700'
+                        : 'bg-neutral-100 text-neutral-700'
                     }`}>
                       {webhook.enabled ? 'Enabled' : 'Disabled'}
                     </span>
@@ -138,19 +138,19 @@ export default function WebhooksPage() {
                       <span className="text-sm font-semibold text-neutral-700 min-w-12">{webhook.successRate.toFixed(1)}%</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-4 text-sm text-neutral-600">
                     {webhook.lastTriggeredAt ? formatDate(webhook.lastTriggeredAt) : 'Never'}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <Link href={`/dashboard/webhooks/${webhook.id}`}>
-                        <a className="text-gray-600 hover:text-gray-900">
+                        <a className="text-neutral-600 hover:text-neutral-900">
                           <Edit2 size={18} />
                         </a>
                       </Link>
                       <button
                         onClick={() => handleDelete(webhook.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-error-600 hover:text-error-900"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -168,10 +168,10 @@ export default function WebhooksPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Create Webhook</h2>
-            <p className="text-gray-600 text-center py-8">Webhook creation form will be implemented in WebhookForm component</p>
+            <p className="text-neutral-600 text-center py-8">Webhook creation form will be implemented in WebhookForm component</p>
             <button
               onClick={() => setShowCreateModal(false)}
-              className="mt-4 w-full bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+              className="mt-4 w-full bg-neutral-200 text-neutral-800 px-4 py-2 rounded-lg hover:bg-neutral-300"
             >
               Close
             </button>

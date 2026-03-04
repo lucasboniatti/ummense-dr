@@ -40,10 +40,10 @@ export default function ExecutionDetailPage() {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold">Execution Details</h1>
-        <p className="text-gray-600 mt-1">Rule execution trace, conditions, actions, and error details</p>
+        <p className="text-neutral-600 mt-1">Rule execution trace, conditions, actions, and error details</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
+      {error && <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded">{error}</div>}
 
       {detail && <ExecutionDetailModal execution={detail} onClose={() => router.back()} />}
     </div>

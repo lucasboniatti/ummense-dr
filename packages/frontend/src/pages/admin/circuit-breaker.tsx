@@ -39,29 +39,29 @@ const CircuitBreakerPanel: React.FC = () => {
     if (loading) return <div>Loading...</div>;
 
     const getStatusColor = (state: string) => {
-        if (state === 'healthy') return 'bg-green-100 text-green-800 border-green-200';
-        if (state === 'degraded') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-        return 'bg-red-100 text-red-800 border-red-200';
+        if (state === 'healthy') return 'bg-success-100 text-success-800 border-success-200';
+        if (state === 'degraded') return 'bg-warning-100 text-warning-800 border-warning-200';
+        return 'bg-error-100 text-error-800 border-error-200';
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-6 max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">Circuit Breaker States</h2>
+        <div className="bg-white p-6 rounded-lg shadow-md border border-neutral-200 mt-6 max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-6 text-neutral-800 border-b pb-2">Circuit Breaker States</h2>
 
             <div className="space-y-6">
                 {Object.entries(connectors).map(([connectorId, state]) => (
-                    <div key={connectorId} className="flex flex-col md:flex-row md:items-center justify-between bg-gray-50 p-4 rounded border">
+                    <div key={connectorId} className="flex flex-col md:flex-row md:items-center justify-between bg-neutral-50 p-4 rounded border">
                         <div>
-                            <h4 className="font-semibold text-lg text-gray-800 capitalize flex items-center gap-2">
+                            <h4 className="font-semibold text-lg text-neutral-800 capitalize flex items-center gap-2">
                                 {connectorId.replace('_', ' ')}
                                 <span className={`text-xs px-2 py-0.5 rounded border font-semibold ${getStatusColor(state.state)}`}>
                                     {state.state.toUpperCase()}
                                 </span>
                             </h4>
-                            <div className="text-sm text-gray-500 mt-2 space-y-1">
-                                <p><span className="font-semibold text-gray-600">Failures:</span> {state.failureCount}</p>
-                                {state.lastFailureAt && <p><span className="font-semibold text-gray-600">Last Failure:</span> {new Date(state.lastFailureAt).toLocaleString()}</p>}
-                                {state.nextRetryAt && state.state === 'offline' && <p><span className="font-semibold text-gray-600">Retry After:</span> {new Date(state.nextRetryAt).toLocaleString()}</p>}
+                            <div className="text-sm text-neutral-500 mt-2 space-y-1">
+                                <p><span className="font-semibold text-neutral-600">Failures:</span> {state.failureCount}</p>
+                                {state.lastFailureAt && <p><span className="font-semibold text-neutral-600">Last Failure:</span> {new Date(state.lastFailureAt).toLocaleString()}</p>}
+                                {state.nextRetryAt && state.state === 'offline' && <p><span className="font-semibold text-neutral-600">Retry After:</span> {new Date(state.nextRetryAt).toLocaleString()}</p>}
                             </div>
                         </div>
 
