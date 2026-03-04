@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { FormInput } from './composite/FormField';
+import { Button } from './ui/Button';
 
 interface LoginFormProps {
   onSuccess?: (token: string) => void;
@@ -43,46 +45,41 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Log In</h2>
+    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-6">
+      <h2 className="text-2xl font-bold">Log In</h2>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Email</label>
-        <input
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded"
-          placeholder="your@email.com"
-          required
-        />
-      </div>
+      <FormInput
+        type="email"
+        label="Email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="your@email.com"
+        required
+      />
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded"
-          placeholder="Your password"
-          required
-        />
-      </div>
+      <FormInput
+        type="password"
+        label="Password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        placeholder="Your password"
+        required
+      />
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="p-3 bg-error-100 border border-error-400 text-error-700 rounded-md text-sm">
           {error}
         </div>
       )}
 
-      <button
+      <Button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+        className="w-full"
+        variant="primary"
       >
         {loading ? 'Loading...' : 'Log In'}
-      </button>
+      </Button>
     </form>
   );
 }
