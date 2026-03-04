@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from './ui/Button';
 
 interface Tag {
   id: number;
@@ -26,8 +27,8 @@ export function TagManager({ tags, onAddTag, onDeleteTag }: TagManagerProps) {
   };
 
   return (
-    <div className="p-4 bg-gray-50 rounded-lg">
-      <h4 className="font-semibold mb-3">Tag Manager</h4>
+    <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+      <h4 className="font-semibold mb-3 text-neutral-900">Tag Manager</h4>
 
       <form onSubmit={handleSubmit} className="mb-4 space-y-2">
         <input
@@ -35,7 +36,7 @@ export function TagManager({ tags, onAddTag, onDeleteTag }: TagManagerProps) {
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder="Tag name"
-          className="w-full px-2 py-1 text-sm border rounded"
+          className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           required
         />
         <div className="flex gap-2">
@@ -43,32 +44,30 @@ export function TagManager({ tags, onAddTag, onDeleteTag }: TagManagerProps) {
             type="color"
             value={color}
             onChange={e => setColor(e.target.value)}
-            className="w-12 h-8 border rounded"
+            className="w-12 h-10 border border-neutral-300 rounded-md cursor-pointer"
           />
-          <button
-            type="submit"
-            className="flex-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
+          <Button type="submit" variant="primary" className="flex-1 text-sm">
             Add Tag
-          </button>
+          </Button>
         </div>
       </form>
 
       <div className="space-y-2">
         {tags.map(tag => (
-          <div key={tag.id} className="flex items-center justify-between p-2 bg-white rounded border">
+          <div key={tag.id} className="flex items-center justify-between p-2 bg-white rounded-md border border-neutral-200 hover:border-neutral-300 transition-colors">
             <span
-              className="inline-block px-2 py-1 rounded text-white text-sm"
+              className="inline-block px-3 py-1 rounded text-white text-sm font-medium"
               style={{ backgroundColor: tag.color }}
             >
               {tag.name}
             </span>
-            <button
+            <Button
               onClick={() => onDeleteTag?.(tag.id)}
-              className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+              variant="destructive"
+              size="sm"
             >
               Delete
-            </button>
+            </Button>
           </div>
         ))}
       </div>

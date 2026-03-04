@@ -31,7 +31,6 @@ export const ConditionalBranch: React.FC<ConditionalBranchProps> = ({
   const handleExpressionChange = (value: string) => {
     onExpressionChange(value);
 
-    // Validate expression
     const validation = ConditionalEvaluator.validateSyntax(value);
     if (validation.valid) {
       setIsValid(true);
@@ -43,28 +42,45 @@ export const ConditionalBranch: React.FC<ConditionalBranchProps> = ({
   };
 
   return (
-    <div className="conditional-branch-editor">
-      <h3>Conditional Logic</h3>
+    <div className="space-y-4 p-4">
+      <div>
+        <h3 className="text-lg font-semibold text-neutral-900">Conditional Logic</h3>
+      </div>
 
-      <div className="form-group">
-        <label htmlFor="condition">Condition Expression:</label>
+      <div className="space-y-2">
+        <label htmlFor="condition" className="block text-sm font-medium text-neutral-700">
+          Condition Expression:
+        </label>
         <textarea
           id="condition"
           value={expression}
           onChange={(e) => handleExpressionChange(e.target.value)}
           placeholder="e.g., trigger.status == 'active' AND trigger.count > 10"
           rows={3}
-          style={{ borderColor: isValid ? "#ccc" : "#f44336" }}
+          className={`w-full px-3 py-2 border rounded-md text-sm font-mono focus:outline-none focus:ring-2 ${
+            isValid
+              ? 'border-neutral-300 focus:ring-primary-500'
+              : 'border-error-500 focus:ring-error-500'
+          }`}
         />
-        {!isValid && <div className="error-message">{error}</div>}
-        <div className="hint">
+        {!isValid && (
+          <div className="text-sm text-error-600 font-medium">{error}</div>
+        )}
+        <div className="text-xs text-neutral-600 bg-neutral-50 p-2 rounded-md">
           Available: trigger.*, previous.*, Operators: ==, !=, &lt;, &gt;, &lt;=, &gt;=, AND, OR, NOT
         </div>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="true-branch">If TRUE, continue to:</label>
-        <select value={trueBranchStepId || ""} onChange={(e) => onTrueBranchChange(e.target.value)}>
+      <div className="space-y-2">
+        <label htmlFor="true-branch" className="block text-sm font-medium text-neutral-700">
+          If TRUE, continue to:
+        </label>
+        <select
+          id="true-branch"
+          value={trueBranchStepId || ""}
+          onChange={(e) => onTrueBranchChange(e.target.value)}
+          className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
           <option value="">-- Select step --</option>
           {availableSteps.map((step) => (
             <option key={step.id} value={step.id}>
@@ -74,9 +90,16 @@ export const ConditionalBranch: React.FC<ConditionalBranchProps> = ({
         </select>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="false-branch">If FALSE, continue to:</label>
-        <select value={falseBranchStepId || ""} onChange={(e) => onFalseBranchChange(e.target.value)}>
+      <div className="space-y-2">
+        <label htmlFor="false-branch" className="block text-sm font-medium text-neutral-700">
+          If FALSE, continue to:
+        </label>
+        <select
+          id="false-branch"
+          value={falseBranchStepId || ""}
+          onChange={(e) => onFalseBranchChange(e.target.value)}
+          className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
           <option value="">-- Select step --</option>
           {availableSteps.map((step) => (
             <option key={step.id} value={step.id}>
@@ -86,11 +109,11 @@ export const ConditionalBranch: React.FC<ConditionalBranchProps> = ({
         </select>
       </div>
 
-      <div className="syntax-help">
-        <h4>Expression Examples:</h4>
-        <ul>
+      <div className="bg-neutral-50 border border-neutral-200 rounded-md p-3 space-y-2">
+        <h4 className="text-sm font-semibold text-neutral-900">Expression Examples:</h4>
+        <ul className="text-xs text-neutral-700 space-y-1 list-disc list-inside">
           <li>trigger.status == 'active'</li>
-          <li>trigger.count > 100</li>
+          <li>trigger.count &gt; 100</li>
           <li>previous.result == true AND trigger.retry_count &lt; 3</li>
           <li>NOT (trigger.error == 'TIMEOUT')</li>
         </ul>

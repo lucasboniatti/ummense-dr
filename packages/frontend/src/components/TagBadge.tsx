@@ -9,9 +9,20 @@ interface TagBadgeProps {
 
 export function TagBadge({ name, color = '#0284c7', onRemove }: TagBadgeProps) {
   return (
-    <Badge style={{ backgroundColor: color }} className="text-white gap-2 cursor-pointer">
+    <Badge
+      style={{ backgroundColor: color }}
+      className="text-white gap-2 cursor-pointer hover:opacity-90 transition-opacity"
+    >
       {name}
-      {onRemove && <button onClick={onRemove} className="ml-1">✕</button>}
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="ml-1 font-semibold hover:text-neutral-200"
+          aria-label={`Remove ${name} tag`}
+        >
+          ✕
+        </button>
+      )}
     </Badge>
   );
 }
