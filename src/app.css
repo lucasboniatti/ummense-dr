@@ -1,0 +1,216 @@
+/* Design System — Global Styles */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* CSS Reset & Base Styles */
+@layer base {
+  * {
+    @apply border-neutral-200;
+  }
+
+  *,
+  *::before,
+  *::after {
+    @apply m-0 p-0 box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-neutral-0 text-neutral-900 font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Dark Mode Support */
+  [data-theme='dark'] {
+    @apply bg-neutral-900 text-neutral-0;
+  }
+
+  /* Typography Base */
+  h1 {
+    @apply text-5xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+
+  h3 {
+    @apply text-3xl font-semibold;
+  }
+
+  h4 {
+    @apply text-2xl font-semibold;
+  }
+
+  h5 {
+    @apply text-xl font-semibold;
+  }
+
+  h6 {
+    @apply text-lg font-semibold;
+  }
+
+  p {
+    @apply text-base leading-normal;
+  }
+
+  small {
+    @apply text-sm;
+  }
+
+  a {
+    @apply text-primary-600 hover:text-primary-700 transition-colors;
+  }
+
+  button {
+    @apply transition-colors duration-200;
+  }
+
+  /* Focus visible for accessibility */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500;
+  }
+
+  /* Form elements */
+  input,
+  textarea,
+  select {
+    @apply bg-neutral-0 text-neutral-900;
+  }
+
+  [data-theme='dark'] input,
+  [data-theme='dark'] textarea,
+  [data-theme='dark'] select {
+    @apply bg-neutral-800 text-neutral-0;
+  }
+}
+
+/* Component Layer for common patterns */
+@layer components {
+  /* Cards */
+  .card {
+    @apply bg-neutral-0 rounded-lg shadow-md p-6 transition-shadow hover:shadow-lg;
+  }
+
+  [data-theme='dark'] .card {
+    @apply bg-neutral-800;
+  }
+
+  /* Buttons - Base styles handled by component library */
+  .btn {
+    @apply inline-flex items-center justify-center font-semibold rounded-md transition-all duration-200 cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary-600 text-white hover:bg-secondary-700 active:bg-secondary-800;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-neutral-900 hover:bg-neutral-100 active:bg-neutral-200;
+  }
+
+  [data-theme='dark'] .btn-ghost {
+    @apply text-neutral-0 hover:bg-neutral-800 active:bg-neutral-700;
+  }
+
+  /* Form fields */
+  .form-field {
+    @apply mb-4;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-neutral-700 mb-2;
+  }
+
+  [data-theme='dark'] .form-label {
+    @apply text-neutral-300;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-neutral-300 rounded-md bg-neutral-0 text-neutral-900 placeholder-neutral-500 transition-colors focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500;
+  }
+
+  [data-theme='dark'] .form-input {
+    @apply bg-neutral-800 text-neutral-0 border-neutral-600 placeholder-neutral-400;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-primary {
+    @apply bg-primary-100 text-primary-900;
+  }
+
+  .badge-success {
+    @apply bg-success-100 text-success-900;
+  }
+
+  .badge-warning {
+    @apply bg-warning-100 text-warning-900;
+  }
+
+  .badge-error {
+    @apply bg-error-100 text-error-900;
+  }
+
+  [data-theme='dark'] .badge-primary {
+    @apply bg-primary-900 text-primary-100;
+  }
+}
+
+/* Utilities for spacing and common patterns */
+@layer utilities {
+  /* Flex utilities */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  /* Text utilities */
+  .truncate-line {
+    @apply overflow-hidden text-overflow-ellipsis whitespace-nowrap;
+  }
+
+  .truncate-lines {
+    @apply line-clamp-3;
+  }
+
+  /* Visibility utilities */
+  .visually-hidden {
+    @apply sr-only;
+  }
+
+  /* Container queries support */
+  @supports (container-type: inline-size) {
+    .container-sm {
+      @apply container-type: inline-size;
+    }
+  }
+}
+
+/* Print styles */
+@media print {
+  @layer base {
+    body {
+      @apply bg-white text-black;
+    }
+
+    a {
+      @apply text-black underline;
+    }
+  }
+}
