@@ -3,7 +3,7 @@ import { controlService, CircuitBreakerState } from '../../services/control.serv
 
 const INITIAL_CONNECTORS = ['slack', 'email', 'custom_webhook'];
 
-export const CircuitBreakerPanel: React.FC = () => {
+const CircuitBreakerPanel: React.FC = () => {
     const [connectors, setConnectors] = useState<Record<string, CircuitBreakerState>>({});
     const [loading, setLoading] = useState(true);
 
@@ -80,3 +80,5 @@ export const CircuitBreakerPanel: React.FC = () => {
         </div>
     );
 };
+
+export default CircuitBreakerPanel;

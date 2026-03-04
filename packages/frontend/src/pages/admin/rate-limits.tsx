@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { controlService, RateLimitStatus } from '../../services/control.service';
+import { RateLimitStatus } from '../../services/control.service';
 
 const INITIAL_CONNECTORS = ['slack', 'email', 'custom_webhook'];
 
-export const RateLimitsPanel: React.FC = () => {
+const RateLimitsPanel: React.FC = () => {
     const [connectors, setConnectors] = useState<Record<string, RateLimitStatus>>({});
     const [loading, setLoading] = useState(true);
 
@@ -106,3 +106,5 @@ export const RateLimitsPanel: React.FC = () => {
         </div>
     );
 };
+
+export default RateLimitsPanel;
