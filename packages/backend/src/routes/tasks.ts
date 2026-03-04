@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { asNumber } from '../utils/http';
 
 const router = Router();
 
@@ -42,7 +43,7 @@ router.get('/', authMiddleware, (req, res) => {
 
 // PUT /api/tasks/:id - Update task
 router.put('/:id', authMiddleware, (req, res) => {
-  res.json({ id: parseInt(req.params.id), ...req.body });
+  res.json({ id: asNumber((req.params as any).id, 0), ...req.body });
 });
 
 // DELETE /api/tasks/:id - Delete task

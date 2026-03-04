@@ -82,7 +82,8 @@ export class DiscordClientService {
     }
 
     const formData = new FormData();
-    formData.append('files[0]', new Blob([file.file]), file.filename);
+    const fileBytes = new Uint8Array(file.file);
+    formData.append('files[0]', new Blob([fileBytes]), file.filename);
 
     // Add content with description if provided
     const payload: any = {};

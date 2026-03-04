@@ -26,7 +26,8 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
-    "test": "npm run test --workspaces"
+    "test": "npm run test --workspaces",
+    "typecheck:backend:full": "npm run typecheck:full --workspace @ummense/backend"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",

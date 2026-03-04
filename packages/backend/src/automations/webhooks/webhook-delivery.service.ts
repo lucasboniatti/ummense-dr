@@ -92,13 +92,15 @@ export class WebhookDeliveryService {
     delivery: WebhookDeliveryRecord
   ): Promise<{ success: boolean; error?: string }> {
     const startTime = Date.now();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
     try {
       const response = await fetch(delivery.webhookId, {
         method: 'POST',
         headers: buildWebhookHeaders(delivery.signature),
         body: JSON.stringify(delivery.payload),
-        timeout: 30000
+        signal: controller.signal
       });
 
       const durationMs = Date.now() - startTime;
@@ -121,6 +123,8 @@ export class WebhookDeliveryService {
         success: false,
         error: errorMessage
       };
+    } finally {
+      clearTimeout(timeout);
     }
   }
 

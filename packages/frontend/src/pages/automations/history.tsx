@@ -4,6 +4,7 @@ import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ExecutionHistoryTable } from '@/components/ExecutionHistoryTable';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { historyService } from '@/services/history.service';
 
 export default function ExecutionHistoryPage() {
   const router = useRouter();
@@ -204,8 +205,20 @@ export default function ExecutionHistoryPage() {
             limit={filters.limit}
             offset={filters.offset}
             sortBy={filters.sortBy as any}
-            onSort={(sortBy) => setFilters({ ...filters, sortBy, offset: 0 })}
-            onPageChange={(offset) => setFilters({ ...filters, offset })}
+            onSort={(sortBy) =>
+              setFilters((prev) => ({ ...prev, sortBy, offset: 0 }))
+            }
+            onPageChange={(offset) => setFilters((prev) => ({ ...prev, offset }))}
+            onSearch={(searchTerm) =>
+              setFilters((prev) => ({ ...prev, searchTerm, offset: 0 }))
+            }
+            onSearchSuggestions={async (searchTerm) => {
+              const suggestions = await historyService.getSearchSuggestions(15);
+              return suggestions.filter((s) =>
+                s.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+            }}
+            searchTerm={filters.searchTerm}
             onRowClick={(executionId) =>
               router.push(`/automations/history/${executionId}`)
             }

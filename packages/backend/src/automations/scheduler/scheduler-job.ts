@@ -10,8 +10,8 @@
  */
 
 import { CronJob } from 'cron';
-import { Logger } from '../../../logger';
-import { Database } from '../../../db/database';
+import type { Logger } from '../../logger';
+import type { Database } from '../../db/database';
 import { SchedulerService } from './scheduler.service';
 import { ExecutionService } from '../execution/execution.service';
 import { AuditLogger } from './audit-logger';
@@ -235,7 +235,7 @@ export class SchedulerJob {
     return {
       running: !!this.job,
       isProcessing: this.isRunning,
-      nextRunTime: this.job?.nextDate().toDate()
+      nextRunTime: this.job?.nextDate().toJSDate()
     };
   }
 }

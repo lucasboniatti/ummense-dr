@@ -39,7 +39,7 @@ export class TokenEncryptionService {
         .promise();
 
       // Return as base64 for safe storage
-      return Buffer.from(result.CiphertextBlob!).toString('base64');
+      return Buffer.from(result.CiphertextBlob as any).toString('base64');
     } catch (error) {
       throw new Error(`KMS encryption failed: ${(error as Error).message}`);
     }
@@ -62,7 +62,7 @@ export class TokenEncryptionService {
         })
         .promise();
 
-      return Buffer.from(result.Plaintext!).toString('utf-8');
+      return Buffer.from(result.Plaintext as any).toString('utf-8');
     } catch (error) {
       throw new Error(`KMS decryption failed: ${(error as Error).message}`);
     }

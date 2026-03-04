@@ -1,4 +1,4 @@
-import { ExecutionHistoryService } from '../services/execution-history.service';
+import { ExecutionHistoryService } from '../automations/history/history.service';
 import { logger } from '../utils/logger';
 
 interface ExecutionSnapshot {
@@ -42,11 +42,13 @@ export class DeltaDetector {
 
     try {
       // Query recent executions using existing API
-      const recent = await this.executionService.searchExecutionHistory({
+      const recentResult = await this.executionService.queryExecutionHistory({
         userId,
-        since: since || new Date(Date.now() - 10 * 60 * 1000), // Last 10 minutes
+        startDate: since || new Date(Date.now() - 10 * 60 * 1000), // Last 10 minutes
+        endDate: new Date(),
         limit: 100,
       });
+      const recent = recentResult.executions || [];
 
       if (!Array.isArray(recent)) {
         logger.warn(`[DeltaDetector] Invalid response format for user ${userId}`);

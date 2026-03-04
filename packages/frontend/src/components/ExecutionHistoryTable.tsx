@@ -28,6 +28,7 @@ interface ExecutionHistoryTableProps {
   sortBy?: 'timestamp' | 'status' | 'duration';
   onSort?: (sortBy: string) => void;
   onSearch?: (searchTerm: string) => void;
+  onSearchSuggestions?: (searchTerm: string) => Promise<string[]>;
   searchTerm?: string;
   searchTime?: number;
   onFilterChange?: (filters: any) => void;
@@ -43,6 +44,7 @@ export function ExecutionHistoryTable({
   sortBy = 'timestamp',
   onSort,
   onSearch,
+  onSearchSuggestions,
   searchTerm = '',
   searchTime,
   onFilterChange,
@@ -85,14 +87,39 @@ export function ExecutionHistoryTable({
     }
   };
 
-  const handleSearch = (term: string) => {
+  const handleSearch = async (term: string) => {
     onSearch?.(term);
-    // Simulate autocomplete suggestions
+
     if (term.length > 0) {
-      setSearchSuggestions(['timeout', 'database error', 'connection failed', 'validation error'].filter((s) => s.includes(term.toLowerCase())));
+      try {
+        if (onSearchSuggestions) {
+          const remoteSuggestions = await onSearchSuggestions(term);
+          const filtered = remoteSuggestions.filter((s) =>
+            s.toLowerCase().includes(term.toLowerCase())
+          );
+
+          if (filtered.length > 0) {
+            setSearchSuggestions(filtered.slice(0, 8));
+            setShowSuggestions(true);
+            return;
+          }
+        }
+      } catch (error) {
+        // Fallback below keeps UX working even if API request fails.
+      }
+
+      const localFallback = [
+        'timeout',
+        'database error',
+        'connection failed',
+        'validation error',
+      ].filter((s) => s.includes(term.toLowerCase()));
+
+      setSearchSuggestions(localFallback);
       setShowSuggestions(true);
     } else {
       setShowSuggestions(false);
+      setSearchSuggestions([]);
     }
   };
 
@@ -113,7 +140,9 @@ export function ExecutionHistoryTable({
                 type="text"
                 placeholder="Buscar por erro, automação, mensagem... (busca em tempo real)"
                 value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => {
+                  void handleSearch(e.target.value);
+                }}
                 onFocus={() => searchTerm && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 className="w-full px-4 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -131,7 +160,7 @@ export function ExecutionHistoryTable({
                     <div
                       key={idx}
                       onClick={() => {
-                        handleSearch(suggestion);
+                        void handleSearch(suggestion);
                         setShowSuggestions(false);
                       }}
                       className="px-4 py-2 hover:bg-neutral-50 cursor-pointer text-sm text-neutral-700"

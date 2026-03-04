@@ -37,7 +37,7 @@ export class RuleEvaluationService {
     // Get operator function
     const operatorFn = this.operators[condition.operator];
     if (!operatorFn) {
-      throw new Error(`Unsupported operator: ${condition.operator}`);
+      throw new Error(`Unsupported operator: ${String(condition.operator)}`);
     }
 
     // Evaluate condition

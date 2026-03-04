@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { OAuthPKCEService } from '../services/oauth-pkce.service';
 import { IntegrationTokenService } from '../services/integration-token.service';
+import { asString } from '../utils/http';
 
 const router = Router();
 const oauthService = new OAuthPKCEService();
@@ -139,7 +140,8 @@ router.get('/discord/callback', async (req: Request, res: Response) => {
  */
 router.post('/disconnect/:type/:id', async (req: Request, res: Response) => {
   try {
-    const { type, id } = req.params;
+    const type = asString((req.params as any).type);
+    const id = asString((req.params as any).id);
     const userId = (req.session as any)?.userId || 'placeholder-user-id';
 
     if (type === 'slack') {

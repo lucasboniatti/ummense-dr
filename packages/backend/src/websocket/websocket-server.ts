@@ -1,6 +1,5 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
-import { Redis } from 'redis';
 import { authenticateUser } from '../services/auth.service';
 import { logger } from '../utils/logger';
 
@@ -89,8 +88,8 @@ export class ExecutionWebSocketServer {
   private wss: WebSocketServer;
   private httpServer: any;
   private clients = new Map<string, WSClient>();
-  private redisSubscriber: Redis | null = null;
-  private redisPublisher: Redis | null = null;
+  private redisSubscriber: any = null;
+  private redisPublisher: any = null;
   private inMemorySubscriptions = new Map<string, Set<string>>();
   private circuitBreaker: RedisCircuitBreaker;
   private config: {

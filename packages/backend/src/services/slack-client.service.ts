@@ -73,7 +73,8 @@ export class SlackClientService {
 
     const formData = new FormData();
     formData.append('channel', file.channel);
-    formData.append('file', new Blob([file.content]), file.filename);
+    const fileBytes = new Uint8Array(file.content);
+    formData.append('file', new Blob([fileBytes]), file.filename);
     if (file.title) {
       formData.append('title', file.title);
     }

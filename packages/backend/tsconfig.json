@@ -11,7 +11,10 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "types": ["node"],
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src/**/*.ts", "api/**/*.ts"],
   "exclude": [

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ExecutionHistoryService } from './history.service';
 import { AuditRequest, logAuditAction } from './audit.middleware';
+import { asNumber, asOptionalString, asString } from '../../utils/http';
 
 export function createHistoryRoutes(historyService: ExecutionHistoryService) {
   const router = Router();
@@ -30,22 +31,48 @@ export function createHistoryRoutes(historyService: ExecutionHistoryService) {
 
       const result = await historyService.queryExecutionHistory({
         userId: req.user.id,
-        automationId: automationId as string,
-        startDate: startDate ? new Date(startDate as string) : undefined,
-        endDate: endDate ? new Date(endDate as string) : undefined,
+        automationId: asOptionalString(automationId),
+        startDate: startDate ? new Date(asString(startDate)) : undefined,
+        endDate: endDate ? new Date(asString(endDate)) : undefined,
         status: status as 'success' | 'failed' | 'skipped',
-        errorType: errorType as string,
-        searchTerm: searchTerm as string,
+        errorType: asOptionalString(errorType),
+        searchTerm: asOptionalString(searchTerm),
         sortBy: (sortBy as 'timestamp' | 'status' | 'duration') || 'timestamp',
         sortOrder: (sortOrder as 'asc' | 'desc') || 'desc',
-        limit: limit ? parseInt(limit as string) : 50,
-        offset: offset ? parseInt(offset as string) : 0,
+        limit: asNumber(limit, 50),
+        offset: asNumber(offset, 0),
       });
 
       res.json(result);
     } catch (error) {
       console.error('Error querying history:', error);
       res.status(500).json({ error: 'Failed to query execution history' });
+    }
+  });
+
+  /**
+   * GET /api/automations/history/suggestions
+   * Get search autocomplete suggestions based on recent errors/messages
+   */
+  router.get('/history/suggestions', async (req: AuditRequest, res) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const limitParam = req.query.limit;
+      const limit =
+        typeof limitParam === 'string' ? parseInt(limitParam, 10) : 10;
+
+      const suggestions = await historyService.getSearchSuggestions(
+        req.user.id,
+        Number.isFinite(limit) ? limit : 10
+      );
+
+      res.json({ suggestions });
+    } catch (error) {
+      console.error('Error fetching history suggestions:', error);
+      res.status(500).json({ error: 'Failed to fetch suggestions' });
     }
   });
 
@@ -60,7 +87,7 @@ export function createHistoryRoutes(historyService: ExecutionHistoryService) {
       }
 
       const result = await historyService.getExecutionDetail(
-        req.params.executionId,
+        asString((req.params as any).executionId),
         req.user.id
       );
 
@@ -85,9 +112,9 @@ export function createHistoryRoutes(historyService: ExecutionHistoryService) {
 
       const csv = await historyService.exportAsCSV({
         userId: req.user.id,
-        automationId: automationId as string,
-        startDate: startDate ? new Date(startDate as string) : undefined,
-        endDate: endDate ? new Date(endDate as string) : undefined,
+        automationId: asOptionalString(automationId),
+        startDate: startDate ? new Date(asString(startDate)) : undefined,
+        endDate: endDate ? new Date(asString(endDate)) : undefined,
         status: status as 'success' | 'failed' | 'skipped',
       });
 
@@ -117,9 +144,9 @@ export function createHistoryRoutes(historyService: ExecutionHistoryService) {
 
       const json = await historyService.exportAsJSON({
         userId: req.user.id,
-        automationId: automationId as string,
-        startDate: startDate ? new Date(startDate as string) : undefined,
-        endDate: endDate ? new Date(endDate as string) : undefined,
+        automationId: asOptionalString(automationId),
+        startDate: startDate ? new Date(asString(startDate)) : undefined,
+        endDate: endDate ? new Date(asString(endDate)) : undefined,
         status: status as 'success' | 'failed' | 'skipped',
       });
 
@@ -149,9 +176,9 @@ export function createHistoryRoutes(historyService: ExecutionHistoryService) {
 
       const result = await historyService.getAuditLogs(
         req.user.id,
-        automationId as string,
-        limit ? parseInt(limit as string) : 50,
-        offset ? parseInt(offset as string) : 0
+        asOptionalString(automationId),
+        asNumber(limit, 50),
+        asNumber(offset, 0)
       );
 
       res.json(result);

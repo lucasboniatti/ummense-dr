@@ -81,6 +81,24 @@ export class RuleExecutionService {
   }
 
   /**
+   * Backward-compatible wrapper expected by slash command flow.
+   */
+  async executeRule(
+    ruleId: string,
+    context: Record<string, any>
+  ): Promise<{ status: 'success' | 'failed'; result: { executedActions: number; errors: string[] } }> {
+    const actions = (context?.actions as Array<{ type: string; params: Record<string, any> }>) || [];
+    const outcome = await this.executeActions(ruleId, actions, context);
+    return {
+      status: outcome.success ? 'success' : 'failed',
+      result: {
+        executedActions: outcome.executedActions,
+        errors: outcome.errors,
+      },
+    };
+  }
+
+  /**
    * Execute individual action based on type
    * @param action Action to execute
    * @param context Data context
@@ -94,19 +112,19 @@ export class RuleExecutionService {
   ): Promise<void> {
     switch (action.type) {
       case 'update_task':
-        await this.updateTask(action.params, context);
+        await this.updateTask(action.params as any, context);
         break;
       case 'create_task':
-        await this.createTask(action.params, context);
+        await this.createTask(action.params as any, context);
         break;
       case 'send_webhook':
-        await this.sendWebhook(action.params, context);
+        await this.sendWebhook(action.params as any, context);
         break;
       case 'send_notification':
-        await this.sendNotification(action.params, context);
+        await this.sendNotification(action.params as any, context);
         break;
       case 'assign_tag':
-        await this.assignTag(action.params, context);
+        await this.assignTag(action.params as any, context);
         break;
       default:
         throw new Error(`Unknown action type: ${action.type}`);

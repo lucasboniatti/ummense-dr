@@ -5,7 +5,7 @@
  * Records all scheduled execution attempts with timing metrics for debugging
  */
 
-import { Database } from '../../../db/database';
+import type { Database } from '../../db/database';
 
 export interface ScheduledExecutionLogEntry {
   automationId: string;

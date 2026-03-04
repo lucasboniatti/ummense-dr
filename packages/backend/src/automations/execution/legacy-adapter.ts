@@ -4,7 +4,7 @@
  * Story 3.1: Workflow Execution Engine Refactor - AC#4
  */
 
-import { WorkflowConfig, StepDefinition } from '../db/models/execution.model';
+import { WorkflowConfig, StepDefinition } from '../../db/models/execution.model';
 
 /**
  * Wave 2 Automation structure (legacy)

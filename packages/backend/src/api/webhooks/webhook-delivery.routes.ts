@@ -6,6 +6,7 @@
 
 import { Router, Request, Response } from 'express';
 import { WebhookDeliveryController } from './webhook-delivery.controller';
+import { asNumber, asString } from '../../utils/http';
 
 const router = Router();
 const controller = new WebhookDeliveryController();
@@ -25,11 +26,11 @@ const controller = new WebhookDeliveryController();
  */
 router.get('/automations/:automationId/webhooks/dlq', async (req: Request, res: Response) => {
   try {
-    const automationId = req.params.automationId;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const sortBy = (req.query.sortBy as string) || 'createdAt';
-    const sortOrder = (req.query.sortOrder as string) || 'desc';
+    const automationId = asString((req.params as any).automationId);
+    const page = asNumber((req.query as any).page, 1);
+    const limit = asNumber((req.query as any).limit, 20);
+    const sortBy = asString((req.query as any).sortBy || 'createdAt');
+    const sortOrder = asString((req.query as any).sortOrder || 'desc');
 
     const result = await controller.listDLQ(automationId, {
       page,
@@ -53,7 +54,7 @@ router.get(
   '/automations/:automationId/webhooks/dlq/:dlqItemId',
   async (req: Request, res: Response) => {
     try {
-      const dlqItemId = req.params.dlqItemId;
+      const dlqItemId = asString((req.params as any).dlqItemId);
       const result = await controller.getDLQItem(dlqItemId);
 
       if (!result) {
@@ -77,7 +78,7 @@ router.post(
   '/automations/:automationId/webhooks/dlq/:dlqItemId/retry',
   async (req: Request, res: Response) => {
     try {
-      const dlqItemId = req.params.dlqItemId;
+      const dlqItemId = asString((req.params as any).dlqItemId);
       const result = await controller.retryDLQItem(dlqItemId);
 
       if (!result.success) {
@@ -100,7 +101,7 @@ router.delete(
   '/automations/:automationId/webhooks/dlq/:dlqItemId',
   async (req: Request, res: Response) => {
     try {
-      const dlqItemId = req.params.dlqItemId;
+      const dlqItemId = asString((req.params as any).dlqItemId);
       const result = await controller.clearDLQItem(dlqItemId);
 
       if (!result.success) {
@@ -131,7 +132,7 @@ router.post(
   '/automations/:automationId/webhooks/dlq/query',
   async (req: Request, res: Response) => {
     try {
-      const automationId = req.params.automationId;
+      const automationId = asString((req.params as any).automationId);
       const { filters, options } = req.body;
 
       const result = await controller.queryDLQ(automationId, filters, options);
@@ -149,7 +150,7 @@ router.post(
  */
 router.get('/automations/:automationId/webhooks/dlq-stats', async (req: Request, res: Response) => {
   try {
-    const automationId = req.params.automationId;
+    const automationId = asString((req.params as any).automationId);
     const stats = await controller.getDLQStats(automationId);
     res.json(stats);
   } catch (error) {

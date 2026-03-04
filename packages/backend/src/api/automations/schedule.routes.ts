@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { ScheduleController } from './schedule.controller';
-import { authenticateUser } from '../../../middleware/auth';
+import { authenticateUser } from '../../middleware/auth';
 
 export function createScheduleRoutes(controller: ScheduleController): Router {
   const router = Router({ mergeParams: true });

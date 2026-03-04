@@ -114,7 +114,7 @@ export class IntegrationTokenService {
       throw new Error(`Failed to list Slack tokens: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as Omit<SlackToken, 'encrypted_token'>[];
   }
 
   /**

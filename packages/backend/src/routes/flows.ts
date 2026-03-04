@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { asNumber } from '../utils/http';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.post('/', authMiddleware, (req, res) => {
 router.get('/:id', authMiddleware, (req, res) => {
   // Mock implementation
   res.json({
-    id: parseInt(req.params.id),
+    id: asNumber((req.params as any).id, 0),
     name: 'Default',
     columns: [
       { id: 1, name: 'Backlog', order: 0 },

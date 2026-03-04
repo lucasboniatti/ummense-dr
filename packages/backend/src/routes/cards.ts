@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { asNumber } from '../utils/http';
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.post('/', authMiddleware, (req, res) => {
 // GET /api/cards/:id - Get card
 router.get('/:id', authMiddleware, (req, res) => {
   res.json({
-    id: parseInt(req.params.id),
+    id: asNumber((req.params as any).id, 0),
     title: 'Card Title',
     description: 'Card description',
     columnId: 2,
@@ -29,7 +30,7 @@ router.get('/:id', authMiddleware, (req, res) => {
 
 // PUT /api/cards/:id - Update card
 router.put('/:id', authMiddleware, (req, res) => {
-  res.json({ id: parseInt(req.params.id), ...req.body });
+  res.json({ id: asNumber((req.params as any).id, 0), ...req.body });
 });
 
 // DELETE /api/cards/:id - Delete card

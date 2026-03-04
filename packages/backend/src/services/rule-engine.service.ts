@@ -205,7 +205,7 @@ export class RuleEngineService {
     }
 
     // Validate configuration
-    loopDetectorService.validateRuleConfig('', config);
+    loopDetectorService.validateRuleConfig('', config as any);
 
     // Create rule
     const { data: newRule, error } = await this.supabase
@@ -260,7 +260,7 @@ export class RuleEngineService {
     }
 
     // Validate new configuration
-    loopDetectorService.validateRuleConfig(ruleId, config);
+    loopDetectorService.validateRuleConfig(ruleId, config as any);
 
     // Update rule
     const { error } = await this.supabase

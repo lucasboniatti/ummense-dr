@@ -511,9 +511,20 @@ export class ExecutionHistoryService {
 
       const suggestions = Array.from(
         new Set(
-          data
-            ?.filter((e) => e.automations?.name)
-            .map((e) => e.automations.name)
+          (data || [])
+            .flatMap((entry: any) => {
+              const relation = entry?.automations;
+              if (!relation) return [];
+              if (Array.isArray(relation)) {
+                return relation
+                  .map((automation: any) => automation?.name)
+                  .filter((name: unknown): name is string => typeof name === 'string');
+              }
+              if (typeof relation?.name === 'string') {
+                return [relation.name];
+              }
+              return [];
+            })
         )
       ).slice(0, limit);
 

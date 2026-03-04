@@ -164,7 +164,7 @@ async function processUserWithRetry(
 async function getAllActiveUsers(supabase: SupabaseClient): Promise<string[]> {
   const { data, error } = await supabase
     .from('automations')
-    .select('user_id', { distinct: true, count: 'exact' })
+    .select('user_id')
     .neq('user_id', null);
 
   if (error) {
@@ -217,11 +217,11 @@ export function getCostSnapshotJobStatus(): {
   nextExecution?: Date;
   status: 'scheduled' | 'running' | 'failed';
 } {
-  const job = schedule.scheduledJobs[COST_JOB_SCHEDULE];
+  const job = schedule.scheduledJobs[COST_JOB_SCHEDULE] as any;
 
   return {
     schedule: COST_JOB_SCHEDULE,
-    lastExecution: job?.lastExecution,
+    lastExecution: job?.lastInvocation ? new Date(job.lastInvocation()) : undefined,
     nextExecution: job?.nextInvocation(),
     status: job ? 'scheduled' : 'failed',
   };

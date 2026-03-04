@@ -13,7 +13,7 @@ export class WorkflowMigration {
    */
   static migrateFromWave2(wave2Automation: any): WorkflowDefinition {
     // Convert Wave 2 structure to Wave 3
-    const steps = [
+    const steps: WorkflowDefinition['steps'] = [
       {
         id: "step-trigger",
         type: "trigger",

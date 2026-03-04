@@ -27,6 +27,19 @@ export interface RetentionPolicy {
 
 class HistoryService {
   /**
+   * Fetch autocomplete suggestions for history search
+   */
+  async getSearchSuggestions(limit: number = 10): Promise<string[]> {
+    const response = await fetch(`/api/automations/history/suggestions?limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch search suggestions');
+    }
+
+    const data = await response.json();
+    return Array.isArray(data.suggestions) ? data.suggestions : [];
+  }
+
+  /**
    * Fetch execution history with filters
    */
   async queryExecutionHistory(params: {

@@ -89,7 +89,7 @@ export class CostSnapshotService {
   private async calculateUserDbStorage(userId: string): Promise<number> {
     // This is a simplified estimate - in production, would query actual table size
     // For now, estimate based on execution count * average size (2KB per execution)
-    const { data: executions, error } = await this.supabase
+    const { count, error } = await this.supabase
       .from('automation_executions')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId);
@@ -99,7 +99,7 @@ export class CostSnapshotService {
       return 0;
     }
 
-    const executionCount = executions?.[0]?.count || 0;
+    const executionCount = count || 0;
     const avgExecutionSizeKb = 2; // Average execution record size
     const storageGb = (executionCount * avgExecutionSizeKb) / (1024 * 1024);
 
@@ -113,13 +113,13 @@ export class CostSnapshotService {
   private async calculateUserS3Storage(userId: string): Promise<number> {
     // This would query the archival tracking in a real implementation
     // For now, estimate based on execution count that's been archived
-    const { data: archivedCount, error } = await this.supabase
+    const { count, error } = await this.supabase
       .from('s3_archival_logs') // Hypothetical table from Story 3.5.1
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'archived');
 
-    if (error || !archivedCount) {
+    if (error) {
       console.error('[CostSnapshotService] Error querying archived storage:', error);
       return 0;
     }
@@ -127,7 +127,7 @@ export class CostSnapshotService {
     // Archived objects are gzip compressed (3.5x compression ratio)
     const avgExecutionSizeKb = 2;
     const compressedSizeKb = (avgExecutionSizeKb / COST_MODEL.s3.compressionRatio);
-    const storageGb = (archivedCount[0]?.count || 0) * compressedSizeKb / (1024 * 1024);
+    const storageGb = (count || 0) * compressedSizeKb / (1024 * 1024);
 
     return Math.round(storageGb * 100) / 100;
   }

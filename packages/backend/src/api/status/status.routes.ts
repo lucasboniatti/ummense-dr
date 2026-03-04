@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { queueService } from '../automations/queue/queue.service';
+import { queueService } from '../../automations/queue/queue.service';
 import { controlRoutes } from '../automations/control.routes';
 
 const router = Router();

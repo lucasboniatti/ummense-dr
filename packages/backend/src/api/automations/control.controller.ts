@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { queueService } from '../automations/queue/queue.service';
-import { circuitBreaker } from '../automations/circuit-breaker/circuit-breaker.service';
-import { rateLimiter } from '../automations/rate-limiter/rate-limiter.service';
+import { queueService } from '../../automations/queue/queue.service';
+import { circuitBreaker } from '../../automations/circuit-breaker/circuit-breaker.service';
+import { rateLimiter } from '../../automations/rate-limiter/rate-limiter.service';
+import { asString } from '../../utils/http';
 
 export class ControlController {
 
@@ -85,7 +86,8 @@ export class ControlController {
     // GET /api/automations/circuit-breaker/:connectorId
     async getCircuitBreakerState(req: Request, res: Response) {
         try {
-            const state = circuitBreaker.getState(req.params.connectorId);
+            const connectorId = asString((req.params as any).connectorId);
+            const state = circuitBreaker.getState(connectorId);
             res.status(200).json(state);
         } catch (error: any) {
             res.status(500).json({ error: error.message });
@@ -95,7 +97,8 @@ export class ControlController {
     // GET /api/automations/rate-limit/:connectorId
     async getRateLimitStatus(req: Request, res: Response) {
         try {
-            const status = await rateLimiter.getLimit(req.params.connectorId);
+            const connectorId = asString((req.params as any).connectorId);
+            const status = await rateLimiter.getLimit(connectorId);
             res.status(200).json(status);
         } catch (error: any) {
             res.status(500).json({ error: error.message });

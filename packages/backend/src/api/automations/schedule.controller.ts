@@ -5,6 +5,7 @@
 
 import { Request, Response } from 'express';
 import { SchedulerService } from '../../automations/scheduler/scheduler.service';
+import { asNumber, asOptionalString, asString } from '../../utils/http';
 
 export class ScheduleController {
   constructor(private schedulerService: SchedulerService) {}
@@ -14,7 +15,7 @@ export class ScheduleController {
    */
   async createSchedule(req: Request, res: Response): Promise<void> {
     try {
-      const { automationId } = req.params;
+      const automationId = asString((req.params as any).automationId || (req.params as any).id);
       const { cronExpression, timezone = 'UTC' } = req.body;
 
       if (!cronExpression) {
@@ -56,7 +57,7 @@ export class ScheduleController {
    */
   async getSchedule(req: Request, res: Response): Promise<void> {
     try {
-      const { automationId } = req.params;
+      const automationId = asString((req.params as any).automationId || (req.params as any).id);
 
       const schedule = await this.schedulerService.getScheduleByAutomationId(
         automationId
@@ -80,7 +81,9 @@ export class ScheduleController {
    */
   async getPreview(req: Request, res: Response): Promise<void> {
     try {
-      const { cronExpression, timezone = 'UTC', count = 3 } = req.query;
+      const cronExpression = asOptionalString((req.query as any).cronExpression);
+      const timezone = asString((req.query as any).timezone || 'UTC');
+      const count = asNumber((req.query as any).count, 3);
 
       if (!cronExpression) {
         res.status(400).json({
@@ -90,9 +93,9 @@ export class ScheduleController {
       }
 
       const nextExecutions = await this.schedulerService.getNextExecutions(
-        cronExpression as string,
-        timezone as string,
-        parseInt(count as string, 10) || 3
+        cronExpression,
+        timezone,
+        count || 3
       );
 
       res.json({ nextExecutions });
@@ -108,7 +111,7 @@ export class ScheduleController {
    */
   async updateSchedule(req: Request, res: Response): Promise<void> {
     try {
-      const { automationId } = req.params;
+      const automationId = asString((req.params as any).automationId || (req.params as any).id);
 
       const schedule = await this.schedulerService.getScheduleByAutomationId(
         automationId
@@ -137,7 +140,7 @@ export class ScheduleController {
    */
   async deleteSchedule(req: Request, res: Response): Promise<void> {
     try {
-      const { automationId } = req.params;
+      const automationId = asString((req.params as any).automationId || (req.params as any).id);
 
       const schedule = await this.schedulerService.getScheduleByAutomationId(
         automationId
@@ -163,7 +166,7 @@ export class ScheduleController {
    */
   async toggleSchedule(req: Request, res: Response): Promise<void> {
     try {
-      const { automationId } = req.params;
+      const automationId = asString((req.params as any).automationId || (req.params as any).id);
       const { enabled } = req.body;
 
       const schedule = await this.schedulerService.getScheduleByAutomationId(

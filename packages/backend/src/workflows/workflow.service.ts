@@ -141,11 +141,16 @@ export class WorkflowService {
    */
   static async applyTemplate(automationId: string, templateId: string): Promise<WorkflowDefinition> {
     const template = await this.loadTemplate(templateId);
-    const workflowDef = JSON.parse(template.workflow_definition);
+    const rawWorkflowDef = (template as any).workflow_definition;
+    const workflowDef =
+      typeof rawWorkflowDef === 'string' ? JSON.parse(rawWorkflowDef) : rawWorkflowDef;
+    const templateName = (template as any).template_name || template.name;
+    const templateDescription =
+      (template as any).template_description || template.description;
 
     return this.createWorkflow(automationId, {
-      name: `${template.template_name} (Copy)`,
-      description: template.template_description,
+      name: `${templateName} (Copy)`,
+      description: templateDescription,
       steps: workflowDef.steps,
       dependencies: new Map(Object.entries(workflowDef.dependencies)),
     });

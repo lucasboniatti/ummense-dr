@@ -9,8 +9,8 @@
  * - Handle timezone-aware scheduling
  */
 
-import { CronExpression } from 'cron-parser';
-import { Database } from '../../../db/database';
+import { parseExpression } from 'cron-parser';
+import type { Database } from '../../db/database';
 import { ExecutionService } from '../execution/execution.service';
 import { AuditLogger } from './audit-logger';
 
@@ -58,7 +58,7 @@ export class SchedulerService {
   ): Promise<CronValidationResult> {
     try {
       // Test cron expression parsing
-      const interval = new CronExpression(cronExpr, { tz: timezone });
+      const interval = parseExpression(cronExpr, { tz: timezone });
 
       // Get next 3 executions for preview
       const nextExecutions = Array.from({ length: 3 }, () =>
@@ -87,7 +87,7 @@ export class SchedulerService {
     count: number = 3
   ): Promise<Date[]> {
     try {
-      const interval = new CronExpression(cronExpr, { tz: timezone });
+      const interval = parseExpression(cronExpr, { tz: timezone });
       return Array.from({ length: count }, () => interval.next().toDate());
     } catch (error) {
       throw new Error(
@@ -106,7 +106,7 @@ export class SchedulerService {
     currentTime: Date = new Date()
   ): Promise<boolean> {
     try {
-      const interval = new CronExpression(cronExpr, { tz: timezone });
+      const interval = parseExpression(cronExpr, { tz: timezone });
       const nextExecution = interval.next().toDate();
 
       // Check if we're within 60 seconds of scheduled time
