@@ -1,4 +1,5 @@
-import app from '../src/app';
+// Vercel executes this entrypoint in a CommonJS context.
+// Keep CJS exports and require to avoid ESM runtime mismatch in production.
+const app = require('../src/app').default;
 
-// Vercel Node runtime can execute an Express app directly as handler.
-export default app;
+module.exports = app;
