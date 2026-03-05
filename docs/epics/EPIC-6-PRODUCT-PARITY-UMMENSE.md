@@ -2,7 +2,7 @@
 
 **Epic ID:** EPIC-6-PRODUCT-PARITY-UMMENSE
 **Wave:** Wave 6 (UX + Product Surface Expansion)
-**Status:** Draft
+**Status:** Implementation In Progress (2/7 stories done)
 **Created:** 2026-03-04
 **Priority:** CRITICAL (P0)
 
@@ -27,12 +27,12 @@ Este epic fecha esse gap com incremento orientado a produto real, mantendo o que
 
 ## Stories
 
-1. **Story 6.1** - App Shell + Painel Consolidado de Operações (Draft)
+1. **Story 6.1** - App Shell + Painel Consolidado de Operações (Done)
 2. **Story 6.2** - Fluxos 2.0 (Quadro/Tabela/Indicadores com persistência real) (Draft)
 3. **Story 6.3** - Card Workspace 2.0 (Detalhes, equipe, timeline, tarefas do card) (Draft)
 4. **Story 6.4** - Task Workspace 2.0 (Modal completo + histórico de alterações) (Draft)
 5. **Story 6.5** - Calendário e Eventos Integrados ao Operacional (Draft)
-6. **Story 6.6** - Backend/API Closure para produto completo (sem mocks) (Draft)
+6. **Story 6.6** - Backend/API Closure para produto completo (sem mocks) (Done)
 7. **Story 6.7** - UAT/E2E de Paridade + Go/No-Go de Produto (Draft)
 
 ---
@@ -64,3 +64,4 @@ Este epic fecha esse gap com incremento orientado a produto real, mantendo o que
 ## Change Log
 
 - **2026-03-04:** Epic criado por `@sm` a partir da análise comparativa dos 4 prints de referência versus estado atual do produto.
+- **2026-03-05:** Progresso atualizado por `@po` após fechamento das Stories 6.6 e 6.1.

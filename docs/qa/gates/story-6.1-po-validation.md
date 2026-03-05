@@ -37,3 +37,11 @@ Story 6.1 está clara, rastreável e pronta para execução após a base técnic
 
 - **GO** para desenvolvimento, respeitando cadeia de dependências do Epic 6.
 - **Recommended next command:** `@aios-dev *develop 6.6` (primeiro), depois `@aios-dev *develop 6.1`.
+
+---
+
+## Closure Update (2026-03-05)
+
+- QA gate atualizado para **PASS**.
+- Story apta para fechamento e marcada como **Done** no ciclo de produto.
+- Próxima recomendação de execução: `@aios-dev *develop 6.2`.

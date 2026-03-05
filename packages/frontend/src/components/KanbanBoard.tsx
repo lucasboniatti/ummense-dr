@@ -1,87 +1,73 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Column } from './Column';
+import { Card } from './Card';
+import { KanbanCard, KanbanColumn } from '../hooks/useKanban';
 
-interface Card {
-  id: number;
-  title: string;
-  columnId: number;
+interface KanbanBoardProps {
+  columns: KanbanColumn[];
+  isCardPending: (cardId: number) => boolean;
+  onDragStart: (cardId: number, fromColumnId: number) => void;
+  onDragEnd: () => void;
+  onDropColumn: (toColumnId: number) => void;
+  filterCard?: (card: KanbanCard, column: KanbanColumn) => boolean;
 }
 
-interface Column {
-  id: number;
-  name: string;
-  cards: Card[];
-}
-
-export function KanbanBoard() {
-  const [columns, setColumns] = useState<Column[]>([
-    { id: 1, name: 'Backlog', cards: [] },
-    { id: 2, name: 'A Fazer', cards: [] },
-    { id: 3, name: 'Em Progresso', cards: [] },
-    { id: 4, name: 'Finalizado', cards: [] },
-  ]);
-  const [draggedCard, setDraggedCard] = useState<{
-    cardId: number;
-    fromColumnId: number;
-  } | null>(null);
-
-  const handleDragStart = (cardId: number, columnId: number) => {
-    setDraggedCard({ cardId, fromColumnId: columnId });
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (toColumnId: number) => {
-    if (!draggedCard) return;
-
-    setColumns(
-      columns.map(col => {
-        if (col.id === draggedCard.fromColumnId) {
-          return {
-            ...col,
-            cards: col.cards.filter(c => c.id !== draggedCard.cardId),
-          };
-        }
-        if (col.id === toColumnId) {
-          const card = columns
-            .find(c => c.id === draggedCard.fromColumnId)
-            ?.cards.find(c => c.id === draggedCard.cardId);
-          if (card) {
-            return { ...col, cards: [...col.cards, { ...card, columnId: toColumnId }] };
-          }
-        }
-        return col;
-      })
-    );
-
-    setDraggedCard(null);
+export function KanbanBoard({
+  columns,
+  isCardPending,
+  onDragStart,
+  onDragEnd,
+  onDropColumn,
+  filterCard,
+}: KanbanBoardProps) {
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
   };
 
   return (
-    <div className="flex gap-4 p-4 bg-white overflow-x-auto">
-      {columns.map(column => (
-        <div
-          key={column.id}
-          className="flex-shrink-0 w-80 bg-neutral-100 rounded-lg p-4 border border-neutral-200"
-          onDragOver={handleDragOver}
-          onDrop={() => handleDrop(column.id)}
-        >
-          <h3 className="text-lg font-bold mb-4 text-neutral-900">{column.name}</h3>
-          <div className="space-y-2">
-            {column.cards.map(card => (
-              <div
-                key={card.id}
-                draggable
-                onDragStart={() => handleDragStart(card.id, column.id)}
-                className="p-3 bg-white rounded shadow cursor-move hover:shadow-md"
-              >
-                {card.title}
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+    <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white p-4">
+      <div className="flex min-h-[380px] gap-4">
+        {columns.map((column) => {
+          const filteredCards = filterCard
+            ? column.cards.filter((card) => filterCard(card, column))
+            : column.cards;
+
+          return (
+            <Column
+              key={column.id}
+              name={column.name}
+              cardCount={filteredCards.length}
+              totalCount={column.cards.length}
+              onDragOver={handleDragOver}
+              onDrop={() => onDropColumn(column.id)}
+            >
+              {filteredCards.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-neutral-300 bg-white/70 p-3 text-xs text-neutral-500">
+                  Sem cards para este filtro.
+                </div>
+              ) : (
+                filteredCards.map((card) => (
+                  <Card
+                    key={card.id}
+                    id={card.id}
+                    title={card.title}
+                    description={card.description}
+                    status={card.status}
+                    responsible={card.responsible}
+                    progressPercent={card.progress?.percent ?? 0}
+                    tags={card.tags}
+                    updatedAt={card.updatedAt}
+                    isPending={isCardPending(card.id)}
+                    draggable={!isCardPending(card.id)}
+                    onDragStart={() => onDragStart(card.id, column.id)}
+                    onDragEnd={onDragEnd}
+                  />
+                ))
+              )}
+            </Column>
+          );
+        })}
+      </div>
     </div>
   );
 }
