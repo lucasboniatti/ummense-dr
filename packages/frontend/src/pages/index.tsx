@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CalendarPanel, { CalendarEvent } from '../components/panel/CalendarPanel';
 import TasksPanel, { PanelTask, TaskTag } from '../components/panel/TasksPanel';
+import { eventsService } from '../services/events.service';
 
 interface ApiTaskItem {
   id: number;
@@ -135,6 +136,22 @@ function inferProgress(status: string): number {
   return 15;
 }
 
+function toCalendarIso(value: string): string {
+  if (value.includes('T')) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
+  }
+
+  const parsed = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return new Date().toISOString();
+  }
+
+  return parsed.toISOString();
+}
+
 function getLocalDevToken(): string {
   if (typeof window === 'undefined') return '';
 
@@ -175,6 +192,7 @@ export default function HomePage() {
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsMutating, setEventsMutating] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [eventsHint, setEventsHint] = useState<string | null>(null);
 
@@ -400,6 +418,132 @@ export default function HomePage() {
     });
   }, [tasks, queryPriority, querySearch]);
 
+  const undatedTasksCount = useMemo(
+    () => filteredTasks.filter((task) => !task.dueDate).length,
+    [filteredTasks]
+  );
+
+  const calendarEvents = useMemo<CalendarEvent[]>(() => {
+    const dueDateSyntheticEvents: CalendarEvent[] = filteredTasks
+      .filter((task) => task.dueDate)
+      .map((task) => ({
+        id: `task-due-${task.id}`,
+        title: `Prazo: ${task.title}`,
+        startsAt: toCalendarIso(task.dueDate as string),
+        endsAt: null,
+        cardId: task.cardId,
+        taskId: task.id,
+      }));
+
+    const merged = [...events];
+
+    dueDateSyntheticEvents.forEach((dueEvent) => {
+      const alreadyExists = merged.some(
+        (existing) => existing.taskId === dueEvent.taskId && existing.id.startsWith('task-due-')
+      );
+      if (!alreadyExists) {
+        merged.push(dueEvent);
+      }
+    });
+
+    return merged;
+  }, [events, filteredTasks]);
+
+  const handleCreateEvent = useCallback(
+    async (payload: {
+      title: string;
+      description: string | null;
+      startsAt: string;
+      endsAt: string | null;
+      cardId: number | null;
+      taskId: number | null;
+    }) => {
+      if (!devToken) {
+        setEventsError('Token JWT ausente. Não foi possível criar evento real.');
+        return;
+      }
+
+      setEventsMutating(true);
+      setEventsError(null);
+
+      try {
+        await eventsService.create(devToken, payload);
+        setReloadCount((previous) => previous + 1);
+      } catch (eventError) {
+        setEventsError(
+          eventError instanceof Error
+            ? eventError.message
+            : 'Falha ao criar evento.'
+        );
+      } finally {
+        setEventsMutating(false);
+      }
+    },
+    [devToken]
+  );
+
+  const handleUpdateEvent = useCallback(
+    async (
+      eventId: string,
+      payload: {
+        title?: string;
+        description?: string | null;
+        startsAt?: string;
+        endsAt?: string | null;
+        cardId?: number | null;
+        taskId?: number | null;
+      }
+    ) => {
+      if (!devToken) {
+        setEventsError('Token JWT ausente. Não foi possível editar evento real.');
+        return;
+      }
+
+      setEventsMutating(true);
+      setEventsError(null);
+
+      try {
+        await eventsService.update(eventId, devToken, payload);
+        setReloadCount((previous) => previous + 1);
+      } catch (eventError) {
+        setEventsError(
+          eventError instanceof Error
+            ? eventError.message
+            : 'Falha ao editar evento.'
+        );
+      } finally {
+        setEventsMutating(false);
+      }
+    },
+    [devToken]
+  );
+
+  const handleDeleteEvent = useCallback(
+    async (eventId: string) => {
+      if (!devToken) {
+        setEventsError('Token JWT ausente. Não foi possível remover evento real.');
+        return;
+      }
+
+      setEventsMutating(true);
+      setEventsError(null);
+
+      try {
+        await eventsService.remove(eventId, devToken);
+        setReloadCount((previous) => previous + 1);
+      } catch (eventError) {
+        setEventsError(
+          eventError instanceof Error
+            ? eventError.message
+            : 'Falha ao remover evento.'
+        );
+      } finally {
+        setEventsMutating(false);
+      }
+    },
+    [devToken]
+  );
+
   const summaryCards = [
     {
       label: 'Fluxos ativos',
@@ -463,10 +607,15 @@ export default function HomePage() {
         />
 
         <CalendarPanel
-          events={events}
-          loading={eventsLoading}
+          events={calendarEvents}
+          loading={eventsLoading || eventsMutating}
           error={eventsError}
           sourceHint={eventsHint}
+          canEdit={Boolean(devToken)}
+          undatedTasksCount={undatedTasksCount}
+          onCreateEvent={handleCreateEvent}
+          onUpdateEvent={handleUpdateEvent}
+          onDeleteEvent={handleDeleteEvent}
           onRetry={() => setReloadCount((previous) => previous + 1)}
         />
       </section>

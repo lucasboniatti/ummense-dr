@@ -324,19 +324,56 @@ router.get('/:id/timeline', authMiddleware, async (req, res, next) => {
 
     await ensureCardOwnership(cardId, userId);
 
-    const { data: timeline, error } = await supabase
-      .from('card_timeline_events')
-      .select('id,card_id,user_id,action,details,created_at')
-      .eq('card_id', cardId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const [{ data: timeline, error: timelineError }, { data: linkedEvents, error: linkedEventsError }] =
+      await Promise.all([
+        supabase
+          .from('card_timeline_events')
+          .select('id,card_id,user_id,action,details,created_at')
+          .eq('card_id', cardId)
+          .order('created_at', { ascending: false })
+          .range(0, limit + offset),
+        supabase
+          .from('events')
+          .select('id,title,description,starts_at,ends_at,metadata,created_at')
+          .eq('card_id', cardId)
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .range(0, limit + offset),
+      ]);
 
-    if (error) {
-      throw error;
+    if (timelineError) {
+      throw timelineError;
     }
 
+    if (linkedEventsError) {
+      throw linkedEventsError;
+    }
+
+    const normalizedEvents = (linkedEvents || []).map((event) => ({
+      id: `event-${event.id}`,
+      card_id: cardId,
+      user_id: userId,
+      action: 'event.linked',
+      details: {
+        title: event.title,
+        description: event.description,
+        startsAt: event.starts_at,
+        endsAt: event.ends_at,
+        metadata: event.metadata || {},
+      },
+      created_at: event.created_at,
+    }));
+
+    const mergedItems = [...(timeline || []), ...normalizedEvents]
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+      .slice(offset, offset + limit);
+
     res.status(200).json({
-      items: timeline || [],
+      items: mergedItems,
       pagination: {
         limit,
         offset,

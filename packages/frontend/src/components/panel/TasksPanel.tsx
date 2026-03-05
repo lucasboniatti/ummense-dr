@@ -149,7 +149,7 @@ export default function TasksPanel({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-600">
-                    <Link href={`/dashboard/automations?card=${task.cardId}`} passHref legacyBehavior>
+                    <Link href={`/cards/${task.cardId}?taskId=${task.id}`} passHref legacyBehavior>
                       <a className="font-semibold text-primary-700 hover:underline">{task.cardName}</a>
                     </Link>
                     <span>Prazo: {formatDueDate(task.dueDate)}</span>

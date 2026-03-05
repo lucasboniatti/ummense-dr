@@ -33,5 +33,8 @@ jobs:
       - name: Test
         run: npm run test
 
+      - name: E2E Parity
+        run: npm run test:e2e:parity
+
       - name: Build
         run: npm run build

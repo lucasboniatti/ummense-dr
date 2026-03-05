@@ -15,6 +15,7 @@ import {
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import EventEditor from '../events/EventEditor';
 
 export interface CalendarEvent {
   id: string;
@@ -30,10 +31,35 @@ interface CalendarPanelProps {
   loading: boolean;
   error: string | null;
   sourceHint: string | null;
+  canEdit?: boolean;
+  undatedTasksCount?: number;
+  cardIdHint?: number | null;
+  taskIdHint?: number | null;
+  onCreateEvent?: (payload: {
+    title: string;
+    description: string | null;
+    startsAt: string;
+    endsAt: string | null;
+    cardId: number | null;
+    taskId: number | null;
+  }) => Promise<void> | void;
+  onUpdateEvent?: (
+    eventId: string,
+    payload: {
+      title?: string;
+      description?: string | null;
+      startsAt?: string;
+      endsAt?: string | null;
+      cardId?: number | null;
+      taskId?: number | null;
+    }
+  ) => Promise<void> | void;
+  onDeleteEvent?: (eventId: string) => Promise<void> | void;
   onRetry: () => void;
 }
 
 const weekLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+type QuickFilter = 'all' | 'next7days' | 'undated';
 
 function eventDate(event: CalendarEvent): Date | null {
   try {
@@ -50,9 +76,20 @@ export default function CalendarPanel({
   loading,
   error,
   sourceHint,
+  canEdit = false,
+  undatedTasksCount = 0,
+  cardIdHint = null,
+  taskIdHint = null,
+  onCreateEvent,
+  onUpdateEvent,
+  onDeleteEvent,
   onRetry,
 }: CalendarPanelProps) {
   const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [activeEvent, setActiveEvent] = useState<CalendarEvent | null>(null);
+  const [editorLoading, setEditorLoading] = useState(false);
 
   const days = useMemo(() => {
     const monthStart = startOfMonth(visibleMonth);
@@ -79,12 +116,108 @@ export default function CalendarPanel({
   }, [events]);
 
   const upcomingEvents = useMemo(() => {
+    const now = new Date();
+    const next7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
     return events
       .map((event) => ({ event, date: eventDate(event) }))
       .filter((entry): entry is { event: CalendarEvent; date: Date } => entry.date !== null)
+      .filter((entry) => {
+        if (quickFilter === 'all') return true;
+        if (quickFilter === 'undated') return false;
+        return entry.date >= now && entry.date <= next7Days;
+      })
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .slice(0, 6);
-  }, [events]);
+  }, [events, quickFilter]);
+
+  const onOpenCreate = () => {
+    setActiveEvent(null);
+    setIsEditorOpen(true);
+  };
+
+  const onOpenEdit = (event: CalendarEvent) => {
+    setActiveEvent(event);
+    setIsEditorOpen(true);
+  };
+
+  const mappedActiveEvent = activeEvent
+    ? {
+        id: activeEvent.id,
+        user_id: '',
+        title: activeEvent.title,
+        description: null,
+        starts_at: activeEvent.startsAt,
+        ends_at: activeEvent.endsAt,
+        card_id: activeEvent.cardId,
+        task_id: activeEvent.taskId,
+        metadata: {},
+        created_at: activeEvent.startsAt,
+        updated_at: activeEvent.startsAt,
+      }
+    : null;
+
+  const handleCreateEvent = async (payload: {
+    title: string;
+    description: string | null;
+    startsAt: string;
+    endsAt: string | null;
+    cardId: number | null;
+    taskId: number | null;
+  }) => {
+    if (!onCreateEvent) {
+      return;
+    }
+
+    setEditorLoading(true);
+    try {
+      await onCreateEvent(payload);
+      setIsEditorOpen(false);
+      setActiveEvent(null);
+    } finally {
+      setEditorLoading(false);
+    }
+  };
+
+  const handleUpdateEvent = async (
+    eventId: string,
+    payload: {
+      title?: string;
+      description?: string | null;
+      startsAt?: string;
+      endsAt?: string | null;
+      cardId?: number | null;
+      taskId?: number | null;
+    }
+  ) => {
+    if (!onUpdateEvent) {
+      return;
+    }
+
+    setEditorLoading(true);
+    try {
+      await onUpdateEvent(eventId, payload);
+      setIsEditorOpen(false);
+      setActiveEvent(null);
+    } finally {
+      setEditorLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!onDeleteEvent) {
+      return;
+    }
+
+    setEditorLoading(true);
+    try {
+      await onDeleteEvent(eventId);
+      setIsEditorOpen(false);
+      setActiveEvent(null);
+    } finally {
+      setEditorLoading(false);
+    }
+  };
 
   return (
     <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm md:p-5">
@@ -111,9 +244,57 @@ export default function CalendarPanel({
         </div>
       </header>
 
-      <p className="mb-4 text-sm font-semibold text-neutral-600">
-        {format(visibleMonth, 'MMMM yyyy', { locale: ptBR })}
-      </p>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-neutral-600">
+          {format(visibleMonth, 'MMMM yyyy', { locale: ptBR })}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setQuickFilter('next7days')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+              quickFilter === 'next7days'
+                ? 'bg-primary-600 text-white'
+                : 'border border-neutral-300 text-neutral-700'
+            }`}
+          >
+            Próximos 7 dias
+          </button>
+          <button
+            type="button"
+            onClick={() => setQuickFilter('undated')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+              quickFilter === 'undated'
+                ? 'bg-primary-600 text-white'
+                : 'border border-neutral-300 text-neutral-700'
+            }`}
+          >
+            Sem data
+          </button>
+          <button
+            type="button"
+            onClick={() => setQuickFilter('all')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+              quickFilter === 'all'
+                ? 'bg-primary-600 text-white'
+                : 'border border-neutral-300 text-neutral-700'
+            }`}
+          >
+            Todos
+          </button>
+
+          {canEdit && (
+            <button
+              type="button"
+              onClick={onOpenCreate}
+              className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
+            >
+              Novo evento
+            </button>
+          )}
+        </div>
+      </div>
 
       {sourceHint && (
         <div className="mb-4 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-sm font-medium text-warning-800">
@@ -182,7 +363,13 @@ export default function CalendarPanel({
           <div className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
             <h3 className="mb-2 text-sm font-bold text-neutral-800">Próximos eventos</h3>
 
-            {upcomingEvents.length === 0 && (
+            {quickFilter === 'undated' && (
+              <p className="mb-2 text-sm text-neutral-600">
+                Tarefas sem prazo: <strong>{undatedTasksCount}</strong>
+              </p>
+            )}
+
+            {upcomingEvents.length === 0 && quickFilter !== 'undated' && (
               <p className="text-sm text-neutral-600">Nenhum evento programado.</p>
             )}
 
@@ -197,12 +384,36 @@ export default function CalendarPanel({
                     {format(date, "dd 'de' MMM, HH:mm", { locale: ptBR })}
                     {event.cardId ? ` • Card #${event.cardId}` : ''}
                   </p>
+                  {canEdit && !event.id.startsWith('task-due-') && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenEdit(event)}
+                      className="mt-2 rounded border border-neutral-300 px-2 py-1 text-[11px] font-semibold text-neutral-700 hover:bg-neutral-100"
+                    >
+                      Editar
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
           </div>
         </>
       )}
+
+      <EventEditor
+        open={isEditorOpen}
+        event={mappedActiveEvent}
+        loading={editorLoading}
+        cardIdHint={cardIdHint}
+        taskIdHint={taskIdHint}
+        onCancel={() => {
+          setIsEditorOpen(false);
+          setActiveEvent(null);
+        }}
+        onCreate={handleCreateEvent}
+        onUpdate={handleUpdateEvent}
+        onDelete={handleDeleteEvent}
+      />
     </section>
   );
 }

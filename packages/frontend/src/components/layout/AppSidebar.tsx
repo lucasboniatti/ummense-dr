@@ -34,7 +34,8 @@ const navItems: NavItem[] = [
     icon: KanbanSquare,
     matches: (pathname) =>
       pathname.startsWith('/dashboard/automations') ||
-      pathname.startsWith('/flows'),
+      pathname.startsWith('/flows') ||
+      pathname.startsWith('/cards'),
   },
   {
     label: 'Contatos',

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/router';
 import { KanbanBoard } from '../../components/KanbanBoard';
 import {
   KanbanCard,
@@ -251,6 +252,7 @@ function formatDate(value: string): string {
 }
 
 export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceProps) {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
@@ -484,6 +486,10 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
     void dropOnColumn(columnId);
   };
 
+  const openCardWorkspace = (cardId: number) => {
+    void router.push(`/cards/${cardId}`);
+  };
+
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
@@ -665,6 +671,7 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
           onDragStart={(cardId, fromColumnId) => startDrag({ cardId, fromColumnId })}
           onDragEnd={clearDrag}
           onDropColumn={onDropColumn}
+          onCardClick={openCardWorkspace}
           filterCard={matchCardFilter}
         />
       )}
@@ -680,19 +687,28 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
                 <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-800">Responsável</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-800">Progresso</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-800">Atualizado</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-800">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-neutral-600">
+                  <td colSpan={7} className="px-4 py-6 text-center text-sm text-neutral-600">
                     Nenhum card encontrado para os filtros atuais.
                   </td>
                 </tr>
               )}
               {filteredRows.map((row) => (
                 <tr key={row.id} className="hover:bg-neutral-50">
-                  <td className="px-4 py-3 text-sm font-semibold text-neutral-900">{row.title}</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-neutral-900">
+                    <button
+                      type="button"
+                      onClick={() => openCardWorkspace(row.id)}
+                      className="text-left text-primary-700 hover:underline"
+                    >
+                      {row.title}
+                    </button>
+                  </td>
                   <td className="px-4 py-3 text-sm text-neutral-700">{row.columnName}</td>
                   <td className="px-4 py-3 text-sm text-neutral-700">{row.effectiveStatus}</td>
                   <td className="px-4 py-3 text-sm text-neutral-700">
@@ -700,6 +716,15 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
                   </td>
                   <td className="px-4 py-3 text-sm text-neutral-700">{row.progress.percent}%</td>
                   <td className="px-4 py-3 text-sm text-neutral-700">{formatDate(row.updatedAt)}</td>
+                  <td className="px-4 py-3 text-sm text-neutral-700">
+                    <button
+                      type="button"
+                      onClick={() => void router.push(`/cards/${row.id}?newTask=1`)}
+                      className="rounded border border-neutral-300 px-2 py-1 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
+                    >
+                      Nova tarefa
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

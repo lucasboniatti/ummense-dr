@@ -45,6 +45,25 @@ async function ensureCardOwnership(cardId: number, userId: string) {
   return card;
 }
 
+async function ensureTaskOwnership(taskId: number, userId: string) {
+  const { data: task, error } = await supabase
+    .from('tasks')
+    .select('id,card_id,cards!inner(id,user_id)')
+    .eq('id', taskId)
+    .eq('cards.user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
+
+  return task;
+}
+
 // POST /api/tags - Create tag
 router.post('/', authMiddleware, async (req, res, next) => {
   try {
@@ -230,6 +249,99 @@ router.delete('/cards/:cardId/tags/:tagId', authMiddleware, async (req, res, nex
       .from('card_tags')
       .delete()
       .eq('card_id', cardId)
+      .eq('tag_id', tagId);
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/tags/tasks/:taskId/tags - List task tags
+router.get('/tasks/:taskId/tags', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const taskId = asNumber(req.params.taskId, 0);
+
+    if (!taskId) {
+      throw new AppError('Invalid task id', 400);
+    }
+
+    await ensureTaskOwnership(taskId, userId);
+
+    const { data, error } = await supabase
+      .from('task_tags')
+      .select('tag_id,tags(id,name,color,created_at)')
+      .eq('task_id', taskId);
+
+    if (error) {
+      throw error;
+    }
+
+    const tags = (data || [])
+      .map((row: any) => row.tags)
+      .filter(Boolean);
+
+    res.status(200).json(tags);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/tags/tasks/:taskId/tags/:tagId - Add tag to task
+router.post('/tasks/:taskId/tags/:tagId', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const taskId = asNumber(req.params.taskId, 0);
+    const tagId = asNumber(req.params.tagId, 0);
+
+    if (!taskId || !tagId) {
+      throw new AppError('Invalid task id or tag id', 400);
+    }
+
+    await ensureTaskOwnership(taskId, userId);
+    await ensureTagOwnership(tagId, userId);
+
+    const { error } = await supabase.from('task_tags').insert({
+      task_id: taskId,
+      tag_id: tagId,
+    });
+
+    if (error) {
+      if (String((error as any).code) === '23505') {
+        throw new AppError('Tag already assigned to task', 409);
+      }
+      throw error;
+    }
+
+    res.status(201).json({ taskId, tagId });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/tags/tasks/:taskId/tags/:tagId - Remove tag from task
+router.delete('/tasks/:taskId/tags/:tagId', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const taskId = asNumber(req.params.taskId, 0);
+    const tagId = asNumber(req.params.tagId, 0);
+
+    if (!taskId || !tagId) {
+      throw new AppError('Invalid task id or tag id', 400);
+    }
+
+    await ensureTaskOwnership(taskId, userId);
+    await ensureTagOwnership(tagId, userId);
+
+    const { error } = await supabase
+      .from('task_tags')
+      .delete()
+      .eq('task_id', taskId)
       .eq('tag_id', tagId);
 
     if (error) {

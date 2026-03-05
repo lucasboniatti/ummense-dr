@@ -23,10 +23,12 @@
     "env:check:infra": "node ./scripts/env-check.mjs --target infra",
     "quality:gates": "node ./scripts/quality-gates.mjs",
     "quality:gates:red": "GATE_FORCE_FAIL_STAGE=test node ./scripts/quality-gates.mjs",
+    "qa:epic6:fixture": "node ./scripts/create-epic6-parity-fixture.mjs",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "test": "npm run test --workspaces",
+    "test:e2e:parity": "playwright test -c packages/e2e/playwright.parity.config.ts",
     "typecheck:backend:full": "npm run typecheck:full --workspace @ummense/backend"
   },
   "dependencies": {

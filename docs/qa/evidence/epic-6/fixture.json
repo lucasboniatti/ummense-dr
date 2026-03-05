@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-03-05T14:31:00.593Z",
+  "apiBaseUrl": "http://127.0.0.1:3001",
+  "flowId": 4,
+  "columnId": 13,
+  "cardId": 4,
+  "taskId": 4,
+  "taskTitle": "Task Parity 1772721060324-343562",
+  "tagId": 4,
+  "webhookUrl": "https://example.com/webhook-parity-1772721060324-343562",
+  "tokenA": "<redacted-local-token>",
+  "tokenB": "<redacted-local-token>",
+  "permissionChecks": {
+    "getTaskTagsAsOtherUser": 404,
+    "addTaskTagAsOtherUser": 404,
+    "getCardAsOtherUser": 404,
+    "updateCardAsOtherUser": 404
+  }
+}

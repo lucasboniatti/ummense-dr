@@ -9,6 +9,7 @@ interface KanbanBoardProps {
   onDragStart: (cardId: number, fromColumnId: number) => void;
   onDragEnd: () => void;
   onDropColumn: (toColumnId: number) => void;
+  onCardClick?: (cardId: number) => void;
   filterCard?: (card: KanbanCard, column: KanbanColumn) => boolean;
 }
 
@@ -18,6 +19,7 @@ export function KanbanBoard({
   onDragStart,
   onDragEnd,
   onDropColumn,
+  onCardClick,
   filterCard,
 }: KanbanBoardProps) {
   const handleDragOver = (event: React.DragEvent) => {
@@ -59,6 +61,7 @@ export function KanbanBoard({
                     updatedAt={card.updatedAt}
                     isPending={isCardPending(card.id)}
                     draggable={!isCardPending(card.id)}
+                    onClick={onCardClick ? () => onCardClick(card.id) : undefined}
                     onDragStart={() => onDragStart(card.id, column.id)}
                     onDragEnd={onDragEnd}
                   />
