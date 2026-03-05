@@ -2,6 +2,13 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors, { CorsOptions } from 'cors';
 import { webhookRoutes } from './routes/webhook.routes';
 import { analyticsRoutes } from './routes/analytics.routes';
+import flowRoutes from './routes/flows';
+import cardRoutes from './routes/cards';
+import taskRoutes from './routes/tasks';
+import tagRoutes from './routes/tags';
+import eventRoutes from './routes/events';
+import panelRoutes from './routes/panel';
+import { AppError } from './utils/errors';
 
 const app: Express = express();
 
@@ -65,6 +72,12 @@ app.get('/health', (req: Request, res: Response) => {
 // API Routes
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/flows', flowRoutes);
+app.use('/api/cards', cardRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/tags', tagRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/panel', panelRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -72,6 +85,7 @@ app.use((req: Request, res: Response) => {
     error: 'Not Found',
     path: req.path,
     method: req.method,
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -79,8 +93,8 @@ app.use((req: Request, res: Response) => {
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('[Error]', err);
 
-  const status = err.status || 500;
-  const message = err.message || 'Internal Server Error';
+  const status = err instanceof AppError ? err.status : err.status || 500;
+  const message = err instanceof AppError ? err.message : err.message || 'Internal Server Error';
 
   res.status(status).json({
     error: message,

@@ -1,41 +1,414 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { asNumber } from '../utils/http';
+import { asNumber, asOptionalString } from '../utils/http';
+import { AppError } from '../utils/errors';
+import { supabase } from '../lib/supabase';
+import { getAuthenticatedUserId } from '../utils/request-user';
 
 const router = Router();
 
+async function ensureCardOwnership(cardId: number, userId: string) {
+  const { data: card, error } = await supabase
+    .from('cards')
+    .select('id,title,description,column_id,user_id,created_at,updated_at,status,contacts,custom_fields')
+    .eq('id', cardId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!card) {
+    throw new AppError('Card not found', 404);
+  }
+
+  return card;
+}
+
+async function ensureColumnOwnership(columnId: number, userId: string) {
+  const { data: column, error } = await supabase
+    .from('columns')
+    .select('id,flow_id,name,order')
+    .eq('id', columnId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!column) {
+    throw new AppError('Column not found', 404);
+  }
+
+  const { data: flow, error: flowError } = await supabase
+    .from('flows')
+    .select('id,user_id')
+    .eq('id', column.flow_id)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (flowError) {
+    throw flowError;
+  }
+
+  if (!flow) {
+    throw new AppError('Forbidden', 403);
+  }
+
+  return column;
+}
+
+async function appendTimeline(cardId: number, userId: string, action: string, details: Record<string, unknown>) {
+  const { error } = await supabase.from('card_timeline_events').insert({
+    card_id: cardId,
+    user_id: userId,
+    action,
+    details,
+    created_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
 // POST /api/cards - Create card
-router.post('/', authMiddleware, (req, res) => {
-  const { title, description, columnId } = req.body;
-  res.status(201).json({
-    id: 1,
-    title,
-    description,
-    columnId,
-    userId: req.user?.id,
-    comments: [],
-  });
+router.post('/', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const title = asOptionalString(req.body?.title);
+    const description = asOptionalString(req.body?.description);
+    const columnId = asNumber(req.body?.columnId, 0);
+
+    if (!title || !columnId) {
+      throw new AppError('title and columnId are required', 400);
+    }
+
+    await ensureColumnOwnership(columnId, userId);
+
+    const { data: card, error } = await supabase
+      .from('cards')
+      .insert({
+        title,
+        description: description || null,
+        column_id: columnId,
+        user_id: userId,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select('id,title,description,column_id,user_id,created_at,updated_at,status')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    await appendTimeline(card.id, userId, 'card.created', {
+      title: card.title,
+      columnId: card.column_id,
+    });
+
+    res.status(201).json({
+      id: card.id,
+      title: card.title,
+      description: card.description,
+      columnId: card.column_id,
+      userId: card.user_id,
+      status: card.status,
+      createdAt: card.created_at,
+      updatedAt: card.updated_at,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-// GET /api/cards/:id - Get card
-router.get('/:id', authMiddleware, (req, res) => {
-  res.json({
-    id: asNumber((req.params as any).id, 0),
-    title: 'Card Title',
-    description: 'Card description',
-    columnId: 2,
-    comments: [{ id: 1, text: 'Comment', userId: 1, createdAt: new Date() }],
-  });
+// GET /api/cards/:id - Get card details
+router.get('/:id', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const cardId = asNumber(req.params.id, 0);
+
+    if (!cardId) {
+      throw new AppError('Invalid card id', 400);
+    }
+
+    const card = await ensureCardOwnership(cardId, userId);
+
+    const [{ data: tasks, error: tasksError }, { data: tags, error: tagsError }] = await Promise.all([
+      supabase
+        .from('tasks')
+        .select('id,title,status,priority,due_date,assigned_to,created_at,updated_at')
+        .eq('card_id', cardId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('card_tags')
+        .select('tag_id,tags(id,name,color,created_at)')
+        .eq('card_id', cardId),
+    ]);
+
+    if (tasksError) {
+      throw tasksError;
+    }
+
+    if (tagsError) {
+      throw tagsError;
+    }
+
+    const totalTasks = (tasks || []).length;
+    const completedTasks = (tasks || []).filter((task) => task.status === 'completed').length;
+
+    res.status(200).json({
+      id: card.id,
+      title: card.title,
+      description: card.description,
+      columnId: card.column_id,
+      userId: card.user_id,
+      status: card.status || 'active',
+      contacts: card.contacts || [],
+      customFields: card.custom_fields || {},
+      progress: {
+        total: totalTasks,
+        completed: completedTasks,
+        percent: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+      },
+      tasks: tasks || [],
+      tags: (tags || []).map((entry: any) => entry.tags).filter(Boolean),
+      createdAt: card.created_at,
+      updatedAt: card.updated_at,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-// PUT /api/cards/:id - Update card
-router.put('/:id', authMiddleware, (req, res) => {
-  res.json({ id: asNumber((req.params as any).id, 0), ...req.body });
+// PUT /api/cards/:id - Update card metadata
+router.put('/:id', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const cardId = asNumber(req.params.id, 0);
+
+    if (!cardId) {
+      throw new AppError('Invalid card id', 400);
+    }
+
+    await ensureCardOwnership(cardId, userId);
+
+    const payload = req.body || {};
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (payload.title !== undefined) {
+      const title = asOptionalString(payload.title);
+      if (!title) {
+        throw new AppError('title cannot be empty', 422);
+      }
+      updateData.title = title;
+    }
+
+    if (payload.description !== undefined) {
+      updateData.description = asOptionalString(payload.description) || null;
+    }
+
+    if (payload.status !== undefined) {
+      const status = asOptionalString(payload.status);
+      if (!status) {
+        throw new AppError('status cannot be empty', 422);
+      }
+      updateData.status = status;
+    }
+
+    if (payload.contacts !== undefined) {
+      updateData.contacts = payload.contacts;
+    }
+
+    if (payload.customFields !== undefined) {
+      updateData.custom_fields = payload.customFields;
+    }
+
+    const { data: card, error } = await supabase
+      .from('cards')
+      .update(updateData)
+      .eq('id', cardId)
+      .eq('user_id', userId)
+      .select('id,title,description,column_id,user_id,status,contacts,custom_fields,updated_at')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    await appendTimeline(card.id, userId, 'card.updated', {
+      changedFields: Object.keys(updateData).filter((key) => key !== 'updated_at'),
+    });
+
+    res.status(200).json({
+      id: card.id,
+      title: card.title,
+      description: card.description,
+      columnId: card.column_id,
+      userId: card.user_id,
+      status: card.status || 'active',
+      contacts: card.contacts || [],
+      customFields: card.custom_fields || {},
+      updatedAt: card.updated_at,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-// DELETE /api/cards/:id - Delete card
-router.delete('/:id', authMiddleware, (req, res) => {
-  res.status(204).send();
+// PATCH /api/cards/:id/move - Move card to another column
+router.patch('/:id/move', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const cardId = asNumber(req.params.id, 0);
+    const toColumnId = asNumber(req.body?.toColumnId, 0);
+
+    if (!cardId || !toColumnId) {
+      throw new AppError('card id and toColumnId are required', 400);
+    }
+
+    const currentCard = await ensureCardOwnership(cardId, userId);
+    await ensureColumnOwnership(toColumnId, userId);
+
+    if (Number(currentCard.column_id) === toColumnId) {
+      throw new AppError('Card is already in target column', 409);
+    }
+
+    const { data: movedCard, error } = await supabase
+      .from('cards')
+      .update({
+        column_id: toColumnId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', cardId)
+      .eq('user_id', userId)
+      .select('id,title,column_id,updated_at')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    await appendTimeline(cardId, userId, 'card.moved', {
+      fromColumnId: currentCard.column_id,
+      toColumnId,
+    });
+
+    res.status(200).json({
+      id: movedCard.id,
+      title: movedCard.title,
+      columnId: movedCard.column_id,
+      updatedAt: movedCard.updated_at,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/cards/:id/timeline - List timeline events with pagination
+router.get('/:id/timeline', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const cardId = asNumber(req.params.id, 0);
+    const limit = Math.min(asNumber(req.query.limit, 20), 100);
+    const offset = Math.max(asNumber(req.query.offset, 0), 0);
+
+    if (!cardId) {
+      throw new AppError('Invalid card id', 400);
+    }
+
+    await ensureCardOwnership(cardId, userId);
+
+    const { data: timeline, error } = await supabase
+      .from('card_timeline_events')
+      .select('id,card_id,user_id,action,details,created_at')
+      .eq('card_id', cardId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(200).json({
+      items: timeline || [],
+      pagination: {
+        limit,
+        offset,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/cards/:id/timeline - Add timeline note/event
+router.post('/:id/timeline', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const cardId = asNumber(req.params.id, 0);
+    const action = asOptionalString(req.body?.action) || 'note.added';
+    const details = req.body?.details || {};
+
+    if (!cardId) {
+      throw new AppError('Invalid card id', 400);
+    }
+
+    await ensureCardOwnership(cardId, userId);
+
+    const { data: createdEvent, error } = await supabase
+      .from('card_timeline_events')
+      .insert({
+        card_id: cardId,
+        user_id: userId,
+        action,
+        details,
+        created_at: new Date().toISOString(),
+      })
+      .select('id,card_id,user_id,action,details,created_at')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(201).json(createdEvent);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/cards/:id - Hard delete card
+router.delete('/:id', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = getAuthenticatedUserId(req);
+    const cardId = asNumber(req.params.id, 0);
+
+    if (!cardId) {
+      throw new AppError('Invalid card id', 400);
+    }
+
+    await ensureCardOwnership(cardId, userId);
+
+    const { error } = await supabase
+      .from('cards')
+      .delete()
+      .eq('id', cardId)
+      .eq('user_id', userId);
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

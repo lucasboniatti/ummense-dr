@@ -1,9 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { getRequiredEnvVar } from '../config/env';
 
 export interface AuthRequest extends Request {
-  user?: { id: number; email: string };
+  user?: {
+    id: string | number;
+    email?: string;
+    [key: string]: unknown;
+  };
 }
 
 export function authMiddleware(
@@ -22,12 +26,25 @@ export function authMiddleware(
       return;
     }
 
-    const decoded = jwt.verify(token, getRequiredEnvVar('JWT_SECRET')) as {
-      id: number;
-      email: string;
+    const decoded = jwt.verify(token, getRequiredEnvVar('JWT_SECRET')) as JwtPayload & {
+      id?: string | number;
+      email?: string;
+      user_id?: string;
+      uid?: string;
     };
 
-    req.user = decoded;
+    const userId = decoded.id ?? decoded.sub ?? decoded.user_id ?? decoded.uid;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Invalid token' });
+      return;
+    }
+
+    req.user = {
+      id: userId,
+      email: decoded.email,
+    };
+
     next();
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
