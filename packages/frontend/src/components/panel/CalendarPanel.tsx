@@ -71,6 +71,22 @@ function eventDate(event: CalendarEvent): Date | null {
   }
 }
 
+function resolveVolumeStyle(eventsCount: number): string {
+  if (eventsCount >= 5) {
+    return 'border-primary-300 bg-primary-100';
+  }
+
+  if (eventsCount >= 3) {
+    return 'border-primary-200 bg-primary-50';
+  }
+
+  if (eventsCount >= 1) {
+    return 'border-primary-100 bg-white';
+  }
+
+  return '';
+}
+
 export default function CalendarPanel({
   events,
   loading,
@@ -334,26 +350,45 @@ export default function CalendarPanel({
             ))}
           </div>
 
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-neutral-600">
+            <span className="text-neutral-500">Volume diário:</span>
+            <span className="rounded border border-primary-100 bg-white px-2 py-0.5">
+              1-2
+            </span>
+            <span className="rounded border border-primary-200 bg-primary-50 px-2 py-0.5">
+              3-4
+            </span>
+            <span className="rounded border border-primary-300 bg-primary-100 px-2 py-0.5">
+              5+
+            </span>
+          </div>
+
           <div className="grid grid-cols-7 gap-2">
             {days.map((day) => {
               const key = format(day, 'yyyy-MM-dd');
               const dayEvents = eventsByDay.get(key) || [];
+              const eventsCount = dayEvents.length;
+              const volumeStyle = resolveVolumeStyle(eventsCount);
 
               return (
                 <div
                   key={key}
+                  aria-label={`Dia ${format(day, 'dd/MM/yyyy')} com ${eventsCount} evento(s)`}
                   className={[
                     'relative rounded-lg border p-2 text-center text-sm',
                     isSameMonth(day, visibleMonth)
                       ? 'border-neutral-200 bg-white text-neutral-800'
                       : 'border-neutral-100 bg-neutral-50 text-neutral-400',
+                    volumeStyle,
                     isToday(day) ? 'ring-2 ring-primary-300' : '',
                   ].join(' ')}
                 >
                   <span className="font-medium">{format(day, 'd')}</span>
 
-                  {dayEvents.length > 0 && (
-                    <span className="absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary-600" />
+                  {eventsCount > 0 && (
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-primary-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      {eventsCount}
+                    </span>
                   )}
                 </div>
               );

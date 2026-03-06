@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import { EventItem } from '../../services/events.service';
+import {
+  fromLocalDateTimeInput,
+  toLocalDateTimeInput,
+} from '../../utils/datetime-local';
 
 interface EventEditorProps {
   open: boolean;
@@ -37,34 +41,6 @@ interface EventFormState {
   endsAt: string;
   cardId: string;
   taskId: string;
-}
-
-function toLocalDateTimeInput(value: string | null): string {
-  if (!value) {
-    return '';
-  }
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return '';
-  }
-
-  const offset = parsed.getTimezoneOffset() * 60 * 1000;
-  const localDate = new Date(parsed.getTime() - offset);
-  return localDate.toISOString().slice(0, 16);
-}
-
-function fromLocalDateTimeInput(value: string): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-
-  return parsed.toISOString();
 }
 
 function initialForm(event: EventItem | null, cardIdHint?: number | null, taskIdHint?: number | null): EventFormState {
