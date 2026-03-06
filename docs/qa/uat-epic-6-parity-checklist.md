@@ -8,13 +8,13 @@ Ambiente: `Homologação local integrada (infra + backend + frontend)`
 - [x] Acessar `/` com token válido.
 - [x] Validar cards de resumo carregando.
 - [x] Validar widget de tarefas com estados loading/erro/empty.
-- [ ] Validar calendário com filtros rápidos (`Próximos 7 dias`, `Sem data`, `Todos`).
+- [x] Validar calendário com filtros rápidos (`Próximos 7 dias`, `Sem data`, `Todos`).
 
 ## 2. Fluxos 2.0
 - [x] Acessar `/dashboard/automations`.
 - [x] Alternar abas `Quadro`, `Tabela`, `Indicadores` sem perder filtros.
 - [x] Mover card no quadro e validar persistência após refresh.
-- [ ] Abrir card via clique no board/tabela.
+- [x] Abrir card via clique no board/tabela.
 
 ## 3. Card Workspace 2.0
 - [x] Acessar `/cards/:id`.
@@ -26,7 +26,7 @@ Ambiente: `Homologação local integrada (infra + backend + frontend)`
 - [x] Abrir modal de tarefa a partir do painel (`/cards/:id?taskId=:taskId`).
 - [x] Abrir modal de tarefa a partir do fluxo (`Nova tarefa` na tabela de fluxos).
 - [x] Abrir modal a partir da seção de tarefas do card.
-- [ ] Criar/editar/excluir tarefa e validar histórico.
+- [x] Criar/editar/excluir tarefa e validar histórico.
 
 ## 5. Calendário e Eventos
 - [x] Criar evento com data/hora local e validar renderização correta.

@@ -253,6 +253,38 @@ test.describe('Product Parity E2E (authenticated)', () => {
     await captureEvidence(page, '04c-flows-dnd-persistence.png');
   });
 
+  test('fluxos abre card por clique no quadro e na tabela', async ({ page, request }) => {
+    test.slow();
+    test.skip(!hasFlowsFixture(), 'Set PARITY_FLOW_ID, PARITY_COLUMN_ID, PARITY_TARGET_COLUMN_ID and PARITY_CARD_TITLE');
+
+    const currentCardTitle = await getCurrentCardTitle(request);
+    await page.goto(withToken(`/flows/${parityFlowId}`));
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Fluxos 2.0' })
+    ).toBeVisible();
+
+    const filterInput = page.getByPlaceholder('Filtrar por texto (card, descrição, responsável, tag...)');
+    await filterInput.fill(currentCardTitle);
+
+    // Board click -> card workspace
+    await page.getByRole('button', { name: 'Quadro' }).click();
+    await page.getByText(currentCardTitle).first().click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Card Workspace 2.0' })
+    ).toBeVisible();
+
+    // Table click -> card workspace
+    await page.goto(withToken(`/flows/${parityFlowId}`));
+    await filterInput.fill(currentCardTitle);
+    await page.getByRole('button', { name: 'Tabela' }).click();
+    await page.getByRole('button', { name: currentCardTitle }).first().click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Card Workspace 2.0' })
+    ).toBeVisible();
+
+    await captureEvidence(page, '11-flows-open-card-board-table.png');
+  });
+
   test('calendário reflete due date da tarefa no painel', async ({ page }) => {
     await page.goto(withToken(`/cards/${parityCardId}?taskId=${parityTaskId}`));
 
@@ -276,6 +308,28 @@ test.describe('Product Parity E2E (authenticated)', () => {
     await expect(page.getByText(`Prazo: ${parityTaskTitle}`)).toBeVisible();
 
     await captureEvidence(page, '09b-calendar-due-date-reflection.png');
+  });
+
+  test('calendário valida filtros rápidos (Próximos 7 dias, Sem data, Todos)', async ({ page }) => {
+    await page.goto(withToken('/'));
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Calendário' })
+    ).toBeVisible();
+
+    const upcomingFilter = page.getByRole('button', { name: 'Próximos 7 dias' });
+    const undatedFilter = page.getByRole('button', { name: 'Sem data' });
+    const allFilter = page.getByRole('button', { name: 'Todos' });
+
+    await undatedFilter.click();
+    await expect(page.getByText('Tarefas sem prazo:', { exact: false })).toBeVisible();
+
+    await upcomingFilter.click();
+    await expect(page.getByText('Tarefas sem prazo:', { exact: false })).toHaveCount(0);
+
+    await allFilter.click();
+    await expect(page.getByRole('heading', { level: 3, name: 'Próximos eventos' })).toBeVisible();
+
+    await captureEvidence(page, '10-calendar-quick-filters.png');
   });
 
   test('calendario permite criar, editar e remover evento com persistência UTC/local', async ({ page, request }) => {
@@ -350,6 +404,60 @@ test.describe('Product Parity E2E (authenticated)', () => {
     await expect(page.getByText(updatedEventTitle)).toHaveCount(0);
 
     await captureEvidence(page, '09-calendar-event-lifecycle.png');
+  });
+
+  test('task modal permite criar, editar, excluir tarefa e validar histórico', async ({ page }) => {
+    test.slow();
+    await page.goto(withToken(`/cards/${parityCardId}?newTask=1`));
+
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Nova tarefa' })
+    ).toBeVisible();
+
+    const newTaskTitle = `Task CRUD ${Date.now()}`;
+    await page.locator('div.fixed input[type="text"]').first().fill(newTaskTitle);
+    await page.locator('div.fixed textarea').first().fill('Tarefa criada no cenário de parity.');
+    await page.locator('div.fixed select').nth(0).selectOption('P1');
+    await page.locator('div.fixed select').nth(1).selectOption('open');
+    await page.locator('div.fixed input[type="text"]').nth(1).fill('QA User');
+
+    const createTaskButton = page.locator('div.fixed').getByRole('button', { name: 'Criar tarefa' });
+    await createTaskButton.scrollIntoViewIfNeeded();
+    await createTaskButton.evaluate((element) => {
+      (element as HTMLButtonElement).click();
+    });
+
+    const createdTaskButton = page.getByRole('button', { name: newTaskTitle }).first();
+    await expect(createdTaskButton).toBeVisible();
+    await createdTaskButton.click();
+
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Editar tarefa' })
+    ).toBeVisible();
+
+    const updatedTaskTitle = `${newTaskTitle} editada`;
+    await page.locator('div.fixed input[type="text"]').first().fill(updatedTaskTitle);
+    await page.locator('div.fixed select').nth(1).selectOption('completed');
+    const saveTaskButton = page.locator('div.fixed').getByRole('button', { name: 'Salvar alterações' });
+    await saveTaskButton.scrollIntoViewIfNeeded();
+    await saveTaskButton.evaluate((element) => {
+      (element as HTMLButtonElement).click();
+    });
+
+    const updatedTaskButton = page.getByRole('button', { name: updatedTaskTitle }).first();
+    await expect(updatedTaskButton).toBeVisible();
+    await updatedTaskButton.click();
+    await expect(page.getByText('task.created').first()).toBeVisible();
+    await expect(page.getByText('task.updated').first()).toBeVisible({ timeout: 15_000 });
+
+    const deleteTaskButton = page.locator('div.fixed').getByRole('button', { name: 'Remover tarefa' });
+    await deleteTaskButton.scrollIntoViewIfNeeded();
+    await deleteTaskButton.evaluate((element) => {
+      (element as HTMLButtonElement).click();
+    });
+
+    await expect(page.getByRole('button', { name: updatedTaskTitle })).toHaveCount(0);
+    await captureEvidence(page, '12-task-crud-history.png');
   });
 
   test('webhooks local lista webhook real com token aplicado', async ({ page }) => {
