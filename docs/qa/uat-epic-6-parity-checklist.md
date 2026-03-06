@@ -1,6 +1,6 @@
 # UAT Checklist - Epic 6 Product Parity
 
-Data de execução: `2026-03-05`  
+Data de execução: `2026-03-06`  
 Responsável: `@qa`  
 Ambiente: `Homologação local integrada (infra + backend + frontend)`
 
@@ -12,8 +12,8 @@ Ambiente: `Homologação local integrada (infra + backend + frontend)`
 
 ## 2. Fluxos 2.0
 - [x] Acessar `/dashboard/automations`.
-- [ ] Alternar abas `Quadro`, `Tabela`, `Indicadores` sem perder filtros.
-- [ ] Mover card no quadro e validar persistência após refresh.
+- [x] Alternar abas `Quadro`, `Tabela`, `Indicadores` sem perder filtros.
+- [x] Mover card no quadro e validar persistência após refresh.
 - [ ] Abrir card via clique no board/tabela.
 
 ## 3. Card Workspace 2.0
@@ -31,8 +31,8 @@ Ambiente: `Homologação local integrada (infra + backend + frontend)`
 ## 5. Calendário e Eventos
 - [x] Criar evento com data/hora local e validar renderização correta.
 - [x] Editar/remover evento.
-- [ ] Validar reflexo de due date das tarefas no calendário.
-- [ ] Validar persistência UTC no backend e render local no frontend.
+- [x] Validar reflexo de due date das tarefas no calendário.
+- [x] Validar persistência UTC no backend e render local no frontend.
 
 ## 6. Gate Final
 - [x] `npm run quality:gates` executado.
