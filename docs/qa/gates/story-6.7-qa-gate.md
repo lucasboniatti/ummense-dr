@@ -17,7 +17,7 @@
 1. `FIXED` - `test:e2e:parity` não está mais skipped.
 2. `FIXED` - Suíte parity expandida e executada com backend real ativo (`16 passed`).
 3. `FIXED` - Evidências visuais foram anexadas (incluindo quick filters, open card board/tabela e CRUD task/history).
-4. `INFO` - Gate formal final de produto ainda depende do registro PO (`story-6.7-po-validation.md`).
+4. `FIXED` - Gate PO atualizado para `GO` com publicação final e CI pós-merge validados.
 
 ## Recommendation
-- `GO` técnico em QA para Epic 6; seguir para fechamento formal do PO.
+- `GO` técnico confirmado para Epic 6; fechamento formal e publicação concluídos.

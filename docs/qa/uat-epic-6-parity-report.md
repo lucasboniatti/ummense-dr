@@ -2,7 +2,7 @@
 
 Data: `2026-03-06`  
 Responsável: `@qa`  
-Build/Commit: `workspace local (não commitado, Epic 6 em validação final)`
+Build/Commit: `master@21d2bf9 (PR #13 mergeado) | CI push success run 22774750981`
 
 ## Resultado Geral
 - Gate QA: `PASS`
@@ -58,4 +58,5 @@ Build/Commit: `workspace local (não commitado, Epic 6 em validação final)`
 - Baixos: `0`
 
 ## Ações
-1. Executar publicação final operacional com `@devops` (release checklist + monitoramento inicial pós-publicação).
+1. Publicação final operacional concluída com `@devops` (PR #13 mergeado em `master`).
+2. Monitoramento inicial pós-publicação concluído com pipeline CI de `master` em `success` (run `22774750981`).

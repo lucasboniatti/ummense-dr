@@ -2,19 +2,20 @@
 
 - Story: `6.7`
 - Reviewer: `@po`
-- Date: `2026-03-05`
+- Date: `2026-03-06`
 - Decision: `GO`
 
 ## Validation Summary
 - Cobertura UAT validada: `Sim` (paridade executada em homologação local integrada com backend real).
 - Evidências aceitas:
   - `npm run quality:gates` => `PASS`
-  - `npm run test:e2e:parity` => `10 passed`
+  - `npm run test:e2e:parity` => `16 passed`
   - screenshots: `docs/qa/evidence/epic-6/screenshots`
   - fixture + checks de permissão: `docs/qa/evidence/epic-6/fixture.json`
-- Riscos residuais aceitos:
-  - Cobertura avançada de Fluxos 2.0 (interações completas de board/tabela) ficará para próximo ciclo.
-  - Validação avançada de calendário (due date de tarefas e check UTC explícito) ficará para próximo ciclo.
+- Publicação final validada:
+  - PR: `#13` (MERGED)
+  - Merge commit: `21d2bf9319fb8a55b04e7d6726cc91c263efa169`
+  - CI pós-merge (`master`): `success` (run `22774750981`)
 
 ## Final Product Decision
 - `GO`
