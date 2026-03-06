@@ -6,13 +6,13 @@ Build/Commit: `workspace local (não commitado, Epic 6 em validação final)`
 
 ## Resultado Geral
 - Gate QA: `PASS`
-- Gate PO: `PENDING`
-- Decisão: `GO técnico (QA)` / `Aguardando GO formal do PO`
+- Gate PO: `GO`
+- Decisão: `GO técnico + GO formal`
 
 ## Evidências
 - Logs:
   - `npm run quality:gates` => `PASS`
-  - `npm run test:e2e:parity` => `13 passed`
+  - `npm run test:e2e:parity` => `16 passed`
   - `scripts/create-epic6-parity-fixture.mjs` => fixture real + checks negativos de permissão (`404`)
 - Screenshots:
   - `docs/qa/evidence/epic-6/screenshots/01-painel-fluxos.png`
@@ -28,6 +28,9 @@ Build/Commit: `workspace local (não commitado, Epic 6 em validação final)`
   - `docs/qa/evidence/epic-6/screenshots/08-webhooks-autenticado.png`
   - `docs/qa/evidence/epic-6/screenshots/09-calendar-event-lifecycle.png`
   - `docs/qa/evidence/epic-6/screenshots/09b-calendar-due-date-reflection.png`
+  - `docs/qa/evidence/epic-6/screenshots/10-calendar-quick-filters.png`
+  - `docs/qa/evidence/epic-6/screenshots/11-flows-open-card-board-table.png`
+  - `docs/qa/evidence/epic-6/screenshots/12-task-crud-history.png`
 - Fixture: `docs/qa/evidence/epic-6/fixture.json`
 
 ## Execução por Jornada
@@ -38,7 +41,7 @@ Build/Commit: `workspace local (não commitado, Epic 6 em validação final)`
 
 ### Fluxos 2.0
 - Status: `PASS`
-- Observações: cobertura parity validou alternância Quadro/Tabela/Indicadores sem perda de filtro e DnD com persistência após refresh.
+- Observações: cobertura parity validou alternância Quadro/Tabela/Indicadores sem perda de filtro, DnD com persistência após refresh e abertura de card por clique em quadro/tabela.
 
 ### Card Workspace 2.0
 - Status: `PASS`
@@ -46,7 +49,7 @@ Build/Commit: `workspace local (não commitado, Epic 6 em validação final)`
 
 ### Task Workspace 2.0 + Calendário
 - Status: `PASS`
-- Observações: task modal validado em 3 entradas + update; calendário validado com create/edit/delete de evento, reflexo de due date e verificação UTC->local.
+- Observações: task modal validado em 3 entradas + CRUD completo com histórico; calendário validado com quick filters, create/edit/delete de evento, reflexo de due date e verificação UTC->local.
 
 ## Defeitos
 - Críticos: `0`
@@ -55,4 +58,4 @@ Build/Commit: `workspace local (não commitado, Epic 6 em validação final)`
 - Baixos: `0`
 
 ## Ações
-1. Fechar `story-6.7-po-validation.md` com decisão GO/NOGO do PO.
+1. Executar publicação final operacional com `@devops` (release checklist + monitoramento inicial pós-publicação).
