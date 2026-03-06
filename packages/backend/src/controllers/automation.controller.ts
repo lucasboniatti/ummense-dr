@@ -107,7 +107,8 @@ export const automationController = {
   // Export CSV
   exportCsv: async (req: any, res: Response) => {
     try {
-      const { ruleId, webhookId, status, startDate, endDate, search } = req.body;
+      const source = req.method === 'GET' ? req.query : req.body;
+      const { ruleId, webhookId, status, startDate, endDate, search } = source || {};
       const csv = await automationService.exportCsv(req.user.id, {
         ruleId,
         webhookId,

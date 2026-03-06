@@ -11,6 +11,28 @@ export const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  if (typeof window === 'undefined') {
+    return config;
+  }
+
+  const token =
+    window.localStorage.getItem('synkra_dev_token') ||
+    window.localStorage.getItem('token');
+
+  if (!token) {
+    return config;
+  }
+
+  const headers = (config.headers || {}) as Record<string, string>;
+  if (!headers.Authorization) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  config.headers = headers as any;
+
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {

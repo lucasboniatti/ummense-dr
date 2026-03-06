@@ -102,4 +102,24 @@ router.get('/summary', async (req: Request, res: Response, next: NextFunction) =
   }
 });
 
+/**
+ * GET /api/analytics/metrics
+ * Alias used by dashboard widgets. Returns a stable contract.
+ */
+router.get('/metrics', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.status(200).json({
+      successRate: 0,
+      avgDuration: 0,
+      failedExecutions: [],
+      costSavings: 0,
+      storageUtilization: 0,
+      successTrend: [],
+      durationTrend: [],
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export const analyticsRoutes = router;

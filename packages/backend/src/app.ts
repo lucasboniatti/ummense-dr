@@ -2,15 +2,26 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors, { CorsOptions } from 'cors';
 import { webhookRoutes } from './routes/webhook.routes';
 import { analyticsRoutes } from './routes/analytics.routes';
+import authRoutes from './routes/auth';
+import { automationRoutes } from './routes/automation.routes';
 import flowRoutes from './routes/flows';
 import cardRoutes from './routes/cards';
 import taskRoutes from './routes/tasks';
 import tagRoutes from './routes/tags';
 import eventRoutes from './routes/events';
 import panelRoutes from './routes/panel';
+import { authMiddleware } from './middleware/auth.middleware';
+import { controlRoutes } from './api/automations/control.routes';
+import { statusRoutes } from './api/status/status.routes';
+import webhookDeliveryRoutes from './api/webhooks/webhook-delivery.routes';
+import { createHistoryRoutes } from './automations/history/history.routes';
+import { ExecutionHistoryService } from './automations/history/history.service';
+import { supabase } from './lib/supabase';
 import { AppError } from './utils/errors';
 
 const app: Express = express();
+const historyService = new ExecutionHistoryService(supabase as any);
+const historyRoutes = createHistoryRoutes(historyService);
 
 const localCorsDefaults = [
   'http://localhost:3000',
@@ -70,6 +81,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/flows', flowRoutes);
@@ -78,6 +90,15 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/panel', panelRoutes);
+app.use('/api/status', statusRoutes);
+
+// Unified automations surface consumed by frontend pages/services.
+app.use('/api/automations', authMiddleware, controlRoutes);
+app.use('/api/automations', authMiddleware, automationRoutes);
+app.use('/api/automations', authMiddleware, historyRoutes);
+
+// DLQ endpoints under /api/automations/:automationId/webhooks/*
+app.use('/api', authMiddleware, webhookDeliveryRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

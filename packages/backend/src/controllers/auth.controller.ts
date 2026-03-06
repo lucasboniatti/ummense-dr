@@ -2,14 +2,16 @@ import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { hashPassword, comparePasswords, validatePassword } from '../utils/password';
-import { User, AuthPayload } from '../types/user';
+import { AuthPayload } from '../types/user';
+import { supabase } from '../lib/supabase';
+import { getRequiredEnvVar } from '../config/env';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = getRequiredEnvVar('JWT_SECRET');
 const JWT_EXPIRATION = '24h';
 
-// Mock database - replace with real DB
-const users: Map<number, User> = new Map();
-let nextId = 1;
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
 export async function signup(
   req: AuthRequest,
@@ -17,16 +19,17 @@ export async function signup(
 ): Promise<void> {
   try {
     const { email, password } = req.body as AuthPayload;
+    const normalizedEmail = normalizeEmail(email || '');
 
     // Validate input
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       res.status(400).json({ error: 'Email and password required' });
       return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       res.status(400).json({ error: 'Invalid email format' });
       return;
     }
@@ -38,26 +41,39 @@ export async function signup(
       return;
     }
 
-    // Check if email already exists
-    const userExists = Array.from(users.values()).some(u => u.email === email);
-    if (userExists) {
+    const { data: existingUser, error: existingUserError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    if (existingUserError) {
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+
+    if (existingUser) {
       res.status(409).json({ error: 'Email already registered' });
       return;
     }
 
-    // Hash password and create user
     const password_hash = await hashPassword(password);
-    const user: User = {
-      id: nextId++,
-      email,
-      password_hash,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
+    const { data: user, error: insertError } = await supabase
+      .from('users')
+      .insert({
+        email: normalizedEmail,
+        password_hash,
+      })
+      .select('id,email')
+      .single();
 
-    users.set(user.id, user);
+    if (insertError || !user) {
+      const message = insertError?.code === '23505' ? 'Email already registered' : 'Internal server error';
+      const status = insertError?.code === '23505' ? 409 : 500;
+      res.status(status).json({ error: message });
+      return;
+    }
 
-    // Generate JWT
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
@@ -87,14 +103,24 @@ export async function login(
 ): Promise<void> {
   try {
     const { email, password } = req.body as AuthPayload;
+    const normalizedEmail = normalizeEmail(email || '');
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       res.status(400).json({ error: 'Email and password required' });
       return;
     }
 
-    // Find user
-    const user = Array.from(users.values()).find(u => u.email === email);
+    const { data: user, error: selectError } = await supabase
+      .from('users')
+      .select('id,email,password_hash')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    if (selectError) {
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
@@ -131,22 +157,36 @@ export async function login(
   }
 }
 
-export function getMe(req: AuthRequest, res: Response): void {
+export async function getMe(req: AuthRequest, res: Response): Promise<void> {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
 
-  const user = users.get(req.user.id);
-  if (!user) {
-    res.status(404).json({ error: 'User not found' });
-    return;
-  }
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id,email')
+      .eq('id', String(req.user?.id))
+      .maybeSingle();
 
-  res.status(200).json({
-    id: user.id,
-    email: user.email,
-  });
+    if (error) {
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.status(200).json({
+      id: user.id,
+      email: user.email,
+    });
+  } catch {
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
 export function logout(req: AuthRequest, res: Response): void {

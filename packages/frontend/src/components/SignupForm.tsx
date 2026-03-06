@@ -3,7 +3,7 @@ import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
 
 interface SignupFormProps {
-  onSuccess?: (user: any) => void;
+  onSuccess?: (token: string) => void;
   onError?: (error: string) => void;
 }
 
@@ -30,6 +30,7 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, password: formData.password, name: formData.name }),
       });
@@ -40,7 +41,7 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
       }
 
       const data = await response.json();
-      onSuccess?.(data);
+      onSuccess?.(data.token);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);

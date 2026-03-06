@@ -16,10 +16,9 @@ export function authMiddleware(
   next: NextFunction
 ): void {
   try {
-    // Try to get token from cookie first, then from Authorization header
-    const token =
-      req.cookies?.token ||
-      req.headers.authorization?.replace('Bearer ', '');
+    const cookieToken = extractCookieToken(req.headers.cookie);
+    const bearerToken = req.headers.authorization?.replace('Bearer ', '');
+    const token = cookieToken || bearerToken;
 
     if (!token) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -49,4 +48,31 @@ export function authMiddleware(
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
   }
+}
+
+function extractCookieToken(cookieHeader?: string): string | null {
+  if (!cookieHeader) {
+    return null;
+  }
+
+  const parts = cookieHeader.split(';');
+  for (const rawPart of parts) {
+    const part = rawPart.trim();
+    if (!part.startsWith('token=')) {
+      continue;
+    }
+
+    const value = part.slice('token='.length).trim();
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
+
+  return null;
 }

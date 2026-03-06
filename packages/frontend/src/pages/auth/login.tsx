@@ -3,9 +3,9 @@ import { LoginForm } from '../../components/LoginForm';
 
 export function LoginPage() {
   const handleSuccess = (token: string) => {
-    // Store token and redirect
     localStorage.setItem('token', token);
-    window.location.href = '/dashboard';
+    localStorage.setItem('synkra_dev_token', token);
+    window.location.href = '/';
   };
 
   return (

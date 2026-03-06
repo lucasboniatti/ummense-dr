@@ -3,9 +3,9 @@ import { SignupForm } from '../../components/SignupForm';
 
 export function SignupPage() {
   const handleSuccess = (token: string) => {
-    // Store token and redirect
     localStorage.setItem('token', token);
-    window.location.href = '/dashboard';
+    localStorage.setItem('synkra_dev_token', token);
+    window.location.href = '/';
   };
 
   return (

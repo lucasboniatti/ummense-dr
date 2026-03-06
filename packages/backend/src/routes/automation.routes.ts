@@ -37,3 +37,4 @@ automationRoutes.get('/recent-executions', automationController.getRecentExecuti
 
 // POST export CSV
 automationRoutes.post('/export-csv', automationController.exportCsv);
+automationRoutes.get('/export-csv', automationController.exportCsv);

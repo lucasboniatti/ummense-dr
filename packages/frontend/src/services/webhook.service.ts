@@ -31,9 +31,19 @@ async function request(
   endpoint: string,
   options: RequestInit = {}
 ) {
+  const token =
+    typeof window === 'undefined'
+      ? ''
+      : window.localStorage.getItem('synkra_dev_token') ||
+        window.localStorage.getItem('token') ||
+        '';
+
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
   const response = await fetch(`${API_URL}/api${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeader,
       ...options.headers,
     },
     ...options,
