@@ -97,7 +97,11 @@ function buildJwt(userId, email) {
 function printShellExports(fixture) {
   const lines = [
     `export PARITY_DEV_TOKEN='${fixture.tokenA}'`,
+    `export PARITY_FLOW_ID='${fixture.flowId}'`,
     `export PARITY_CARD_ID='${fixture.cardId}'`,
+    `export PARITY_CARD_TITLE='${fixture.cardTitle}'`,
+    `export PARITY_COLUMN_ID='${fixture.columnId}'`,
+    `export PARITY_TARGET_COLUMN_ID='${fixture.targetColumnId}'`,
     `export PARITY_TASK_ID='${fixture.taskId}'`,
     `export PARITY_TASK_TITLE='${fixture.taskTitle}'`,
     `export PARITY_WEBHOOK_URL='${fixture.webhookUrl}'`,
@@ -132,8 +136,12 @@ async function main() {
 
   const flowDetails = await requestOrFail(tokenA, 'GET', `/api/flows/${flow.id}`);
   const firstColumn = Array.isArray(flowDetails.columns) ? flowDetails.columns[0] : null;
+  const secondColumn = Array.isArray(flowDetails.columns) ? flowDetails.columns[1] : null;
   if (!firstColumn?.id) {
     fail(`Flow ${flow.id} does not have columns`);
+  }
+  if (!secondColumn?.id) {
+    fail(`Flow ${flow.id} does not have a target column for parity moves`);
   }
 
   const card = await requestOrFail(tokenA, 'POST', '/api/cards', {
@@ -199,7 +207,9 @@ async function main() {
     apiBaseUrl,
     flowId: flow.id,
     columnId: firstColumn.id,
+    targetColumnId: secondColumn.id,
     cardId: card.id,
+    cardTitle: card.title,
     taskId: task.id,
     taskTitle: task.title,
     tagId: tag.id,
