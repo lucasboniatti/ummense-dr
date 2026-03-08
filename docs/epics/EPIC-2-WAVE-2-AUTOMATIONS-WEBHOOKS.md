@@ -1,6 +1,6 @@
 # Epic 2.0: Wave 2 — Automations & Webhooks
 
-**Status:** Draft
+**Status:** In Progress (5/6 stories closed)
 **Created:** 2026-03-01
 **Target Completion:** Week 4-5 (after Wave 1 deployment)
 **Priority:** HIGH
@@ -45,12 +45,12 @@ Wave 2 introduces automated workflows and webhook integrations to TaskFlow, enab
 
 | ID | Title | Complexity | Points | Status |
 |---|---|---|---|---|
-| 2.1 | Event System & Triggers | HIGH | 13 | Draft |
+| 2.1 | Event System & Triggers | HIGH | 8 | Done |
 | 2.2 | Rule-Based Automation Engine | HIGH | 13 | Done |
-| 2.3 | Webhook Integration & Delivery | MEDIUM | 8 | Draft |
-| 2.4 | Webhook Management UI | MEDIUM | 8 | Draft |
+| 2.3 | Webhook Integration & Delivery | MEDIUM | 13 | Done |
+| 2.4 | Webhook Management UI | MEDIUM | 8 | Done |
 | 2.5 | Automation Dashboard & Logs | MEDIUM | 8 | Done |
-| 2.6 | Third-Party Integrations (Slack/Discord) | MEDIUM | 8 | Draft |
+| 2.6 | Third-Party Integrations (Slack/Discord) | MEDIUM | 8 | Ready for Review |
 
 **Total: 58 story points**
 
@@ -243,7 +243,9 @@ Wave 2 introduces automated workflows and webhook integrations to TaskFlow, enab
 - **[ARCHITECT]** Optional alerting: Webhook alert on high failure rates
 
 **Closure Note (2026-03-08):**
+- Story 2.1 was formally closed as `Done` after deterministic Wave 2 harness validation removed the remaining test blocker.
 - Story 2.2 was formally closed as `Done` after the transactional webhook gap was removed in commit `300c701` and CI run `22820921485` passed on `master`.
+- Story 2.3 was formally closed as `Done` after the SSRF/backoff fixes from the harness restoration were revalidated and no open implementation caveats remained.
 - Story 2.5 was formally closed as `Done` after the backend stub follow-up was completed.
 - The original Wave 2 dashboard UX was later redistributed across:
   - Story `3.2` for DLQ operations
