@@ -44,7 +44,7 @@ export class SSRFValidatorService {
       }
 
       // Extract hostname
-      const hostname = url.hostname;
+      const hostname = this.normalizeHostname(url.hostname);
 
       // Check if it's an IP address directly
       if (this.isIpAddress(hostname)) {
@@ -211,6 +211,18 @@ export class SSRFValidatorService {
    */
   private isIpAddress(ip: string): boolean {
     return this.isIPv4Address(ip) || this.isIPv6Address(ip);
+  }
+
+  /**
+   * URLs with IPv6 literals expose the hostname wrapped in brackets.
+   * Normalize to the raw IP form before matching against the blocklist.
+   */
+  private normalizeHostname(hostname: string): string {
+    if (hostname.startsWith('[') && hostname.endsWith(']')) {
+      return hostname.slice(1, -1);
+    }
+
+    return hostname;
   }
 }
 

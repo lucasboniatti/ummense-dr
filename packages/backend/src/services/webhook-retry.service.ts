@@ -52,23 +52,15 @@ export class WebhookRetryService {
       description: 'Immediate'
     });
 
-    // Attempts 2-5
-    for (let i = 2; i < this.MAX_ATTEMPTS; i++) {
-      const delaySeconds = this.calculateBackoffSeconds(i);
+    // Attempts 2-5 use the backoff for the previous failure count.
+    for (let attempt = 2; attempt <= this.MAX_ATTEMPTS; attempt++) {
+      const delaySeconds = this.calculateBackoffSeconds(attempt - 1);
       schedule.push({
-        attempt: i,
+        attempt,
         delaySeconds,
-        description: `${delaySeconds}s (2^${i})`
+        description: `${delaySeconds}s (2^${attempt - 1})`
       });
     }
-
-    // Attempt 5 (last retry)
-    const delay5 = this.calculateBackoffSeconds(4);
-    schedule.push({
-      attempt: 5,
-      delaySeconds: delay5,
-      description: `${delay5}s (2^4, capped)`
-    });
 
     return schedule;
   }
@@ -79,9 +71,11 @@ export class WebhookRetryService {
    */
   getTotalRetryTimeSpan(): number {
     let totalSeconds = 0;
-    for (let i = 2; i <= this.MAX_ATTEMPTS; i++) {
-      totalSeconds += this.calculateBackoffSeconds(i);
+
+    for (let attempt = 1; attempt < this.MAX_ATTEMPTS; attempt++) {
+      totalSeconds += this.calculateBackoffSeconds(attempt);
     }
+
     return totalSeconds;
   }
 

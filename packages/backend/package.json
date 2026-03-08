@@ -9,6 +9,7 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"api/**/*.ts\"",
     "typecheck": "tsc --project tsconfig.quality.json --noEmit",
     "test": "tsx --test src/__tests__/auth.service.security.test.ts",
+    "test:wave2-harness": "vitest run tests/event-system.test.ts tests/rule-engine.test.ts tests/webhook-delivery.test.ts",
     "typecheck:full": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -42,6 +43,7 @@
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^4.0.18"
   }
 }

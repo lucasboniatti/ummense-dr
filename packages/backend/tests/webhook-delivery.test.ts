@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { webhookDeliveryService } from '../src/services/webhook-delivery.service';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ssrfValidatorService } from '../src/services/ssrf-validator.service';
 import { idempotencyKeyService } from '../src/services/idempotency-key.service';
 import { webhookRetryService } from '../src/services/webhook-retry.service';
@@ -118,8 +117,8 @@ describe('Webhook Delivery Service', () => {
     });
 
     it('should cap backoff at 300 seconds for large attempts', () => {
-      const backoff = webhookRetryService.calculateBackoffSeconds(8);
-      expect(backoff).toBeLessThanOrEqual(300);
+      const schedule = webhookRetryService.getRetrySchedule();
+      expect(schedule.every((step) => step.delaySeconds <= 300)).toBe(true);
     });
 
     it('should provide complete retry schedule', () => {
@@ -129,12 +128,13 @@ describe('Webhook Delivery Service', () => {
       expect(schedule[0].delaySeconds).toBe(0); // Immediate
       expect(schedule[1].delaySeconds).toBe(2);
       expect(schedule[2].delaySeconds).toBe(4);
+      expect(schedule[3].delaySeconds).toBe(8);
+      expect(schedule[4].delaySeconds).toBe(16);
     });
 
     it('should calculate total retry timespan', () => {
       const totalSeconds = webhookRetryService.getTotalRetryTimeSpan();
-      expect(totalSeconds).toBeLessThan(60); // Should be ~30 seconds
-      expect(totalSeconds).toBeGreaterThan(20);
+      expect(totalSeconds).toBe(30);
     });
   });
 

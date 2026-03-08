@@ -1,21 +1,163 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { EventEmitterService } from '../src/services/event-emitter.service';
-import { EventDeduplicationService } from '../src/services/event-deduplication.service';
-import { WebSocketEventHandler } from '../src/websocket/event-handler';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mockEventStore = vi.hoisted(() => {
+  let nextId = 0;
+  const eventLogs: Array<Record<string, any>> = [];
+
+  const applyFilters = (
+    rows: Array<Record<string, any>>,
+    filters: Array<(row: Record<string, any>) => boolean>
+  ) => rows.filter((row) => filters.every((filter) => filter(row)));
+
+  const reset = () => {
+    nextId = 0;
+    eventLogs.length = 0;
+  };
+
+  const seed = (overrides: Record<string, any> = {}) => {
+    const record = {
+      id: overrides.id ?? `event-log-${++nextId}`,
+      user_id: overrides.user_id ?? 'user-1',
+      event_type: overrides.event_type ?? 'task:created',
+      event_id: overrides.event_id ?? `event-${nextId}`,
+      event_version: overrides.event_version ?? 1,
+      payload: overrides.payload ?? {},
+      created_at: overrides.created_at ?? new Date().toISOString(),
+      deleted_at: overrides.deleted_at ?? null,
+      ...overrides,
+    };
+
+    eventLogs.push(record);
+    return record;
+  };
+
+  const from = vi.fn((table: string) => {
+    if (table !== 'event_logs') {
+      throw new Error(`Unexpected table requested in event tests: ${table}`);
+    }
+
+    return {
+      select: (_columns: string = '*') => {
+        const filters: Array<(row: Record<string, any>) => boolean> = [];
+        const builder: any = {
+          eq(field: string, value: unknown) {
+            filters.push((row) => row[field] === value);
+            return builder;
+          },
+          single: async () => ({
+            data: applyFilters(eventLogs, filters)[0] ?? null,
+            error: null,
+          }),
+          maybeSingle: async () => ({
+            data: applyFilters(eventLogs, filters)[0] ?? null,
+            error: null,
+          }),
+          then(resolve: any, reject: any) {
+            return Promise.resolve({
+              data: applyFilters(eventLogs, filters),
+              error: null,
+            }).then(resolve, reject);
+          },
+        };
+
+        return builder;
+      },
+      insert: (payload: Record<string, any> | Array<Record<string, any>>) => {
+        let inserted: Array<Record<string, any>> | null = null;
+
+        const applyInsert = () => {
+          if (!inserted) {
+            const records = (Array.isArray(payload) ? payload : [payload]).map((record) => ({
+              id: record.id ?? `event-log-${++nextId}`,
+              deleted_at: null,
+              ...record,
+            }));
+
+            eventLogs.push(...records);
+            inserted = records;
+          }
+
+          return inserted;
+        };
+
+        return {
+          select: () => ({
+            single: async () => ({
+              data: applyInsert()[0],
+              error: null,
+            }),
+          }),
+          then(resolve: any, reject: any) {
+            return Promise.resolve({ data: applyInsert(), error: null }).then(resolve, reject);
+          },
+        };
+      },
+      update: (values: Record<string, any>) => {
+        const filters: Array<(row: Record<string, any>) => boolean> = [];
+
+        const runUpdate = () => {
+          const updated = applyFilters(eventLogs, filters).map((row) => {
+            Object.assign(row, values);
+            return row;
+          });
+
+          return { data: updated, error: null };
+        };
+
+        const builder: any = {
+          eq(field: string, value: unknown) {
+            filters.push((row) => row[field] === value);
+            return builder;
+          },
+          lt(field: string, value: string) {
+            const cutoff = new Date(value).getTime();
+            filters.push((row) => new Date(String(row[field])).getTime() < cutoff);
+            return builder;
+          },
+          is(field: string, value: unknown) {
+            filters.push((row) => (row[field] ?? null) === value);
+            return builder;
+          },
+          select: async () => runUpdate(),
+          then(resolve: any, reject: any) {
+            return Promise.resolve(runUpdate()).then(resolve, reject);
+          },
+        };
+
+        return builder;
+      },
+    };
+  });
+
+  return { eventLogs, from, reset, seed };
+});
+
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => ({
+    from: mockEventStore.from,
+  })),
+}));
+
 import { EventCleanupJob } from '../src/jobs/event-cleanup.job';
 import { WebSocketHeartbeatTimeoutJob } from '../src/jobs/websocket-heartbeat.job';
-import { createClient } from '@supabase/supabase-js';
-
-// Mock Supabase
-vi.mock('@supabase/supabase-js');
+import { EventDeduplicationService } from '../src/services/event-deduplication.service';
+import { EventEmitterService } from '../src/services/event-emitter.service';
+import { WebSocketEventHandler } from '../src/websocket/event-handler';
 
 describe('Event System Tests (Story 2.1)', () => {
   let eventEmitterService: EventEmitterService;
   let deduplicationService: EventDeduplicationService;
 
   beforeEach(() => {
+    mockEventStore.reset();
     eventEmitterService = new EventEmitterService();
     deduplicationService = new EventDeduplicationService();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   describe('Unit Tests: Event Deduplication', () => {
@@ -24,410 +166,305 @@ describe('Event System Tests (Story 2.1)', () => {
       const eventId = 'event-uuid-456';
       const eventType = 'task:created';
 
-      // First event should not be duplicate
-      const isDuplicate1 = await deduplicationService.isEventDuplicate(
-        userId,
-        eventId,
-        eventType
-      );
-      expect(isDuplicate1).toBe(false);
+      await expect(
+        deduplicationService.isEventDuplicate(userId, eventId, eventType)
+      ).resolves.toBe(false);
 
-      // Second event with same UUID should be duplicate
-      const isDuplicate2 = await deduplicationService.isEventDuplicate(
-        userId,
-        eventId,
-        eventType
-      );
-      expect(isDuplicate2).toBe(false); // In mock, returns false (no DB)
+      await eventEmitterService.emitEvent(userId, eventType, eventId, { taskId: 'task-1' });
+
+      await expect(
+        deduplicationService.isEventDuplicate(userId, eventId, eventType)
+      ).resolves.toBe(true);
     });
 
     it('should validate event type format (domain:action)', async () => {
-      const validTypes = ['task:created', 'automation:executed', 'rule:completed'];
-      const invalidTypes = ['taskCreated', 'task_created', 'task', ''];
+      await expect(
+        eventEmitterService.emitEvent('user-123', 'task:created', 'uuid-1', { taskId: 'task-1' })
+      ).resolves.toMatchObject({ eventType: 'task:created' });
 
-      for (const type of validTypes) {
-        expect(() => {
-          // Event type format validation happens in emitEvent
-          if (!type.match(/^\w+:\w+$/)) {
-            throw new Error('Invalid event type format');
-          }
-        }).not.toThrow();
-      }
-
-      for (const type of invalidTypes) {
-        expect(() => {
-          if (!type.match(/^\w+:\w+$/)) {
-            throw new Error('Invalid event type format');
-          }
-        }).toThrow();
-      }
+      await expect(
+        eventEmitterService.emitEvent('user-123', 'taskCreated', 'uuid-2', { taskId: 'task-1' })
+      ).rejects.toThrow('Invalid event type format');
     });
 
     it('should support event versioning', async () => {
-      const payload = { taskId: 'task-1', status: 'pending' };
+      const emitted = await eventEmitterService.emitEvent(
+        'user-123',
+        'automation:executed',
+        'uuid-versioned',
+        { taskId: 'task-1', priority: 'high' },
+        2
+      );
 
-      // Event with default version (v1)
-      const event1 = {
-        eventVersion: 1,
-        payload: payload
-      };
-      expect(event1.eventVersion).toBe(1);
-
-      // Event with explicit version (v2 for schema changes)
-      const event2 = {
-        eventVersion: 2,
-        payload: { ...payload, priority: 'high' }
-      };
-      expect(event2.eventVersion).toBe(2);
-      expect(Object.keys(event2.payload)).toContain('priority');
+      expect(emitted.eventVersion).toBe(2);
+      expect(emitted.payload).toMatchObject({ priority: 'high' });
     });
   });
 
   describe('Unit Tests: Event Emitter', () => {
     it('should generate UUID for events when not provided', async () => {
-      const userId = 'user-123';
-      const eventType = 'task:created';
-      const payload = { taskId: 'task-1' };
+      const result = await eventEmitterService.emitEvent(
+        'user-123',
+        'task:created',
+        undefined as unknown as string,
+        { taskId: 'task-1' }
+      );
 
-      // When emitting without eventId, should generate one
-      // In a real test, we'd mock Supabase and verify the generated UUID
-      expect(async () => {
-        // This would call emitEvent which generates UUID internally
-        const result = await eventEmitterService.emitEvent(
-          userId,
-          eventType,
-          undefined, // No explicit eventId
-          payload
-        );
-        expect(result.eventId).toBeDefined();
-      }).not.toThrow();
+      expect(result.eventId).toBeTruthy();
+      expect(mockEventStore.eventLogs).toHaveLength(1);
     });
 
     it('should return existing event if duplicate (idempotent)', async () => {
-      // Idempotency test: same inputs should return same result
-      const userId = 'user-123';
-      const eventId = 'event-uuid-456';
-      const eventType = 'task:created';
-      const payload = { taskId: 'task-1' };
+      const first = await eventEmitterService.emitEvent(
+        'user-123',
+        'task:created',
+        'event-dup',
+        { taskId: 'task-1' }
+      );
+      const second = await eventEmitterService.emitEvent(
+        'user-123',
+        'task:created',
+        'event-dup',
+        { taskId: 'task-1' }
+      );
 
-      // In a real scenario with Supabase mocked:
-      // First call inserts
-      // Second call with same IDs returns the existing record
-      expect(async () => {
-        const result1 = await eventEmitterService.emitEvent(
-          userId,
-          eventType,
-          eventId,
-          payload
-        );
-        const result2 = await eventEmitterService.emitEvent(
-          userId,
-          eventType,
-          eventId,
-          payload
-        );
-        expect(result1.id).toEqual(result2.id); // Same event ID
-      }).not.toThrow();
+      expect(second.id).toBe(first.id);
+      expect(mockEventStore.eventLogs).toHaveLength(1);
     });
 
-    it('should log event emission with observability data', () => {
-      const logSpy = vi.spyOn(console, 'log');
+    it('should log event emission with observability data', async () => {
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      // Event emission should log: eventType, userId, eventId, timestamp
-      expect(() => {
-        console.log('[EVENT] task:created emitted', {
-          userId: 'user-123',
-          eventId: 'uuid-456',
-          timestamp: new Date().toISOString()
-        });
-      }).not.toThrow();
+      await eventEmitterService.emitEvent('user-123', 'task:created', 'uuid-456', {
+        taskId: 'task-1',
+      });
 
-      expect(logSpy).toHaveBeenCalled();
-      logSpy.mockRestore();
+      expect(logSpy).toHaveBeenCalledWith(
+        '[EVENT] task:created emitted',
+        expect.objectContaining({ userId: 'user-123', eventId: 'uuid-456' })
+      );
     });
   });
 
   describe('Integration Tests: Event Flow', () => {
     it('should emit event and broadcast to subscribers', async () => {
-      const eventType = 'task:created';
       const handler = vi.fn();
+      eventEmitterService.onEvent('task:created', handler);
 
-      // Subscribe to event type
-      eventEmitterService.onEvent(eventType, handler);
-
-      // Emit event
-      // In real test, this would insert to DB and trigger broadcast
-      await eventEmitterService.emitEvent(
+      const event = await eventEmitterService.emitEvent(
         'user-123',
-        eventType,
+        'task:created',
         'uuid-1',
         { taskId: 'task-1' }
       );
 
-      // Verify handler was called
-      // Note: In actual implementation, this is async non-blocking
-      expect(handler).toHaveBeenCalledTimes(0); // Mock doesn't call in test env
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledWith(expect.objectContaining({ id: event.id }));
     });
 
     it('should unsubscribe from event type', async () => {
-      const eventType = 'task:created';
       const handler = vi.fn();
+      eventEmitterService.onEvent('task:created', handler);
+      eventEmitterService.offEvent('task:created', handler);
 
-      // Subscribe
-      eventEmitterService.onEvent(eventType, handler);
+      await eventEmitterService.emitEvent('user-123', 'task:created', 'uuid-1', {
+        taskId: 'task-1',
+      });
 
-      // Unsubscribe
-      eventEmitterService.offEvent(eventType, handler);
-
-      // Emit event after unsubscribe
-      await eventEmitterService.emitEvent(
-        'user-123',
-        eventType,
-        'uuid-1',
-        { taskId: 'task-1' }
-      );
-
-      // Handler should not be called
       expect(handler).not.toHaveBeenCalled();
     });
 
     it('should enforce UNIQUE constraint on (user_id, event_id, event_type)', async () => {
-      const userId = 'user-123';
-      const eventId = 'uuid-456';
-      const eventType = 'task:created';
+      await eventEmitterService.emitEvent('user-123', 'task:created', 'uuid-456', {
+        taskId: 'task-1',
+      });
 
-      // First emit should succeed
-      expect(async () => {
-        await eventEmitterService.emitEvent(
-          userId,
-          eventType,
-          eventId,
-          { taskId: 'task-1' }
-        );
-      }).not.toThrow();
+      const duplicate = await eventEmitterService.emitEvent(
+        'user-123',
+        'task:created',
+        'uuid-456',
+        { taskId: 'task-1' }
+      );
 
-      // Second emit with same (user_id, event_id, event_type) should be idempotent
-      // (return existing event, not throw constraint violation)
-      expect(async () => {
-        const result = await eventEmitterService.emitEvent(
-          userId,
-          eventType,
-          eventId,
-          { taskId: 'task-1' }
-        );
-        expect(result.eventId).toBe(eventId);
-      }).not.toThrow();
+      expect(duplicate.eventId).toBe('uuid-456');
+      expect(mockEventStore.eventLogs).toHaveLength(1);
     });
   });
 
   describe('Integration Tests: WebSocket Handler', () => {
     it('should manage socket connections and subscriptions', () => {
-      // Create mock Socket.io server
+      const connectionHandlers: Array<(socket: any) => void> = [];
       const mockIO = {
-        on: vi.fn(),
-        sockets: {
-          sockets: new Map()
-        },
-        emit: vi.fn()
+        on: vi.fn((event: string, handler: (socket: any) => void) => {
+          if (event === 'connection') {
+            connectionHandlers.push(handler);
+          }
+        }),
+        sockets: { sockets: new Map() },
+        emit: vi.fn(),
       };
 
-      const handler = new WebSocketEventHandler(mockIO as any);
+      new WebSocketEventHandler(mockIO as any);
 
-      // Handler should set up connection listeners
       expect(mockIO.on).toHaveBeenCalledWith('connection', expect.any(Function));
+      expect(connectionHandlers).toHaveLength(1);
     });
 
     it('should validate event type format in subscribe', () => {
+      vi.useFakeTimers();
+
+      let connectionHandler: ((socket: any) => void) | undefined;
       const mockSocket = {
-        on: vi.fn(),
+        id: 'socket-123',
+        on: vi.fn((event: string, handler: (...args: any[]) => void) => {
+          if (event === 'subscribe') {
+            handler('taskCreated');
+          }
+        }),
         emit: vi.fn(),
-        id: 'socket-123'
       };
-
       const mockIO = {
-        on: vi.fn(),
-        sockets: { sockets: new Map() }
+        on: vi.fn((event: string, handler: (socket: any) => void) => {
+          if (event === 'connection') {
+            connectionHandler = handler;
+          }
+        }),
+        sockets: { sockets: new Map([['socket-123', mockSocket]]) },
       };
 
-      const handler = new WebSocketEventHandler(mockIO as any);
+      new WebSocketEventHandler(mockIO as any);
+      connectionHandler?.(mockSocket);
 
-      // Valid event type should not emit error
-      const validType = 'task:created';
-      expect(validType).toMatch(/^\w+:\w+$/);
-
-      // Invalid event type should emit error
-      const invalidType = 'taskCreated';
-      expect(invalidType).not.toMatch(/^\w+:\w+$/);
+      expect(mockSocket.emit).toHaveBeenCalledWith('error', 'Invalid event type format');
     });
 
     it('should maintain heartbeat interval for each socket', () => {
+      vi.useFakeTimers();
+
+      let connectionHandler: ((socket: any) => void) | undefined;
+      const mockSocket = {
+        id: 'socket-123',
+        on: vi.fn(),
+        emit: vi.fn(),
+      };
       const mockIO = {
-        on: vi.fn((event, callback) => {
+        on: vi.fn((event: string, handler: (socket: any) => void) => {
           if (event === 'connection') {
-            const mockSocket = {
-              on: vi.fn(),
-              emit: vi.fn(),
-              id: 'socket-123'
-            };
-            callback(mockSocket);
+            connectionHandler = handler;
           }
         }),
-        sockets: { sockets: new Map() }
+        sockets: { sockets: new Map([['socket-123', mockSocket]]) },
       };
 
-      const handler = new WebSocketEventHandler(mockIO as any);
+      new WebSocketEventHandler(mockIO as any);
+      connectionHandler?.(mockSocket);
+      vi.advanceTimersByTime(30000);
 
-      // After connection, should set up heartbeat (30s interval)
-      // Verify setInterval is called
-      // Note: Testing setInterval requires sinon or native timer mocks
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'heartbeat',
+        expect.objectContaining({ timestamp: expect.any(Number) })
+      );
     });
   });
 
   describe('Integration Tests: Event Cleanup Job', () => {
     it('should soft-delete events older than 90 days', async () => {
+      const oldRecord = mockEventStore.seed({
+        created_at: new Date(Date.now() - 91 * 24 * 60 * 60 * 1000).toISOString(),
+        deleted_at: null,
+      });
+      const recentRecord = mockEventStore.seed({
+        created_at: new Date().toISOString(),
+        deleted_at: null,
+      });
       const job = new EventCleanupJob();
 
-      // Mock the cleanup execution
-      const consoleSpy = vi.spyOn(console, 'log');
+      await (job as any).cleanup();
 
-      // Start job (runs cleanup immediately + at interval)
-      job.start(24); // 24-hour interval
-
-      // Wait a bit for cleanup to run
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Job should have logged execution
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '[EVENT CLEANUP] Starting job - runs every 24 hours'
-      );
-
-      job.stop();
-      consoleSpy.mockRestore();
+      expect(
+        mockEventStore.eventLogs.find((row) => row.id === oldRecord.id)?.deleted_at
+      ).toBeTruthy();
+      expect(
+        mockEventStore.eventLogs.find((row) => row.id === recentRecord.id)?.deleted_at
+      ).toBeNull();
     });
 
     it('should only soft-delete non-deleted events', async () => {
+      const preservedDeletedAt = '2026-01-01T00:00:00.000Z';
+      const alreadyDeleted = mockEventStore.seed({
+        created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+        deleted_at: preservedDeletedAt,
+      });
+      const activeOldRecord = mockEventStore.seed({
+        created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+        deleted_at: null,
+      });
       const job = new EventCleanupJob();
 
-      // The job uses:
-      // .update({ deleted_at: new Date().toISOString() })
-      // .lt('created_at', ninetyDaysAgo)
-      // .is('deleted_at', null) // Only non-deleted
+      await (job as any).cleanup();
 
-      expect(true).toBe(true); // Logic verified in implementation
+      expect(
+        mockEventStore.eventLogs.find((row) => row.id === alreadyDeleted.id)?.deleted_at
+      ).toBe(preservedDeletedAt);
+      expect(
+        mockEventStore.eventLogs.find((row) => row.id === activeOldRecord.id)?.deleted_at
+      ).toBeTruthy();
     });
   });
 
   describe('Integration Tests: Heartbeat Timeout Job', () => {
     it('should detect stale connections after 5+ minutes', () => {
-      const mockIO = {
+      let connectionHandler: ((socket: any) => void) | undefined;
+      const mockSocket = {
+        id: 'socket-123',
         on: vi.fn(),
-        sockets: { sockets: new Map() }
+        disconnect: vi.fn(),
+      };
+      const mockIO = {
+        on: vi.fn((event: string, handler: (socket: any) => void) => {
+          if (event === 'connection') {
+            connectionHandler = handler;
+          }
+        }),
+        sockets: { sockets: new Map([['socket-123', mockSocket]]) },
       };
 
       const job = new WebSocketHeartbeatTimeoutJob(mockIO as any);
+      connectionHandler?.(mockSocket);
 
-      // Job tracking: 10 missed heartbeats * 30s = 5 minutes
-      expect(job['MAX_MISSED_HEARTBEATS']).toBe(10);
-      expect(job['CHECK_INTERVAL_MS']).toBe(60000); // Checks every 60s
+      const trackers = (job as any).heartbeatTimeouts as Map<string, { missedCount: number }>;
+      trackers.get('socket-123')!.missedCount = 8;
+      (job as any).checkHeartbeats();
+
+      expect(mockSocket.disconnect).toHaveBeenCalledWith(true);
     });
 
     it('should reset missed count on heartbeat ACK', () => {
-      const mockIO = {
-        on: vi.fn((event, callback) => {
-          if (event === 'connection') {
-            const mockSocket = {
-              on: vi.fn(),
-              emit: vi.fn(),
-              id: 'socket-123',
-              disconnect: vi.fn()
-            };
-            callback(mockSocket);
+      let ackHandler: (() => void) | undefined;
+      const mockSocket = {
+        id: 'socket-123',
+        on: vi.fn((event: string, handler: () => void) => {
+          if (event === 'heartbeat_ack') {
+            ackHandler = handler;
           }
         }),
-        sockets: { sockets: new Map() }
       };
-
-      const job = new WebSocketHeartbeatTimeoutJob(mockIO as any);
-
-      // When heartbeat_ack received, missed count should reset to 0
-      // Implementation verified in websocket-heartbeat.job.ts
-      expect(true).toBe(true);
-    });
-
-    it('should disconnect and clean up timed-out sockets', () => {
-      const mockSocket = {
-        disconnect: vi.fn(),
-        id: 'socket-123'
-      };
-
       const mockIO = {
-        on: vi.fn(),
-        sockets: { sockets: new Map([['socket-123', mockSocket]]) }
+        on: vi.fn((event: string, handler: (socket: any) => void) => {
+          if (event === 'connection') {
+            handler(mockSocket);
+          }
+        }),
+        sockets: { sockets: new Map([['socket-123', mockSocket]]) },
       };
 
       const job = new WebSocketHeartbeatTimeoutJob(mockIO as any);
+      const trackers = (job as any).heartbeatTimeouts as Map<string, { missedCount: number }>;
+      trackers.get('socket-123')!.missedCount = 6;
 
-      // Job should call socket.disconnect(true) for stale connections
-      // Implementation verified in websocket-heartbeat.job.ts
-      expect(true).toBe(true);
-    });
-  });
+      ackHandler?.();
 
-  describe('E2E Tests: Full Event Lifecycle', () => {
-    it('should complete full event lifecycle: emit → broadcast → WebSocket → cleanup', async () => {
-      // E2E scenario:
-      // 1. User creates task (triggers task:created event)
-      // 2. Event emitted with UUID dedup
-      // 3. Broadcast to WebSocket subscribers
-      // 4. Multiple users receive real-time notification
-      // 5. Event stored in DB with versioning
-      // 6. After 90 days, soft-deleted by cleanup job
-
-      expect(true).toBe(true); // Full lifecycle verified through integration tests above
-    });
-
-    it('should handle concurrent events with proper deduplication', async () => {
-      // Scenario: Multiple rapid events from same user
-      // UNIQUE constraint prevents duplicates
-      // Idempotent returns ensure at-least-once semantics
-
-      const userId = 'user-123';
-      const eventType = 'task:updated';
-
-      const event1 = {
-        eventId: 'uuid-1',
-        userId,
-        eventType,
-        payload: { taskId: 'task-1', status: 'in-progress' }
-      };
-
-      const event2 = {
-        eventId: 'uuid-2',
-        userId,
-        eventType,
-        payload: { taskId: 'task-2', status: 'completed' }
-      };
-
-      // Both should succeed (different eventIds)
-      expect(event1.eventId).not.toEqual(event2.eventId);
-    });
-
-    it('should maintain event order for same user', async () => {
-      // Events from same user should be processable in order
-      // Database created_at timestamp ensures ordering
-      // WebSocket delivery may vary but DB has authoritative order
-
-      const userId = 'user-123';
-      const timestamps = [];
-
-      for (let i = 0; i < 5; i++) {
-        timestamps.push(new Date().toISOString());
-      }
-
-      // Each timestamp is monotonically increasing
-      for (let i = 1; i < timestamps.length; i++) {
-        expect(new Date(timestamps[i]) >= new Date(timestamps[i - 1])).toBe(true);
-      }
+      expect(trackers.get('socket-123')?.missedCount).toBe(0);
     });
   });
 });
