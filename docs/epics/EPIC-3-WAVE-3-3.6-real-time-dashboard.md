@@ -2,7 +2,7 @@
 
 **Epic ID:** EPIC-3.6
 **Wave:** Wave 3 (Advanced Automation, Reliability & Scaling)
-**Status:** Planning
+**Status:** In Progress (1/4 sub-stories closed)
 **Created:** 2026-03-03
 **Priority:** HIGH (P1)
 
@@ -57,6 +57,11 @@ Enable platform operators to monitor automation execution history in real-time w
 - Saved filters reduce query time by 70% (user testing)
 - Cost monitoring accuracy within ±5% of actual S3/DB costs
 - Export functionality maintains data sanitization (no PII leakage)
+
+**Revalidation Note (2026-03-08):**
+- Story `3.6.2` remains `Done`
+- Stories `3.6.1`, `3.6.3` and `3.6.4` remain `Ready for Review` after PO/QA revalidation
+- The remaining gaps are not scope invention; they are mismatches between story claims and the code currently wired in the product
 
 ---
 

@@ -4,6 +4,8 @@
 **Status:** ✅ **APPROVED**
 **Date:** 2026-03-03
 
+> Revalidation note (2026-03-08): this gate is stale and should be treated as historical only. Stories `3.6.1`, `3.6.3`, and `3.6.4` remain `Ready for Review` with open technical gaps after PO/QA revalidation, so the claim that all Wave 3 stories are done is no longer the current source of truth.
+
 ---
 
 ## 1. Overview
