@@ -1,119 +1,154 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-/**
- * E2E Test: Full Slack Integration Workflow
- * Tests: Connect → Send → Verify
- */
+import { SendSlackMessageAction } from '../../backend/src/actions/send-slack-message.action';
+import { OAuthPKCEService } from '../../backend/src/services/oauth-pkce.service';
+import { IntegrationDisconnectService } from '../../backend/src/services/integration-disconnect.service';
+import { integrationRateLimiter } from '../../backend/src/services/integration-rate-limiter.service';
+import { IntegrationTokenService } from '../../backend/src/services/integration-token.service';
+import { RuleExecutionService } from '../../backend/src/services/rule-execution.service';
+import { SlackClientService } from '../../backend/src/services/slack-client.service';
+import { SlackSlashCommandService } from '../../backend/src/services/slack-slash-command.service';
+
 describe('Slack E2E Workflow', () => {
-  describe('Complete OAuth Flow', () => {
-    it('should complete Slack OAuth authorization', async () => {
-      // Step 1: Generate PKCE pair
-      // const { codeVerifier, codeChallenge } = OAuthPKCEService.generatePKCEPair();
-
-      // Step 2: Redirect to Slack auth
-      // const authUrl = OAuthPKCEService.getSlackAuthUrl(clientId, codeChallenge);
-      // browser.navigate(authUrl);
-
-      // Step 3: User approves (simulated)
-      // const authCode = 'xoxe-test-code-123';
-
-      // Step 4: Exchange code for token
-      // const tokenResponse = await OAuthPKCEService.exchangeCodeForSlackToken(
-      //   authCode,
-      //   codeVerifier,
-      //   clientId
-      // );
-
-      // Step 5: Verify token stored encrypted
-      // expect(tokenResponse.access_token).toBeDefined();
-      // expect(tokenResponse.team_id).toBeDefined();
-
-      expect(true).toBe(true);
-    });
+  beforeEach(() => {
+    integrationRateLimiter.resetAll();
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+      text: async () => 'ok',
+    } as Response);
   });
 
-  describe('Message Sending Workflow', () => {
-    it('should send message to Slack channel', async () => {
-      // Prerequisite: User has connected Slack integration
-      // const userId = 'user-123';
-      // const workspaceId = 'T123456';
-
-      // Step 1: Get token (decrypted from DB)
-      // const token = await tokenService.getSlackToken(userId, workspaceId);
-
-      // Step 2: Send message
-      // const result = await slackClient.sendMessage(userId, workspaceId, {
-      //   channel: 'C123456',
-      //   text: 'Rule executed successfully',
-      // });
-
-      // Step 3: Verify message posted
-      // expect(result.ts).toBeDefined();
-      // expect(result.channel).toBe('C123456');
-
-      expect(true).toBe(true);
-    });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    integrationRateLimiter.resetAll();
   });
 
-  describe('Slash Command Execution', () => {
-    it('should execute rule via /automation command', async () => {
-      // Step 1: User types /automation rule-123 in Slack
-      // const slashCommand = {
-      //   command: '/automation',
-      //   text: 'rule-123',
-      //   user_id: 'U123456',
-      //   team_id: 'T123456',
-      // };
+  it('should complete the Slack connect -> send -> disconnect workflow', async () => {
+    const { codeVerifier, codeChallenge } = OAuthPKCEService.generatePKCEPair();
+    const authUrl = OAuthPKCEService.getSlackAuthUrl('slack-client-id', codeChallenge);
 
-      // Step 2: Validate signature
-      // const isValid = SlackSlashCommandService.validateSlashCommand(...);
-      // expect(isValid).toBe(true);
-
-      // Step 3: Execute rule
-      // const response = await slackSlashCommand.handleAutomationCommand(slashCommand);
-
-      // Step 4: Verify response
-      // expect(response.response_type).toBe('in_channel');
-      // expect(response.text).toContain('Rule execution started');
-
-      expect(true).toBe(true);
+    vi.spyOn(OAuthPKCEService, 'exchangeCodeForSlackToken').mockResolvedValue({
+      access_token: 'xoxb-workflow-token',
+      team_id: 'T123456',
+      team_name: 'Ummense',
+      scope: 'chat:write,chat:write.public',
+      bot_user_id: 'B123456',
+      app_id: 'A123456',
     });
+    vi.spyOn(IntegrationTokenService.prototype, 'storeSlackToken').mockResolvedValue({
+      id: 'slack-token-1',
+      user_id: 'user-123',
+      workspace_id: 'T123456',
+      encrypted_token: 'encrypted-token',
+      kms_key_id: 'kms-key',
+      token_type: 'bot',
+      scopes: ['chat:write', 'chat:write.public'],
+      expires_at: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deleted_at: null,
+    } as any);
+    vi.spyOn(IntegrationTokenService.prototype, 'getSlackToken').mockResolvedValue('xoxb-workflow-token');
+    vi.spyOn(IntegrationTokenService.prototype, 'deleteSlackToken').mockResolvedValue();
+    vi.spyOn(SlackClientService.prototype, 'sendMessage').mockResolvedValue({
+      ts: 'ts-workflow-1',
+      channel: 'C123456',
+    });
+
+    const tokenResponse = await OAuthPKCEService.exchangeCodeForSlackToken(
+      'auth-code-123',
+      codeVerifier,
+      'slack-client-id'
+    );
+    await new IntegrationTokenService().storeSlackToken(
+      'user-123',
+      tokenResponse.team_id,
+      tokenResponse.access_token,
+      'kms-key',
+      tokenResponse.scope.split(','),
+    );
+
+    const sendResult = await new SendSlackMessageAction().execute({
+      userId: 'user-123',
+      workspaceId: 'T123456',
+      channel: 'C123456',
+      template: 'Rule {{rule_name}} completed in {{duration_ms}}ms with status {{status}}',
+      variables: {
+        rule_name: 'High Priority Alert',
+        duration_ms: 245,
+        status: 'success',
+      },
+    });
+
+    const disconnectResult = await new IntegrationDisconnectService().disconnectSlack(
+      'user-123',
+      'T123456'
+    );
+
+    expect(OAuthPKCEService.validatePKCE(codeVerifier, codeChallenge)).toBe(true);
+    expect(authUrl).toContain('slack.com/oauth/v2/authorize');
+    expect(sendResult).toEqual({ success: true, messageId: 'ts-workflow-1' });
+    expect(disconnectResult).toEqual({ success: true });
   });
 
-  describe('Rate Limit Handling', () => {
-    it('should handle rate limit gracefully', async () => {
-      // Step 1: Send 60 messages (at limit)
-      // for (let i = 0; i < 60; i++) {
-      //   await slackClient.sendMessage(userId, workspaceId, message);
-      // }
-
-      // Step 2: 61st message should fail
-      // const result = await slackClient.sendMessage(userId, workspaceId, message);
-      // expect(result.error).toContain('Rate limited');
-
-      // Step 3: User retries after X seconds
-      // await sleep(retryAfter * 1000);
-      // const retryResult = await slackClient.sendMessage(userId, workspaceId, message);
-      // expect(retryResult.success).toBe(true);
-
-      expect(true).toBe(true);
+  it('should execute a rule from the Slack slash command flow', async () => {
+    vi.spyOn(RuleExecutionService.prototype, 'executeRule').mockResolvedValue({
+      status: 'success',
+      result: {
+        executedActions: 1,
+        errors: [],
+      },
     });
+
+    const response = await new SlackSlashCommandService().handleAutomationCommand(
+      {
+        team_id: 'T123456',
+        team_domain: 'ummense',
+        channel_id: 'C123456',
+        user_id: 'U123456',
+        command: '/automation',
+        text: 'rule-123',
+        api_app_id: 'A123456',
+        response_url: 'https://hooks.slack.test/commands',
+        trigger_id: 'trigger-123',
+      },
+      'signing-secret'
+    );
+
+    expect(response.response_type).toBe('in_channel');
+    expect(response.text).toContain('rule-123');
   });
 
-  describe('Disconnect & Cleanup', () => {
-    it('should revoke token and remove from DB', async () => {
-      // Step 1: User clicks "Disconnect"
-      // await integrationDisconnect.disconnectSlack(userId, workspaceId);
-
-      // Step 2: Verify token is revoked
-      // const token = await tokenService.getSlackToken(userId, workspaceId);
-      // expect(token).toBeNull();
-
-      // Step 3: Verify future requests fail
-      // const result = await slackClient.sendMessage(userId, workspaceId, message);
-      // expect(result.error).toContain('Token not found');
-
-      expect(true).toBe(true);
+  it('should block the 61st Slack message in the same one-minute window', async () => {
+    vi.spyOn(SlackClientService.prototype, 'sendMessage').mockResolvedValue({
+      ts: 'ts-rate-limit',
+      channel: 'C123456',
     });
+
+    const action = new SendSlackMessageAction();
+
+    for (let index = 0; index < 60; index++) {
+      const result = await action.execute({
+        userId: 'user-123',
+        workspaceId: 'T-rate-limit',
+        channel: 'C123456',
+        template: 'Message {{rule_name}}',
+        variables: { rule_name: `Rule ${index}` },
+      });
+
+      expect(result.success).toBe(true);
+    }
+
+    const blocked = await action.execute({
+      userId: 'user-123',
+      workspaceId: 'T-rate-limit',
+      channel: 'C123456',
+      template: 'Message {{rule_name}}',
+      variables: { rule_name: 'Rule 60' },
+    });
+
+    expect(blocked.success).toBe(false);
+    expect(blocked.error).toContain('Rate limited');
   });
 });

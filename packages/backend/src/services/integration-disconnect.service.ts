@@ -1,4 +1,5 @@
 import { IntegrationTokenService } from './integration-token.service';
+import { DiscordClientService } from './discord-client.service';
 import { SlackClientService } from './slack-client.service';
 
 /**
@@ -8,6 +9,7 @@ import { SlackClientService } from './slack-client.service';
 export class IntegrationDisconnectService {
   private tokenService = new IntegrationTokenService();
   private slackClient = new SlackClientService();
+  private discordClient = new DiscordClientService();
 
   /**
    * Disconnect Slack integration
@@ -44,8 +46,11 @@ export class IntegrationDisconnectService {
    */
   async disconnectDiscord(userId: string, serverId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Future: Similar to Slack
-      // Get token, revoke, delete
+      const token = await this.getDiscordToken(userId, serverId);
+      if (token) {
+        await this.revokeDiscordToken(token, process.env.DISCORD_CLIENT_ID || '');
+      }
+
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -94,5 +99,9 @@ export class IntegrationDisconnectService {
     if (!response.ok) {
       console.warn(`Discord token revocation failed: ${response.status}`);
     }
+  }
+
+  private async getDiscordToken(userId: string, serverId: string): Promise<string | null> {
+    return (this.discordClient as any).getDiscordToken(userId, serverId);
   }
 }

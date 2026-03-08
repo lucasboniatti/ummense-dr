@@ -1,109 +1,134 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-/**
- * E2E Test: Full Discord Integration Workflow
- * Tests: Connect → Send → Verify
- */
+import { SendDiscordMessageAction } from '../../backend/src/actions/send-discord-message.action';
+import { DiscordClientService } from '../../backend/src/services/discord-client.service';
+import { OAuthPKCEService } from '../../backend/src/services/oauth-pkce.service';
+import { IntegrationDisconnectService } from '../../backend/src/services/integration-disconnect.service';
+import { integrationRateLimiter } from '../../backend/src/services/integration-rate-limiter.service';
+
 describe('Discord E2E Workflow', () => {
-  describe('Complete OAuth Flow', () => {
-    it('should complete Discord OAuth authorization', async () => {
-      // Step 1: Generate PKCE pair
-      // const { codeVerifier, codeChallenge } = OAuthPKCEService.generatePKCEPair();
-
-      // Step 2: Redirect to Discord auth
-      // const authUrl = OAuthPKCEService.getDiscordAuthUrl(clientId, codeChallenge);
-      // browser.navigate(authUrl);
-
-      // Step 3: User approves (simulated)
-      // const authCode = 'discord-auth-code-123';
-
-      // Step 4: Exchange code for token
-      // const tokenResponse = await OAuthPKCEService.exchangeCodeForDiscordToken(
-      //   authCode,
-      //   codeVerifier,
-      //   clientId
-      // );
-
-      // Step 5: Verify token stored
-      // expect(tokenResponse.access_token).toBeDefined();
-      // expect(tokenResponse.guild).toBeDefined();
-
-      expect(true).toBe(true);
-    });
+  beforeEach(() => {
+    integrationRateLimiter.resetAll();
+    process.env.DISCORD_CLIENT_ID = 'discord-client-id';
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'message-1', channel_id: 'channel-1' }),
+      text: async () => 'ok',
+    } as Response);
   });
 
-  describe('Message Sending Workflow', () => {
-    it('should send message to Discord channel', async () => {
-      // Prerequisite: User has connected Discord integration
-      // const userId = 'user-123';
-      // const serverId = '123456789';
-
-      // Step 1: Get token (decrypted from DB)
-      // const token = await tokenService.getDiscordToken(userId, serverId);
-
-      // Step 2: Send message
-      // const result = await discordClient.sendMessage(userId, serverId, {
-      //   channel_id: '987654321',
-      //   content: 'Rule executed successfully',
-      // });
-
-      // Step 3: Verify message posted
-      // expect(result.id).toBeDefined();
-      // expect(result.channel_id).toBe('987654321');
-
-      expect(true).toBe(true);
-    });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    integrationRateLimiter.resetAll();
   });
 
-  describe('File Upload Workflow', () => {
-    it('should upload file to Discord channel', async () => {
-      // Step 1: Prepare file
-      // const file = Buffer.from('file content');
+  it('should complete the Discord auth -> message -> file upload workflow', async () => {
+    const { codeVerifier, codeChallenge } = OAuthPKCEService.generatePKCEPair();
+    const authUrl = OAuthPKCEService.getDiscordAuthUrl('discord-client-id', codeChallenge);
 
-      // Step 2: Upload to channel
-      // const result = await discordClient.uploadFile(userId, serverId, {
-      //   channel_id: '987654321',
-      //   file: file,
-      //   filename: 'report.pdf',
-      // });
-
-      // Step 3: Verify upload
-      // expect(result.message_id).toBeDefined();
-
-      expect(true).toBe(true);
+    vi.spyOn(OAuthPKCEService, 'exchangeCodeForDiscordToken').mockResolvedValue({
+      access_token: 'discord-token',
+      token_type: 'Bearer',
+      expires_in: 3600,
+      guild: { id: 'guild-123', name: 'Ummense Guild' },
     });
+    vi.spyOn(DiscordClientService.prototype, 'sendMessage').mockResolvedValue({
+      id: 'message-123',
+      channel_id: 'channel-123',
+    });
+
+    const tokenResponse = await OAuthPKCEService.exchangeCodeForDiscordToken(
+      'discord-auth-code',
+      codeVerifier,
+      'discord-client-id'
+    );
+
+    const sendResult = await new SendDiscordMessageAction().execute({
+      userId: 'user-123',
+      serverId: tokenResponse.guild.id,
+      channelId: 'channel-123',
+      template: 'Rule {{rule_name}} completed with {{status}}',
+      variables: {
+        rule_name: 'High Priority Alert',
+        status: 'success',
+      },
+    });
+
+    const discordClient = new DiscordClientService();
+    vi.spyOn(discordClient as any, 'getDiscordToken').mockResolvedValue('discord-token');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: 'upload-1' }),
+      text: async () => 'ok',
+    } as Response);
+
+    const uploadResult = await discordClient.uploadFile('user-123', 'guild-123', {
+      channel_id: 'channel-123',
+      file: Buffer.from('report body'),
+      filename: 'report.txt',
+      description: 'Automated report',
+    });
+
+    expect(OAuthPKCEService.validatePKCE(codeVerifier, codeChallenge)).toBe(true);
+    expect(authUrl).toContain('discord.com/api/oauth2/authorize');
+    expect(sendResult).toEqual({ success: true, messageId: 'message-123' });
+    expect(uploadResult).toEqual({ message_id: 'upload-1' });
   });
 
-  describe('Rate Limit Handling', () => {
-    it('should handle Discord rate limits (50/min)', async () => {
-      // Step 1: Send 50 messages (at Discord limit)
-      // for (let i = 0; i < 50; i++) {
-      //   await discordClient.sendMessage(userId, serverId, message);
-      // }
-
-      // Step 2: 51st should be rate limited
-      // const result = await discordClient.sendMessage(userId, serverId, message);
-      // expect(result.error).toContain('Rate limited');
-
-      // Step 3: Retry after X seconds
-      // await sleep(retryAfter * 1000);
-      // const retryResult = await discordClient.sendMessage(userId, serverId, message);
-      // expect(retryResult.success).toBe(true);
-
-      expect(true).toBe(true);
+  it('should enforce the Discord one-minute rate limit', async () => {
+    vi.spyOn(DiscordClientService.prototype, 'sendMessage').mockResolvedValue({
+      id: 'message-rate-limit',
+      channel_id: 'channel-123',
     });
+
+    const action = new SendDiscordMessageAction();
+
+    for (let index = 0; index < 50; index++) {
+      const result = await action.execute({
+        userId: 'user-123',
+        serverId: 'guild-rate-limit',
+        channelId: 'channel-123',
+        template: 'Message {{rule_name}}',
+        variables: { rule_name: `Rule ${index}` },
+      });
+
+      expect(result.success).toBe(true);
+    }
+
+    const blocked = await action.execute({
+      userId: 'user-123',
+      serverId: 'guild-rate-limit',
+      channelId: 'channel-123',
+      template: 'Message {{rule_name}}',
+      variables: { rule_name: 'Rule 50' },
+    });
+
+    expect(blocked.success).toBe(false);
+    expect(blocked.error).toContain('Rate limited');
   });
 
-  describe('Disconnect & Cleanup', () => {
-    it('should revoke token and remove from DB', async () => {
-      // Step 1: User clicks "Disconnect"
-      // await integrationDisconnect.disconnectDiscord(userId, serverId);
+  it('should revoke the Discord token during disconnect when one is available', async () => {
+    vi.spyOn(DiscordClientService.prototype as any, 'getDiscordToken').mockResolvedValue(
+      'discord-token'
+    );
 
-      // Step 2: Verify token is revoked
-      // const result = await discordClient.sendMessage(userId, serverId, message);
-      // expect(result.error).toContain('Token not found');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      text: async () => 'ok',
+    } as Response);
 
-      expect(true).toBe(true);
-    });
+    const result = await new IntegrationDisconnectService().disconnectDiscord(
+      'user-123',
+      'guild-123'
+    );
+
+    expect(result).toEqual({ success: true });
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://discord.com/api/v10/oauth2/token/revoke',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('client_id=discord-client-id'),
+      })
+    );
   });
 });

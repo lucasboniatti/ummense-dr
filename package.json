@@ -30,7 +30,8 @@
     "test": "npm run test --workspaces",
     "test:wave2:harness": "npm run test:wave2-harness --workspace @ummense/backend",
     "test:e2e:parity": "playwright test -c packages/e2e/playwright.parity.config.ts",
-    "typecheck:backend:full": "npm run typecheck:full --workspace @ummense/backend"
+    "typecheck:backend:full": "npm run typecheck:full --workspace @ummense/backend",
+    "test:wave2:integrations": "npx vitest run -c vitest.wave2-integrations.config.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",

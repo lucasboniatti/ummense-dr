@@ -190,11 +190,41 @@ const mockRuleStore = vi.hoisted(() => {
     return builder;
   };
 
+  const createDeleteBuilder = (table: string) => {
+    const rows = rowsFor(table);
+    const filters: Array<(row: Record<string, any>) => boolean> = [];
+
+    const execute = async () => {
+      const deleted = applyFilters(rows, filters);
+      for (const row of deleted) {
+        const index = rows.indexOf(row);
+        if (index >= 0) {
+          rows.splice(index, 1);
+        }
+      }
+
+      return { data: deleted, error: null };
+    };
+
+    const builder: any = {
+      eq(field: string, value: unknown) {
+        filters.push((row) => row[field] === value);
+        return builder;
+      },
+      then(resolve: any, reject: any) {
+        return execute().then(resolve, reject);
+      },
+    };
+
+    return builder;
+  };
+
   const from = vi.fn((table: string) => ({
     select: () => createSelectBuilder(table),
     insert: (payload: Record<string, any> | Array<Record<string, any>>) =>
       createInsertBuilder(table, payload),
     update: (values: Record<string, any>) => createUpdateBuilder(table, values),
+    delete: () => createDeleteBuilder(table),
   }));
 
   const reset = () => {
@@ -206,6 +236,7 @@ const mockRuleStore = vi.hoisted(() => {
     tables.tasks.push({ id: 'task-1', title: 'Seed Task', status: 'todo' });
     tables.webhooks.push({ id: 'webhook-1', url: 'https://example.com/hook' });
     tables.rules.push(makeRule('rule-1'));
+    nextId = 100;
   };
 
   const setRule = (id: string, overrides: Record<string, any> = {}) => {
@@ -418,6 +449,8 @@ describe('Rule Engine Service - Unit Tests', () => {
 
   describe('Atomic Transactions', () => {
     it('should execute all actions or none (all-or-nothing)', async () => {
+      const initialTaskCount = mockRuleStore.tables.tasks.length;
+      const initialNotificationCount = mockRuleStore.tables.notifications.length;
       const result = await ruleExecutionService.executeActions(
         'rule-1',
         [
@@ -429,17 +462,31 @@ describe('Rule Engine Service - Unit Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.executedActions).toBe(2);
+      expect(mockRuleStore.tables.tasks).toHaveLength(initialTaskCount + 1);
+      expect(mockRuleStore.tables.notifications).toHaveLength(initialNotificationCount + 1);
     });
 
     it('should rollback on action failure', async () => {
+      const initialTaskSnapshot = structuredClone(mockRuleStore.tables.tasks);
+      const initialNotificationSnapshot = structuredClone(mockRuleStore.tables.notifications);
       const result = await ruleExecutionService.executeActions(
         'rule-1',
-        [{ type: 'update_task', params: { taskId: undefined, fields: {} } }],
+        [
+          { type: 'update_task', params: { taskId: 'task-1', fields: { status: 'done' } } },
+          { type: 'create_task', params: { title: 'Created before failure' } },
+          { type: 'send_notification', params: { message: 'Created', userId: 'user-1' } },
+          { type: 'assign_tag', params: { taskId: 'task-1', tagName: 'urgent' } },
+          { type: 'update_task', params: { taskId: undefined, fields: {} } },
+        ],
         {}
       );
 
       expect(result.success).toBe(false);
       expect(result.errors[0]).toContain('update_task requires taskId and fields');
+      expect(mockRuleStore.tables.tasks).toEqual(initialTaskSnapshot);
+      expect(mockRuleStore.tables.notifications).toEqual(initialNotificationSnapshot);
+      expect(mockRuleStore.tables.tags).toHaveLength(0);
+      expect(mockRuleStore.tables.task_tags).toHaveLength(0);
     });
   });
 });

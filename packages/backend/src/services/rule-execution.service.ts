@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
+type RollbackHandler = () => Promise<void>;
+type ActionExecutionResult = {
+  rollback?: RollbackHandler;
+};
+
 /**
  * Rule Execution Service
  * Executes rule actions atomically with transaction support
@@ -36,6 +41,7 @@ export class RuleExecutionService {
     duration: number;
   }> {
     const startTime = Date.now();
+    const rollbackHandlers: RollbackHandler[] = [];
     const results = {
       success: true,
       executedActions: 0,
@@ -46,14 +52,17 @@ export class RuleExecutionService {
       // Execute each action in order
       for (const action of actions) {
         try {
-          await this.executeAction(action, context);
+          const actionResult = await this.executeAction(action, context);
+          if (actionResult.rollback) {
+            rollbackHandlers.unshift(actionResult.rollback);
+          }
           results.executedActions++;
         } catch (error) {
           const errorMsg = `Action ${action.type} failed: ${error}`;
           results.errors.push(errorMsg);
           results.success = false;
 
-          // Stop on first failure (rollback in transaction)
+          await this.rollbackExecutedActions(rollbackHandlers, ruleId);
           throw new Error(errorMsg);
         }
       }
@@ -109,23 +118,19 @@ export class RuleExecutionService {
       params: Record<string, any>;
     },
     context: Record<string, any>
-  ): Promise<void> {
+  ): Promise<ActionExecutionResult> {
     switch (action.type) {
       case 'update_task':
-        await this.updateTask(action.params as any, context);
-        break;
+        return this.updateTask(action.params as any, context);
       case 'create_task':
-        await this.createTask(action.params as any, context);
-        break;
+        return this.createTask(action.params as any, context);
       case 'send_webhook':
         await this.sendWebhook(action.params as any, context);
-        break;
+        return {};
       case 'send_notification':
-        await this.sendNotification(action.params as any, context);
-        break;
+        return this.sendNotification(action.params as any, context);
       case 'assign_tag':
-        await this.assignTag(action.params as any, context);
-        break;
+        return this.assignTag(action.params as any, context);
       default:
         throw new Error(`Unknown action type: ${action.type}`);
     }
@@ -139,10 +144,24 @@ export class RuleExecutionService {
   private async updateTask(
     params: { taskId: string; fields: Record<string, any> },
     context: Record<string, any>
-  ): Promise<void> {
+  ): Promise<ActionExecutionResult> {
     if (!params.taskId || !params.fields) {
       throw new Error('update_task requires taskId and fields');
     }
+
+    const { data: existingTask, error: existingTaskError } = await this.supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', params.taskId)
+      .single();
+
+    if (existingTaskError || !existingTask) {
+      throw new Error(`Task not found: ${params.taskId}`);
+    }
+
+    const previousValues = Object.fromEntries(
+      Object.keys(params.fields).map((field) => [field, existingTask[field]])
+    );
 
     const { error } = await this.supabase
       .from('tasks')
@@ -152,6 +171,19 @@ export class RuleExecutionService {
     if (error) {
       throw new Error(`Failed to update task: ${error.message}`);
     }
+
+    return {
+      rollback: async () => {
+        const { error: rollbackError } = await this.supabase
+          .from('tasks')
+          .update(previousValues)
+          .eq('id', params.taskId);
+
+        if (rollbackError) {
+          throw new Error(`Failed to rollback task update: ${rollbackError.message}`);
+        }
+      }
+    };
   }
 
   /**
@@ -162,7 +194,7 @@ export class RuleExecutionService {
   private async createTask(
     params: Record<string, any>,
     context: Record<string, any>
-  ): Promise<void> {
+  ): Promise<ActionExecutionResult> {
     if (!params.title) {
       throw new Error('create_task requires title');
     }
@@ -172,11 +204,28 @@ export class RuleExecutionService {
       created_at: new Date().toISOString()
     };
 
-    const { error } = await this.supabase.from('tasks').insert([newTask]);
+    const { data: createdTask, error } = await this.supabase
+      .from('tasks')
+      .insert([newTask])
+      .select()
+      .single();
 
-    if (error) {
+    if (error || !createdTask) {
       throw new Error(`Failed to create task: ${error.message}`);
     }
+
+    return {
+      rollback: async () => {
+        const { error: rollbackError } = await this.supabase
+          .from('tasks')
+          .delete()
+          .eq('id', createdTask.id);
+
+        if (rollbackError) {
+          throw new Error(`Failed to rollback task creation: ${rollbackError.message}`);
+        }
+      }
+    };
   }
 
   /**
@@ -228,7 +277,7 @@ export class RuleExecutionService {
   private async sendNotification(
     params: { userId?: string; message: string; priority?: string },
     context: Record<string, any>
-  ): Promise<void> {
+  ): Promise<ActionExecutionResult> {
     if (!params.message) {
       throw new Error('send_notification requires message');
     }
@@ -238,19 +287,36 @@ export class RuleExecutionService {
       throw new Error('send_notification requires userId');
     }
 
-    const { error } = await this.supabase.from('notifications').insert([
-      {
-        user_id: userId,
-        message: params.message,
-        priority: params.priority || 'normal',
-        read: false,
-        created_at: new Date().toISOString()
-      }
-    ]);
+    const { data: notification, error } = await this.supabase
+      .from('notifications')
+      .insert([
+        {
+          user_id: userId,
+          message: params.message,
+          priority: params.priority || 'normal',
+          read: false,
+          created_at: new Date().toISOString()
+        }
+      ])
+      .select()
+      .single();
 
-    if (error) {
+    if (error || !notification) {
       throw new Error(`Failed to send notification: ${error.message}`);
     }
+
+    return {
+      rollback: async () => {
+        const { error: rollbackError } = await this.supabase
+          .from('notifications')
+          .delete()
+          .eq('id', notification.id);
+
+        if (rollbackError) {
+          throw new Error(`Failed to rollback notification: ${rollbackError.message}`);
+        }
+      }
+    };
   }
 
   /**
@@ -261,7 +327,7 @@ export class RuleExecutionService {
   private async assignTag(
     params: { taskId?: string; tagName: string },
     context: Record<string, any>
-  ): Promise<void> {
+  ): Promise<ActionExecutionResult> {
     if (!params.tagName) {
       throw new Error('assign_tag requires tagName');
     }
@@ -273,12 +339,13 @@ export class RuleExecutionService {
 
     // Find or create tag
     let tagId: string;
-    const { data: existingTag, error: selectError } = await this.supabase
+    const { data: existingTag } = await this.supabase
       .from('tags')
       .select('id')
       .eq('name', params.tagName)
       .single();
 
+    let createdTagId: string | null = null;
     if (existingTag) {
       tagId = existingTag.id;
     } else {
@@ -292,16 +359,72 @@ export class RuleExecutionService {
         throw new Error(`Failed to create tag: ${insertError?.message}`);
       }
       tagId = newTag.id;
+      createdTagId = newTag.id;
     }
 
     // Create task-tag association
-    const { error: linkError } = await this.supabase
+    const { data: taskTagLink, error: linkError } = await this.supabase
       .from('task_tags')
       .insert([{ task_id: taskId, tag_id: tagId }])
-      .select();
+      .select()
+      .single();
 
     if (linkError && !linkError.message.includes('duplicate')) {
       throw new Error(`Failed to assign tag: ${linkError.message}`);
+    }
+
+    return {
+      rollback: async () => {
+        if (taskTagLink?.id) {
+          const { error: unlinkError } = await this.supabase
+            .from('task_tags')
+            .delete()
+            .eq('id', taskTagLink.id);
+
+          if (unlinkError) {
+            throw new Error(`Failed to rollback task tag: ${unlinkError.message}`);
+          }
+        }
+
+        if (createdTagId) {
+          const { data: remainingLinks, error: remainingLinksError } = await this.supabase
+            .from('task_tags')
+            .select('id')
+            .eq('tag_id', createdTagId);
+
+          if (remainingLinksError) {
+            throw new Error(
+              `Failed to inspect tag rollback dependencies: ${remainingLinksError.message}`
+            );
+          }
+
+          if (!remainingLinks || remainingLinks.length === 0) {
+            const { error: deleteTagError } = await this.supabase
+              .from('tags')
+              .delete()
+              .eq('id', createdTagId);
+
+            if (deleteTagError) {
+              throw new Error(`Failed to rollback tag creation: ${deleteTagError.message}`);
+            }
+          }
+        }
+      }
+    };
+  }
+
+  private async rollbackExecutedActions(
+    rollbackHandlers: RollbackHandler[],
+    ruleId: string
+  ): Promise<void> {
+    for (const rollback of rollbackHandlers) {
+      try {
+        await rollback();
+      } catch (error) {
+        console.error(`[RULE EXECUTION] Rollback failed for rule ${ruleId}`, {
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
   }
 }
