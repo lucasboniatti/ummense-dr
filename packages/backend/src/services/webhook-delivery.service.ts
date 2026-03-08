@@ -14,6 +14,21 @@ interface WebhookPayload {
   };
 }
 
+interface QueueWebhookDeliveryParams {
+  webhookId?: string;
+  webhookUrl?: string;
+  eventId: string;
+  eventType: string;
+  eventData: Record<string, any>;
+  dispatchImmediately?: boolean;
+}
+
+interface ResolvedWebhookTarget {
+  id: string;
+  url: string;
+  secret?: string;
+}
+
 /**
  * Webhook Delivery Service
  * Handles reliable webhook delivery with retries, SSRF protection, and idempotency
@@ -43,49 +58,112 @@ export class WebhookDeliveryService {
     eventType: string,
     eventData: Record<string, any>
   ): Promise<string> {
-    // Fetch webhook details
-    const { data: webhook, error: webhookError } = await this.supabase
-      .from('webhooks')
-      .select('url, secret')
-      .eq('id', webhookId)
-      .single();
+    return this.queueWebhookDelivery({
+      webhookId,
+      eventId,
+      eventType,
+      eventData,
+      dispatchImmediately: true,
+    });
+  }
 
-    if (webhookError || !webhook) {
-      throw new Error(`Webhook not found: ${webhookId}`);
-    }
+  /**
+   * Queue a webhook delivery without forcing the HTTP side effect to happen inline.
+   * This is the path used by the rule engine to preserve all-or-nothing semantics.
+   */
+  async queueWebhookDelivery(params: QueueWebhookDeliveryParams): Promise<string> {
+    const webhook = await this.resolveWebhookTarget(params);
 
-    // Validate URL upfront (SSRF protection)
     await ssrfValidatorService.validateWebhookUrl(webhook.url);
 
-    // Create idempotency key
-    const idempotencyKey = idempotencyKeyService.generateKey(webhookId, eventId, eventType);
+    const payload = this.buildPayload(params.eventId, params.eventType, params.eventData, 1);
+    const createdAt = new Date().toISOString();
+    const idempotencyKey = idempotencyKeyService.generateKey(
+      webhook.id,
+      params.eventId,
+      params.eventType
+    );
 
-    // Create delivery record
-    const { data: delivery, error: deliveryError } = await this.supabase
-      .from('webhook_deliveries')
-      .insert([
-        {
-          webhook_id: webhookId,
-          event_id: eventId,
-          idempotency_key: idempotencyKey,
-          status: 'pending',
-          attempt_count: 0,
-          next_retry_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ])
-      .select('id')
-      .single();
+    const { data: delivery, error: deliveryError } = await this.insertDeliveryRecord({
+      webhook_id: webhook.id,
+      event_id: params.eventId,
+      event_type: params.eventType,
+      idempotency_key: idempotencyKey,
+      status: 'pending',
+      attempt_count: 0,
+      next_retry_at: createdAt,
+      created_at: createdAt,
+      updated_at: createdAt,
+      request_body: payload,
+      payload,
+    });
 
     if (deliveryError || !delivery) {
       throw new Error(`Failed to create delivery record: ${deliveryError?.message}`);
     }
 
-    // Attempt immediate delivery
-    await this.deliverWebhook(delivery.id, webhookId, eventId, eventType, eventData, webhook);
+    if (params.dispatchImmediately !== false) {
+      await this.processQueuedDelivery(delivery.id);
+    }
 
     return delivery.id;
+  }
+
+  async processQueuedDelivery(deliveryId: string): Promise<void> {
+    const { data: delivery, error } = await this.supabase
+      .from('webhook_deliveries')
+      .select('*')
+      .eq('id', deliveryId)
+      .single();
+
+    if (error || !delivery) {
+      throw new Error(`Webhook delivery not found: ${deliveryId}`);
+    }
+
+    const { data: webhook, error: webhookError } = await this.supabase
+      .from('webhooks')
+      .select('id, url, secret')
+      .eq('id', delivery.webhook_id)
+      .single();
+
+    if (webhookError || !webhook) {
+      throw new Error(`Webhook not found: ${delivery.webhook_id}`);
+    }
+
+    const eventType =
+      delivery.event_type ??
+      delivery.request_body?.event_type ??
+      delivery.payload?.event_type;
+    const eventData =
+      delivery.request_body?.data ??
+      delivery.payload?.data ??
+      delivery.payload ??
+      {};
+
+    if (!eventType) {
+      throw new Error(`Webhook delivery ${deliveryId} is missing event_type metadata`);
+    }
+
+    await this.deliverWebhook(
+      delivery.id,
+      delivery.webhook_id,
+      delivery.event_id,
+      eventType,
+      eventData,
+      webhook,
+      delivery.attempt_count ?? 0
+    );
+  }
+
+  async deleteQueuedDelivery(deliveryId: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('webhook_deliveries')
+      .delete()
+      .eq('id', deliveryId);
+
+    if (error) {
+      throw new Error(`Failed to delete queued delivery ${deliveryId}: ${error.message}`);
+    }
   }
 
   /**
@@ -103,19 +181,16 @@ export class WebhookDeliveryService {
     eventId: string,
     eventType: string,
     eventData: Record<string, any>,
-    webhook: { url: string; secret?: string }
+    webhook: { url: string; secret?: string },
+    attemptCount: number
   ): Promise<void> {
     const startTime = Date.now();
-    const payload: WebhookPayload = {
-      event_id: eventId,
-      event_type: eventType,
-      timestamp: new Date().toISOString(),
-      data: eventData,
-      metadata: {
-        attempt: 1,
-        max_attempts: 5
-      }
-    };
+    const payload = this.buildPayload(
+      eventId,
+      eventType,
+      eventData,
+      Math.max(1, attemptCount + 1)
+    );
 
     const payloadJson = JSON.stringify(payload);
 
@@ -152,14 +227,20 @@ export class WebhookDeliveryService {
 
       // Update delivery record
       if (response.ok) {
-        await this.updateDeliverySuccess(deliveryId, response.status, responseBody, duration);
+        await this.updateDeliverySuccess(
+          deliveryId,
+          response.status,
+          responseBody,
+          duration,
+          attemptCount
+        );
       } else {
         await this.updateDeliveryFailure(
           deliveryId,
           response.status,
           responseBody,
           duration,
-          1
+          attemptCount
         );
       }
     } catch (error) {
@@ -167,7 +248,7 @@ export class WebhookDeliveryService {
       const errorMessage = error instanceof Error ? error.message : String(error);
 
       // Timeout or network error
-      await this.updateDeliveryFailure(deliveryId, null, errorMessage, duration, 1);
+      await this.updateDeliveryFailure(deliveryId, null, errorMessage, duration, attemptCount);
     }
   }
 
@@ -178,15 +259,18 @@ export class WebhookDeliveryService {
     deliveryId: string,
     statusCode: number,
     responseBody: string,
-    duration: number
+    duration: number,
+    attemptCount: number
   ): Promise<void> {
     const { error } = await this.supabase
       .from('webhook_deliveries')
       .update({
         status: 'success',
+        attempt_count: attemptCount + 1,
         response_status_code: statusCode,
         response_body: responseBody,
         delivered_at: new Date().toISOString(),
+        next_retry_at: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', deliveryId);
@@ -264,16 +348,7 @@ export class WebhookDeliveryService {
   async processRetryQueue(): Promise<number> {
     const { data: deliveries, error } = await this.supabase
       .from('webhook_deliveries')
-      .select(`
-        id,
-        webhook_id,
-        event_id,
-        status,
-        attempt_count,
-        next_retry_at,
-        webhooks!webhook_id(url, secret),
-        events!event_id(type, data)
-      `)
+      .select('*')
       .eq('status', 'pending')
       .lte('next_retry_at', new Date().toISOString())
       .limit(100); // Process up to 100 at a time
@@ -290,23 +365,7 @@ export class WebhookDeliveryService {
     // Process each delivery
     for (const delivery of deliveries) {
       try {
-        const webhook = delivery.webhooks as any;
-        const event = delivery.events as any;
-
-        if (!webhook || !event) {
-          console.warn(`[WEBHOOK] Missing webhook or event for delivery ${delivery.id}`);
-          continue;
-        }
-
-        // Retry delivery
-        await this.deliverWebhook(
-          delivery.id,
-          delivery.webhook_id,
-          delivery.event_id,
-          event.type,
-          event.data,
-          webhook
-        );
+        await this.processQueuedDelivery(delivery.id);
       } catch (error) {
         console.error(`[WEBHOOK] Error processing delivery ${delivery.id}:`, error);
       }
@@ -359,6 +418,100 @@ export class WebhookDeliveryService {
       averageDeliveryTime: Math.round(averageDeliveryTime),
       deadLetteredCount: deadLetteredCount || 0
     };
+  }
+
+  private async resolveWebhookTarget(
+    params: Pick<QueueWebhookDeliveryParams, 'webhookId' | 'webhookUrl'>
+  ): Promise<ResolvedWebhookTarget> {
+    if (!params.webhookId && !params.webhookUrl) {
+      throw new Error('send_webhook requires webhookId or webhookUrl');
+    }
+
+    if (params.webhookId) {
+      const { data: webhook, error } = await this.supabase
+        .from('webhooks')
+        .select('id, url, secret')
+        .eq('id', params.webhookId)
+        .single();
+
+      if (error || !webhook) {
+        throw new Error(`Webhook not found: ${params.webhookId}`);
+      }
+
+      return webhook as ResolvedWebhookTarget;
+    }
+
+    const { data: webhook, error } = await this.supabase
+      .from('webhooks')
+      .select('id, url, secret')
+      .eq('url', params.webhookUrl)
+      .maybeSingle();
+
+    if (error || !webhook) {
+      throw new Error(
+        `Webhook must be registered before rule-based delivery: ${params.webhookUrl}`
+      );
+    }
+
+    return webhook as ResolvedWebhookTarget;
+  }
+
+  private buildPayload(
+    eventId: string,
+    eventType: string,
+    eventData: Record<string, any>,
+    attempt: number
+  ): WebhookPayload {
+    return {
+      event_id: eventId,
+      event_type: eventType,
+      timestamp: new Date().toISOString(),
+      data: eventData,
+      metadata: {
+        attempt,
+        max_attempts: webhookRetryService.getMaxAttempts()
+      }
+    };
+  }
+
+  private async insertDeliveryRecord(record: Record<string, any>) {
+    const variants = [
+      record,
+      { ...record, payload: undefined },
+      { ...record, request_body: undefined },
+      {
+        webhook_id: record.webhook_id,
+        event_id: record.event_id,
+        event_type: record.event_type,
+        idempotency_key: record.idempotency_key,
+        status: record.status,
+        attempt_count: record.attempt_count,
+        next_retry_at: record.next_retry_at,
+        created_at: record.created_at,
+        updated_at: record.updated_at,
+      },
+    ].map((candidate) =>
+      Object.fromEntries(
+        Object.entries(candidate).filter(([, value]) => value !== undefined)
+      )
+    );
+
+    let lastError: any = null;
+    for (const candidate of variants) {
+      const result = await this.supabase
+        .from('webhook_deliveries')
+        .insert([candidate])
+        .select('id')
+        .single();
+
+      if (!result.error) {
+        return result;
+      }
+
+      lastError = result.error;
+    }
+
+    return { data: null, error: lastError };
   }
 }
 

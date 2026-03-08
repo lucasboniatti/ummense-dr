@@ -155,7 +155,8 @@ Creates a new task with provided details.
 ```
 
 #### send_webhook
-Makes HTTP POST request to a webhook endpoint.
+Queues a reliable webhook delivery and only releases the HTTP dispatch after the
+rest of the atomic action batch succeeds.
 
 ```json
 {
@@ -181,6 +182,10 @@ Alternatively, use a stored webhook ID:
   }
 }
 ```
+
+For atomic execution, prefer a registered `webhookId`. If `webhookUrl` is used,
+the URL must already exist in the `webhooks` registry so the delivery can be
+queued and retried safely.
 
 #### send_notification
 Creates an in-app notification for a user.
@@ -224,6 +229,17 @@ BEGIN TRANSACTION
 ```
 
 All actions succeed or all rollback. No partial execution.
+
+`send_webhook` is treated as a deferred side effect:
+
+```
+1. Queue webhook delivery record
+2. Continue executing local actions
+3. If any later action fails: delete queued delivery during rollback
+4. If batch succeeds: dispatch queued delivery after commit
+```
+
+This avoids firing an external HTTP request in the middle of an atomic rule run.
 
 ### 4. LoopDetectorService
 

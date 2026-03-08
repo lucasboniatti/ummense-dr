@@ -11,6 +11,7 @@ const mockRuleStore = vi.hoisted(() => {
     tags: [] as Array<Record<string, any>>,
     task_tags: [] as Array<Record<string, any>>,
     webhooks: [] as Array<Record<string, any>>,
+    webhook_deliveries: [] as Array<Record<string, any>>,
   };
 
   const rowsFor = (table: string) => {
@@ -92,6 +93,13 @@ const mockRuleStore = vi.hoisted(() => {
           id: record.id ?? `webhook-${nextId++}`,
           ...record,
         };
+      case 'webhook_deliveries':
+        return {
+          id: record.id ?? `webhook-delivery-${nextId++}`,
+          created_at: record.created_at ?? new Date().toISOString(),
+          updated_at: record.updated_at ?? new Date().toISOString(),
+          ...record,
+        };
       default:
         return { id: record.id ?? `row-${nextId++}`, ...record };
     }
@@ -100,15 +108,27 @@ const mockRuleStore = vi.hoisted(() => {
   const createSelectBuilder = (table: string) => {
     const rows = rowsFor(table);
     const filters: Array<(row: Record<string, any>) => boolean> = [];
+    let limitCount: number | null = null;
 
-    const execute = async () => ({ data: applyFilters(rows, filters), error: null });
+    const execute = async () => ({
+      data: (limitCount === null ? applyFilters(rows, filters) : applyFilters(rows, filters).slice(0, limitCount)),
+      error: null
+    });
     const builder: any = {
       eq(field: string, value: unknown) {
         filters.push((row) => row[field] === value);
         return builder;
       },
+      lte(field: string, value: unknown) {
+        filters.push((row) => (row[field] ?? null) <= value);
+        return builder;
+      },
       is(field: string, value: unknown) {
         filters.push((row) => (row[field] ?? null) === value);
+        return builder;
+      },
+      limit(count: number) {
+        limitCount = count;
         return builder;
       },
       single: async () => {
@@ -412,11 +432,13 @@ describe('Rule Engine Service - Unit Tests', () => {
     it('should execute send_webhook action', async () => {
       const result = await ruleExecutionService.executeActions(
         'rule-1',
-        [{ type: 'send_webhook', params: { webhookUrl: 'https://example.com/hook', payload: {} } }],
+        [{ type: 'send_webhook', params: { webhookId: 'webhook-1', payload: { taskId: 'task-1' } } }],
         {}
       );
 
       expect(result.success).toBe(true);
+      expect(mockRuleStore.tables.webhook_deliveries).toHaveLength(1);
+      expect(mockRuleStore.tables.webhook_deliveries[0]?.status).toBe('success');
       expect(globalThis.fetch).toHaveBeenCalledWith(
         'https://example.com/hook',
         expect.objectContaining({ method: 'POST' })
@@ -474,6 +496,7 @@ describe('Rule Engine Service - Unit Tests', () => {
         [
           { type: 'update_task', params: { taskId: 'task-1', fields: { status: 'done' } } },
           { type: 'create_task', params: { title: 'Created before failure' } },
+          { type: 'send_webhook', params: { webhookId: 'webhook-1', payload: { taskId: 'task-1' } } },
           { type: 'send_notification', params: { message: 'Created', userId: 'user-1' } },
           { type: 'assign_tag', params: { taskId: 'task-1', tagName: 'urgent' } },
           { type: 'update_task', params: { taskId: undefined, fields: {} } },
@@ -487,6 +510,8 @@ describe('Rule Engine Service - Unit Tests', () => {
       expect(mockRuleStore.tables.notifications).toEqual(initialNotificationSnapshot);
       expect(mockRuleStore.tables.tags).toHaveLength(0);
       expect(mockRuleStore.tables.task_tags).toHaveLength(0);
+      expect(mockRuleStore.tables.webhook_deliveries).toHaveLength(0);
+      expect(globalThis.fetch).not.toHaveBeenCalled();
     });
   });
 });

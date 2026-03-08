@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
+import { randomUUID } from 'crypto';
+import { webhookDeliveryService } from './webhook-delivery.service';
 
 type RollbackHandler = () => Promise<void>;
+type CommitHandler = () => Promise<void>;
 type ActionExecutionResult = {
   rollback?: RollbackHandler;
+  afterCommit?: CommitHandler;
 };
 
 /**
@@ -42,6 +46,7 @@ export class RuleExecutionService {
   }> {
     const startTime = Date.now();
     const rollbackHandlers: RollbackHandler[] = [];
+    const commitHandlers: CommitHandler[] = [];
     const results = {
       success: true,
       executedActions: 0,
@@ -56,6 +61,9 @@ export class RuleExecutionService {
           if (actionResult.rollback) {
             rollbackHandlers.unshift(actionResult.rollback);
           }
+          if (actionResult.afterCommit) {
+            commitHandlers.push(actionResult.afterCommit);
+          }
           results.executedActions++;
         } catch (error) {
           const errorMsg = `Action ${action.type} failed: ${error}`;
@@ -66,6 +74,8 @@ export class RuleExecutionService {
           throw new Error(errorMsg);
         }
       }
+
+      await this.runCommitHandlers(commitHandlers, ruleId);
 
       console.log(`[RULE EXECUTION] Rule ${ruleId} executed successfully`, {
         actionCount: actions.length,
@@ -125,8 +135,7 @@ export class RuleExecutionService {
       case 'create_task':
         return this.createTask(action.params as any, context);
       case 'send_webhook':
-        await this.sendWebhook(action.params as any, context);
-        return {};
+        return this.sendWebhook(action.params as any, context);
       case 'send_notification':
         return this.sendNotification(action.params as any, context);
       case 'assign_tag':
@@ -234,39 +243,51 @@ export class RuleExecutionService {
    * @param context Current context
    */
   private async sendWebhook(
-    params: { webhookId?: string; webhookUrl?: string; payload?: Record<string, any> },
+    params: {
+      webhookId?: string;
+      webhookUrl?: string;
+      payload?: Record<string, any>;
+      eventType?: string;
+      eventId?: string;
+    },
     context: Record<string, any>
-  ): Promise<void> {
+  ): Promise<ActionExecutionResult> {
     if (!params.webhookId && !params.webhookUrl) {
       throw new Error('send_webhook requires webhookId or webhookUrl');
     }
 
-    // If webhookId provided, fetch URL from database
-    let webhookUrl = params.webhookUrl;
-    if (params.webhookId && !webhookUrl) {
-      const { data, error } = await this.supabase
-        .from('webhooks')
-        .select('url')
-        .eq('id', params.webhookId)
-        .single();
-
-      if (error || !data) {
-        throw new Error(`Webhook not found: ${params.webhookId}`);
-      }
-      webhookUrl = data.url;
-    }
-
-    // Send HTTP POST request
     const payload = params.payload || context;
-    const response = await fetch(webhookUrl!, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const eventType =
+      params.eventType ||
+      context.eventType ||
+      context.event?.event_type ||
+      'rule:action';
+    const eventId = params.eventId || context.eventId || randomUUID();
+
+    const deliveryId = await webhookDeliveryService.queueWebhookDelivery({
+      webhookId: params.webhookId,
+      webhookUrl: params.webhookUrl,
+      eventId,
+      eventType,
+      eventData: payload,
+      dispatchImmediately: false,
     });
 
-    if (!response.ok) {
-      throw new Error(`Webhook failed with status ${response.status}`);
-    }
+    return {
+      rollback: async () => {
+        await webhookDeliveryService.deleteQueuedDelivery(deliveryId);
+      },
+      afterCommit: async () => {
+        try {
+          await webhookDeliveryService.processQueuedDelivery(deliveryId);
+        } catch (error) {
+          console.error(`[RULE EXECUTION] Deferred webhook delivery ${deliveryId} will rely on retry queue`, {
+            ruleId: context.rule?.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      },
+    };
   }
 
   /**
@@ -423,6 +444,21 @@ export class RuleExecutionService {
       } catch (error) {
         console.error(`[RULE EXECUTION] Rollback failed for rule ${ruleId}`, {
           error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+  }
+
+  private async runCommitHandlers(
+    commitHandlers: CommitHandler[],
+    ruleId: string
+  ): Promise<void> {
+    for (const commit of commitHandlers) {
+      try {
+        await commit();
+      } catch (error) {
+        console.error(`[RULE EXECUTION] Commit handler failed for rule ${ruleId}`, {
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
