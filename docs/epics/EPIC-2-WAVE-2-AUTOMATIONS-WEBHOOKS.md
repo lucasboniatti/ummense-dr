@@ -46,7 +46,7 @@ Wave 2 introduces automated workflows and webhook integrations to TaskFlow, enab
 | ID | Title | Complexity | Points | Status |
 |---|---|---|---|---|
 | 2.1 | Event System & Triggers | HIGH | 13 | Draft |
-| 2.2 | Rule-Based Automation Engine | HIGH | 13 | Draft |
+| 2.2 | Rule-Based Automation Engine | HIGH | 13 | Done |
 | 2.3 | Webhook Integration & Delivery | MEDIUM | 8 | Draft |
 | 2.4 | Webhook Management UI | MEDIUM | 8 | Draft |
 | 2.5 | Automation Dashboard & Logs | MEDIUM | 8 | Done |
@@ -243,6 +243,7 @@ Wave 2 introduces automated workflows and webhook integrations to TaskFlow, enab
 - **[ARCHITECT]** Optional alerting: Webhook alert on high failure rates
 
 **Closure Note (2026-03-08):**
+- Story 2.2 was formally closed as `Done` after the transactional webhook gap was removed in commit `300c701` and CI run `22820921485` passed on `master`.
 - Story 2.5 was formally closed as `Done` after the backend stub follow-up was completed.
 - The original Wave 2 dashboard UX was later redistributed across:
   - Story `3.2` for DLQ operations
