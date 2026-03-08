@@ -72,7 +72,8 @@ export class DeltaDetector {
           if (field === 'error_context') {
             // Special handling for objects: stringify for comparison
             const currentStr = JSON.stringify(currentValue);
-            const cachedStr = cachedValue ? JSON.stringify(cachedValue) : undefined;
+            const cachedStr =
+              cachedValue === undefined ? undefined : JSON.stringify(cachedValue);
             hasChanged = currentStr !== cachedStr;
           } else {
             hasChanged = currentValue !== cachedValue;

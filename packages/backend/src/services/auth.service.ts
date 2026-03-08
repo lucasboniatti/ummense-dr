@@ -16,17 +16,10 @@ import { logger } from '../utils/logger';
  */
 export async function authenticateUser(req: any): Promise<string | null> {
   try {
-    const authHeader = req.headers?.authorization;
-
-    if (!authHeader) {
-      logger.warn('[Auth] Missing authorization header');
-      return null;
-    }
-
-    const token = extractBearerToken(authHeader);
+    const token = extractTokenFromRequest(req);
 
     if (!token) {
-      logger.warn('[Auth] Invalid authorization header format');
+      logger.warn('[Auth] Missing or invalid authentication token');
       return null;
     }
 
@@ -66,9 +59,32 @@ function extractBearerToken(authHeader: string): string | null {
   return token || null;
 }
 
+function extractTokenFromRequest(req: any): string | null {
+  const authHeader = req.headers?.authorization;
+  const bearerToken = typeof authHeader === 'string' ? extractBearerToken(authHeader) : null;
+
+  if (bearerToken) {
+    return bearerToken;
+  }
+
+  const requestUrl = typeof req.url === 'string' ? req.url : '';
+
+  if (!requestUrl) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(requestUrl, 'http://localhost');
+    const queryToken = parsedUrl.searchParams.get('token');
+    return queryToken?.trim() || null;
+  } catch (error) {
+    logger.debug('[Auth] Failed to parse request URL for token extraction:', error);
+    return null;
+  }
+}
+
 /**
- * Validate JWT token signature and expiration
- * TODO: Implement proper JWT validation with secret key
+ * Validate JWT token signature and expiration.
  *
  * @param token JWT token
  * @returns true if valid

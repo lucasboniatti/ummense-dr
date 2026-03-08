@@ -1,0 +1,3679 @@
+{
+  "generatedAt": "2026-03-08T17:48:56.543Z",
+  "target": {
+    "port": 9401,
+    "path": "/ws",
+    "pid": 86951
+  },
+  "config": {
+    "concurrentClients": 100,
+    "durationSeconds": 3600,
+    "warmupSeconds": 30,
+    "connectionTimeoutMs": 10000,
+    "sampleIntervalMs": 5000,
+    "publishEveryMs": 1000,
+    "uniqueUsers": true
+  },
+  "summary": {
+    "connectionAttempts": 100,
+    "successfulConnections": 100,
+    "connectionSuccessRate": 1,
+    "unexpectedDisconnects": 0,
+    "totalMessages": 356654,
+    "latencyP50Ms": 0,
+    "latencyP95Ms": 1,
+    "latencyP99Ms": 1,
+    "baselineMemoryRssMb": 96.73,
+    "peakMemoryRssMb": 109.81,
+    "memoryDeltaMb": 13.08,
+    "finalMemoryRssMb": 109.81,
+    "cpuAveragePercent": 0.43,
+    "cpuPeakPercent": 2.4,
+    "messageRatePerSecond": 99.07
+  },
+  "thresholds": {
+    "minConnectionSuccessRate": 0.99,
+    "maxLatencyP95Ms": 500,
+    "maxMemoryDeltaMb": 100,
+    "maxCpuAveragePercent": 5
+  },
+  "pass": true,
+  "notes": [],
+  "samples": [
+    {
+      "timestamp": "2026-03-08T16:48:26.439Z",
+      "memoryRssMb": 96.73,
+      "cpuPercent": 17.5
+    },
+    {
+      "timestamp": "2026-03-08T16:48:31.446Z",
+      "memoryRssMb": 103.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:48:36.453Z",
+      "memoryRssMb": 103.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:48:41.462Z",
+      "memoryRssMb": 103.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:48:46.453Z",
+      "memoryRssMb": 103.31,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:48:51.474Z",
+      "memoryRssMb": 103.31,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:48:56.459Z",
+      "memoryRssMb": 103.31,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:49:01.466Z",
+      "memoryRssMb": 103.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:06.461Z",
+      "memoryRssMb": 103.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:11.468Z",
+      "memoryRssMb": 103.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:16.464Z",
+      "memoryRssMb": 103.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:21.474Z",
+      "memoryRssMb": 103.38,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:26.473Z",
+      "memoryRssMb": 103.38,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:31.476Z",
+      "memoryRssMb": 103.38,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:36.476Z",
+      "memoryRssMb": 103.38,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:41.483Z",
+      "memoryRssMb": 103.38,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:49:46.478Z",
+      "memoryRssMb": 103.39,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:49:51.484Z",
+      "memoryRssMb": 103.39,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:49:56.479Z",
+      "memoryRssMb": 103.41,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:50:01.488Z",
+      "memoryRssMb": 103.41,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:06.492Z",
+      "memoryRssMb": 103.61,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:50:11.490Z",
+      "memoryRssMb": 103.64,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:16.492Z",
+      "memoryRssMb": 97.95,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:21.495Z",
+      "memoryRssMb": 97.98,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:26.496Z",
+      "memoryRssMb": 97.98,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:50:31.498Z",
+      "memoryRssMb": 97.98,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:36.509Z",
+      "memoryRssMb": 97.98,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:41.502Z",
+      "memoryRssMb": 97.98,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:46.504Z",
+      "memoryRssMb": 97.98,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:51.503Z",
+      "memoryRssMb": 97.98,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:50:56.506Z",
+      "memoryRssMb": 98.08,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:51:01.509Z",
+      "memoryRssMb": 98.08,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:51:06.510Z",
+      "memoryRssMb": 98.08,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:51:11.521Z",
+      "memoryRssMb": 98.08,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:51:16.515Z",
+      "memoryRssMb": 98.08,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:51:21.518Z",
+      "memoryRssMb": 98.08,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:51:26.519Z",
+      "memoryRssMb": 98.09,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:51:31.517Z",
+      "memoryRssMb": 98.09,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:51:36.524Z",
+      "memoryRssMb": 98.09,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:51:41.548Z",
+      "memoryRssMb": 98.09,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:51:46.524Z",
+      "memoryRssMb": 98.09,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:51:51.523Z",
+      "memoryRssMb": 98.09,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:51:56.527Z",
+      "memoryRssMb": 98.09,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T16:52:01.529Z",
+      "memoryRssMb": 98.44,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:06.532Z",
+      "memoryRssMb": 98.45,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:11.532Z",
+      "memoryRssMb": 98.45,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:52:16.536Z",
+      "memoryRssMb": 98.45,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:21.537Z",
+      "memoryRssMb": 98.45,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:26.540Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:52:31.542Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:36.544Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:41.577Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:46.548Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:51.546Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:52:56.546Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T16:53:01.549Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:53:06.549Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:53:11.553Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:53:16.556Z",
+      "memoryRssMb": 98.47,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:53:21.565Z",
+      "memoryRssMb": 98.48,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:53:26.556Z",
+      "memoryRssMb": 98.48,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T16:53:31.558Z",
+      "memoryRssMb": 98.48,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:53:36.557Z",
+      "memoryRssMb": 98.48,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:53:41.563Z",
+      "memoryRssMb": 98.48,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:53:46.564Z",
+      "memoryRssMb": 98.48,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T16:53:51.567Z",
+      "memoryRssMb": 98.48,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:53:56.565Z",
+      "memoryRssMb": 98.5,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:54:01.573Z",
+      "memoryRssMb": 98.5,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T16:54:06.573Z",
+      "memoryRssMb": 98.5,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T16:54:11.577Z",
+      "memoryRssMb": 98.5,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:54:16.571Z",
+      "memoryRssMb": 98.5,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:54:21.578Z",
+      "memoryRssMb": 98.53,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:54:26.578Z",
+      "memoryRssMb": 98.53,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T16:54:31.579Z",
+      "memoryRssMb": 98.53,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:54:36.580Z",
+      "memoryRssMb": 98.53,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T16:54:41.582Z",
+      "memoryRssMb": 98.53,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T16:54:46.586Z",
+      "memoryRssMb": 98.53,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:54:51.595Z",
+      "memoryRssMb": 98.55,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:54:56.589Z",
+      "memoryRssMb": 98.59,
+      "cpuPercent": 2.1
+    },
+    {
+      "timestamp": "2026-03-08T16:55:01.588Z",
+      "memoryRssMb": 98.59,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T16:55:06.596Z",
+      "memoryRssMb": 98.61,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T16:55:11.595Z",
+      "memoryRssMb": 98.61,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:55:16.596Z",
+      "memoryRssMb": 100.25,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:55:21.597Z",
+      "memoryRssMb": 100.61,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T16:55:26.600Z",
+      "memoryRssMb": 100.64,
+      "cpuPercent": 2
+    },
+    {
+      "timestamp": "2026-03-08T16:55:31.605Z",
+      "memoryRssMb": 100.64,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T16:55:36.605Z",
+      "memoryRssMb": 100.64,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T16:55:41.602Z",
+      "memoryRssMb": 100.64,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T16:55:46.612Z",
+      "memoryRssMb": 100.64,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:55:51.637Z",
+      "memoryRssMb": 100.64,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T16:55:56.614Z",
+      "memoryRssMb": 100.67,
+      "cpuPercent": 2.4
+    },
+    {
+      "timestamp": "2026-03-08T16:56:01.610Z",
+      "memoryRssMb": 100.69,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T16:56:06.616Z",
+      "memoryRssMb": 100.7,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:56:11.614Z",
+      "memoryRssMb": 100.7,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:56:16.680Z",
+      "memoryRssMb": 100.7,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:56:21.621Z",
+      "memoryRssMb": 100.7,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:56:26.626Z",
+      "memoryRssMb": 100.73,
+      "cpuPercent": 2.3
+    },
+    {
+      "timestamp": "2026-03-08T16:56:31.628Z",
+      "memoryRssMb": 100.75,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T16:56:36.634Z",
+      "memoryRssMb": 100.75,
+      "cpuPercent": 0.8
+    },
+    {
+      "timestamp": "2026-03-08T16:56:41.630Z",
+      "memoryRssMb": 100.75,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:56:46.632Z",
+      "memoryRssMb": 100.77,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T16:56:51.634Z",
+      "memoryRssMb": 100.78,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T16:56:56.636Z",
+      "memoryRssMb": 100.8,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T16:57:01.642Z",
+      "memoryRssMb": 100.83,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:57:06.645Z",
+      "memoryRssMb": 100.83,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T16:57:11.643Z",
+      "memoryRssMb": 100.83,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T16:57:16.641Z",
+      "memoryRssMb": 100.83,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T16:57:21.648Z",
+      "memoryRssMb": 100.83,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:57:26.647Z",
+      "memoryRssMb": 100.86,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T16:57:31.649Z",
+      "memoryRssMb": 100.88,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T16:57:36.652Z",
+      "memoryRssMb": 100.88,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T16:57:41.653Z",
+      "memoryRssMb": 100.89,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T16:57:46.657Z",
+      "memoryRssMb": 100.89,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T16:57:51.659Z",
+      "memoryRssMb": 100.89,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T16:57:56.661Z",
+      "memoryRssMb": 100.94,
+      "cpuPercent": 1.4
+    },
+    {
+      "timestamp": "2026-03-08T16:58:01.693Z",
+      "memoryRssMb": 100.97,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:58:06.658Z",
+      "memoryRssMb": 100.97,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T16:58:11.662Z",
+      "memoryRssMb": 100.97,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T16:58:16.663Z",
+      "memoryRssMb": 100.97,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T16:58:21.668Z",
+      "memoryRssMb": 100.98,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T16:58:26.668Z",
+      "memoryRssMb": 101.02,
+      "cpuPercent": 2.2
+    },
+    {
+      "timestamp": "2026-03-08T16:58:31.670Z",
+      "memoryRssMb": 101.02,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T16:58:36.673Z",
+      "memoryRssMb": 101.02,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:58:41.676Z",
+      "memoryRssMb": 101.05,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T16:58:46.676Z",
+      "memoryRssMb": 101.05,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T16:58:51.678Z",
+      "memoryRssMb": 101.05,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:58:56.677Z",
+      "memoryRssMb": 101.06,
+      "cpuPercent": 1.7
+    },
+    {
+      "timestamp": "2026-03-08T16:59:01.683Z",
+      "memoryRssMb": 101.08,
+      "cpuPercent": 2
+    },
+    {
+      "timestamp": "2026-03-08T16:59:06.686Z",
+      "memoryRssMb": 101.08,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:59:11.686Z",
+      "memoryRssMb": 101.08,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:59:16.689Z",
+      "memoryRssMb": 101.08,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:59:21.687Z",
+      "memoryRssMb": 101.09,
+      "cpuPercent": 1.3
+    },
+    {
+      "timestamp": "2026-03-08T16:59:26.691Z",
+      "memoryRssMb": 101.11,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T16:59:31.696Z",
+      "memoryRssMb": 101.11,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T16:59:36.715Z",
+      "memoryRssMb": 101.13,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:59:41.699Z",
+      "memoryRssMb": 101.14,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:59:46.697Z",
+      "memoryRssMb": 101.14,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:59:51.698Z",
+      "memoryRssMb": 101.14,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T16:59:56.698Z",
+      "memoryRssMb": 101.19,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:00:01.698Z",
+      "memoryRssMb": 101.2,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:06.704Z",
+      "memoryRssMb": 101.2,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:11.704Z",
+      "memoryRssMb": 101.2,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:16.707Z",
+      "memoryRssMb": 101.2,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:21.703Z",
+      "memoryRssMb": 101.2,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:26.710Z",
+      "memoryRssMb": 101.25,
+      "cpuPercent": 2
+    },
+    {
+      "timestamp": "2026-03-08T17:00:31.707Z",
+      "memoryRssMb": 101.25,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:36.710Z",
+      "memoryRssMb": 101.25,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:41.717Z",
+      "memoryRssMb": 101.25,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:46.717Z",
+      "memoryRssMb": 101.25,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:51.715Z",
+      "memoryRssMb": 101.25,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:00:56.719Z",
+      "memoryRssMb": 101.27,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:01:01.720Z",
+      "memoryRssMb": 101.28,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:06.748Z",
+      "memoryRssMb": 101.28,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:11.724Z",
+      "memoryRssMb": 101.28,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:16.725Z",
+      "memoryRssMb": 101.28,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:21.730Z",
+      "memoryRssMb": 101.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:26.749Z",
+      "memoryRssMb": 101.31,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:01:31.730Z",
+      "memoryRssMb": 101.31,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:36.729Z",
+      "memoryRssMb": 101.31,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:41.737Z",
+      "memoryRssMb": 101.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:46.733Z",
+      "memoryRssMb": 101.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:51.747Z",
+      "memoryRssMb": 101.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:01:56.741Z",
+      "memoryRssMb": 101.34,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:02:01.747Z",
+      "memoryRssMb": 101.36,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:02:06.743Z",
+      "memoryRssMb": 101.36,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:02:11.749Z",
+      "memoryRssMb": 101.36,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:02:16.744Z",
+      "memoryRssMb": 101.36,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:02:21.749Z",
+      "memoryRssMb": 101.36,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:02:26.751Z",
+      "memoryRssMb": 101.38,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:02:31.757Z",
+      "memoryRssMb": 101.38,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:02:36.760Z",
+      "memoryRssMb": 101.38,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:02:41.758Z",
+      "memoryRssMb": 101.39,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:02:46.761Z",
+      "memoryRssMb": 101.39,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:02:51.765Z",
+      "memoryRssMb": 101.39,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:02:56.794Z",
+      "memoryRssMb": 101.47,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:03:01.769Z",
+      "memoryRssMb": 101.67,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:03:06.796Z",
+      "memoryRssMb": 101.97,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:03:11.770Z",
+      "memoryRssMb": 101.97,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:03:16.773Z",
+      "memoryRssMb": 101.97,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:03:21.775Z",
+      "memoryRssMb": 101.98,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:03:26.775Z",
+      "memoryRssMb": 101.98,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:03:31.780Z",
+      "memoryRssMb": 102,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:03:36.781Z",
+      "memoryRssMb": 102,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:03:41.782Z",
+      "memoryRssMb": 102.02,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:03:46.786Z",
+      "memoryRssMb": 102.02,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:03:51.790Z",
+      "memoryRssMb": 102.02,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:03:56.789Z",
+      "memoryRssMb": 102.02,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:04:01.788Z",
+      "memoryRssMb": 102.05,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:04:06.796Z",
+      "memoryRssMb": 102.05,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:04:11.795Z",
+      "memoryRssMb": 102.05,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:04:16.797Z",
+      "memoryRssMb": 102.05,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:04:21.801Z",
+      "memoryRssMb": 102.06,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:04:26.806Z",
+      "memoryRssMb": 102.08,
+      "cpuPercent": 1.3
+    },
+    {
+      "timestamp": "2026-03-08T17:04:31.800Z",
+      "memoryRssMb": 102.11,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:04:36.805Z",
+      "memoryRssMb": 102.11,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:04:41.806Z",
+      "memoryRssMb": 102.13,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:04:46.812Z",
+      "memoryRssMb": 102.13,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:04:51.835Z",
+      "memoryRssMb": 102.13,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:04:56.807Z",
+      "memoryRssMb": 102.17,
+      "cpuPercent": 1.4
+    },
+    {
+      "timestamp": "2026-03-08T17:05:01.811Z",
+      "memoryRssMb": 102.17,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:05:06.819Z",
+      "memoryRssMb": 102.17,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:05:11.819Z",
+      "memoryRssMb": 102.2,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:05:16.820Z",
+      "memoryRssMb": 102.2,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:05:21.820Z",
+      "memoryRssMb": 102.2,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:05:26.819Z",
+      "memoryRssMb": 102.23,
+      "cpuPercent": 1.5
+    },
+    {
+      "timestamp": "2026-03-08T17:05:31.826Z",
+      "memoryRssMb": 102.23,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:05:36.829Z",
+      "memoryRssMb": 102.23,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:05:41.833Z",
+      "memoryRssMb": 102.25,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:05:46.833Z",
+      "memoryRssMb": 102.25,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:05:51.837Z",
+      "memoryRssMb": 102.25,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:05:56.835Z",
+      "memoryRssMb": 102.27,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:06:01.838Z",
+      "memoryRssMb": 102.31,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:06:06.838Z",
+      "memoryRssMb": 102.31,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:06:11.845Z",
+      "memoryRssMb": 102.31,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:06:16.842Z",
+      "memoryRssMb": 102.31,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:06:21.847Z",
+      "memoryRssMb": 102.33,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:06:26.849Z",
+      "memoryRssMb": 102.38,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:06:31.849Z",
+      "memoryRssMb": 102.39,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:06:36.851Z",
+      "memoryRssMb": 102.39,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:06:41.857Z",
+      "memoryRssMb": 102.41,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:06:46.857Z",
+      "memoryRssMb": 102.41,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:06:51.859Z",
+      "memoryRssMb": 102.42,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:06:56.865Z",
+      "memoryRssMb": 102.42,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:07:01.871Z",
+      "memoryRssMb": 102.45,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:07:06.869Z",
+      "memoryRssMb": 102.45,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:07:11.872Z",
+      "memoryRssMb": 102.47,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:07:16.874Z",
+      "memoryRssMb": 102.5,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:07:21.876Z",
+      "memoryRssMb": 102.5,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:07:26.876Z",
+      "memoryRssMb": 102.53,
+      "cpuPercent": 1.5
+    },
+    {
+      "timestamp": "2026-03-08T17:07:31.882Z",
+      "memoryRssMb": 102.53,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:07:36.881Z",
+      "memoryRssMb": 102.53,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:07:41.886Z",
+      "memoryRssMb": 102.55,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:07:46.887Z",
+      "memoryRssMb": 102.55,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:07:51.889Z",
+      "memoryRssMb": 102.55,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:07:56.892Z",
+      "memoryRssMb": 102.55,
+      "cpuPercent": 1.4
+    },
+    {
+      "timestamp": "2026-03-08T17:08:01.891Z",
+      "memoryRssMb": 102.59,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:08:06.896Z",
+      "memoryRssMb": 102.59,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:08:11.897Z",
+      "memoryRssMb": 102.59,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:08:16.931Z",
+      "memoryRssMb": 102.59,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:08:21.904Z",
+      "memoryRssMb": 102.63,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:08:26.906Z",
+      "memoryRssMb": 102.63,
+      "cpuPercent": 2.1
+    },
+    {
+      "timestamp": "2026-03-08T17:08:31.906Z",
+      "memoryRssMb": 102.63,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:08:36.909Z",
+      "memoryRssMb": 102.63,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:08:41.909Z",
+      "memoryRssMb": 102.66,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:08:46.914Z",
+      "memoryRssMb": 102.66,
+      "cpuPercent": 1.5
+    },
+    {
+      "timestamp": "2026-03-08T17:08:51.911Z",
+      "memoryRssMb": 102.66,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:08:56.918Z",
+      "memoryRssMb": 102.66,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:09:01.920Z",
+      "memoryRssMb": 102.69,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:09:06.924Z",
+      "memoryRssMb": 102.69,
+      "cpuPercent": 1.5
+    },
+    {
+      "timestamp": "2026-03-08T17:09:11.920Z",
+      "memoryRssMb": 102.69,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:09:16.926Z",
+      "memoryRssMb": 102.69,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:09:21.928Z",
+      "memoryRssMb": 102.7,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:09:26.931Z",
+      "memoryRssMb": 102.75,
+      "cpuPercent": 2.1
+    },
+    {
+      "timestamp": "2026-03-08T17:09:31.930Z",
+      "memoryRssMb": 102.75,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:09:36.935Z",
+      "memoryRssMb": 102.75,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T17:09:41.942Z",
+      "memoryRssMb": 102.77,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:09:46.939Z",
+      "memoryRssMb": 102.77,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:09:51.939Z",
+      "memoryRssMb": 102.77,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:09:56.942Z",
+      "memoryRssMb": 102.8,
+      "cpuPercent": 2.3
+    },
+    {
+      "timestamp": "2026-03-08T17:10:01.944Z",
+      "memoryRssMb": 103.3,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:10:06.945Z",
+      "memoryRssMb": 103.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:10:11.946Z",
+      "memoryRssMb": 103.3,
+      "cpuPercent": 2.1
+    },
+    {
+      "timestamp": "2026-03-08T17:10:16.943Z",
+      "memoryRssMb": 103.3,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:10:21.950Z",
+      "memoryRssMb": 103.31,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:10:26.952Z",
+      "memoryRssMb": 103.31,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:10:31.956Z",
+      "memoryRssMb": 103.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:10:36.955Z",
+      "memoryRssMb": 103.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:10:41.960Z",
+      "memoryRssMb": 103.34,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:10:46.958Z",
+      "memoryRssMb": 103.34,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:10:51.964Z",
+      "memoryRssMb": 103.34,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:10:56.961Z",
+      "memoryRssMb": 103.39,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:11:01.964Z",
+      "memoryRssMb": 103.41,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:06.966Z",
+      "memoryRssMb": 103.41,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:11.972Z",
+      "memoryRssMb": 103.41,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:16.970Z",
+      "memoryRssMb": 103.41,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:21.974Z",
+      "memoryRssMb": 103.42,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:26.974Z",
+      "memoryRssMb": 103.45,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:11:31.977Z",
+      "memoryRssMb": 103.47,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:36.979Z",
+      "memoryRssMb": 103.47,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:41.985Z",
+      "memoryRssMb": 103.48,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:46.982Z",
+      "memoryRssMb": 103.48,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:51.987Z",
+      "memoryRssMb": 103.5,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:11:56.982Z",
+      "memoryRssMb": 103.52,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:12:01.994Z",
+      "memoryRssMb": 103.53,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:12:06.992Z",
+      "memoryRssMb": 103.53,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:12:11.996Z",
+      "memoryRssMb": 103.53,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:12:16.996Z",
+      "memoryRssMb": 103.53,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:12:21.996Z",
+      "memoryRssMb": 103.55,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:12:26.994Z",
+      "memoryRssMb": 103.56,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:12:32.000Z",
+      "memoryRssMb": 103.58,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:12:37.005Z",
+      "memoryRssMb": 103.59,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:12:42.006Z",
+      "memoryRssMb": 103.59,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:12:47.007Z",
+      "memoryRssMb": 103.59,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:12:52.008Z",
+      "memoryRssMb": 103.59,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:12:57.004Z",
+      "memoryRssMb": 103.63,
+      "cpuPercent": 0.8
+    },
+    {
+      "timestamp": "2026-03-08T17:13:02.011Z",
+      "memoryRssMb": 103.66,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:13:07.015Z",
+      "memoryRssMb": 103.67,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:13:12.017Z",
+      "memoryRssMb": 103.67,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:13:17.018Z",
+      "memoryRssMb": 103.67,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:13:22.023Z",
+      "memoryRssMb": 103.69,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:13:27.017Z",
+      "memoryRssMb": 103.69,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:13:32.021Z",
+      "memoryRssMb": 103.7,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:13:37.025Z",
+      "memoryRssMb": 103.7,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:13:42.024Z",
+      "memoryRssMb": 103.73,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:13:47.029Z",
+      "memoryRssMb": 103.73,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:13:52.029Z",
+      "memoryRssMb": 103.73,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:13:57.031Z",
+      "memoryRssMb": 103.75,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:14:02.033Z",
+      "memoryRssMb": 103.77,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:14:07.037Z",
+      "memoryRssMb": 103.77,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:14:12.048Z",
+      "memoryRssMb": 103.77,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:14:17.040Z",
+      "memoryRssMb": 103.77,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:14:22.040Z",
+      "memoryRssMb": 103.81,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:14:27.045Z",
+      "memoryRssMb": 103.83,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:14:32.051Z",
+      "memoryRssMb": 103.84,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:14:37.048Z",
+      "memoryRssMb": 103.84,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:14:42.051Z",
+      "memoryRssMb": 103.86,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:14:47.050Z",
+      "memoryRssMb": 103.86,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:14:52.053Z",
+      "memoryRssMb": 103.86,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:14:57.058Z",
+      "memoryRssMb": 103.88,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:15:02.056Z",
+      "memoryRssMb": 103.89,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:15:07.060Z",
+      "memoryRssMb": 103.92,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:15:12.061Z",
+      "memoryRssMb": 103.92,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:15:17.073Z",
+      "memoryRssMb": 103.92,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:15:22.059Z",
+      "memoryRssMb": 103.92,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:15:27.066Z",
+      "memoryRssMb": 103.95,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:15:32.070Z",
+      "memoryRssMb": 103.95,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:15:37.070Z",
+      "memoryRssMb": 103.95,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:15:42.074Z",
+      "memoryRssMb": 103.95,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:15:47.070Z",
+      "memoryRssMb": 103.95,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:15:52.107Z",
+      "memoryRssMb": 103.95,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:15:57.076Z",
+      "memoryRssMb": 104,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:16:02.081Z",
+      "memoryRssMb": 104.02,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:16:07.110Z",
+      "memoryRssMb": 104.02,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:16:12.086Z",
+      "memoryRssMb": 104.02,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:16:17.087Z",
+      "memoryRssMb": 104.02,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:16:22.093Z",
+      "memoryRssMb": 104.03,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:16:27.092Z",
+      "memoryRssMb": 104.05,
+      "cpuPercent": 0.8
+    },
+    {
+      "timestamp": "2026-03-08T17:16:32.095Z",
+      "memoryRssMb": 104.06,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:16:37.096Z",
+      "memoryRssMb": 104.3,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:16:42.100Z",
+      "memoryRssMb": 104.31,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:16:47.101Z",
+      "memoryRssMb": 104.31,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:16:52.100Z",
+      "memoryRssMb": 104.31,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:16:57.104Z",
+      "memoryRssMb": 104.33,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:17:02.105Z",
+      "memoryRssMb": 104.34,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:17:07.113Z",
+      "memoryRssMb": 104.34,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:17:12.111Z",
+      "memoryRssMb": 104.34,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:17:17.113Z",
+      "memoryRssMb": 104.34,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:17:22.114Z",
+      "memoryRssMb": 104.36,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:17:27.110Z",
+      "memoryRssMb": 104.38,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:17:32.118Z",
+      "memoryRssMb": 104.38,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:17:37.119Z",
+      "memoryRssMb": 104.38,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:17:42.124Z",
+      "memoryRssMb": 104.39,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:17:47.148Z",
+      "memoryRssMb": 104.39,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:17:52.126Z",
+      "memoryRssMb": 104.39,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:17:57.124Z",
+      "memoryRssMb": 104.42,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:18:02.130Z",
+      "memoryRssMb": 104.42,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:18:07.134Z",
+      "memoryRssMb": 104.42,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:18:12.134Z",
+      "memoryRssMb": 104.42,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:18:17.139Z",
+      "memoryRssMb": 104.42,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:18:22.138Z",
+      "memoryRssMb": 104.44,
+      "cpuPercent": 0.8
+    },
+    {
+      "timestamp": "2026-03-08T17:18:27.138Z",
+      "memoryRssMb": 104.47,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:18:32.143Z",
+      "memoryRssMb": 104.47,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:18:37.145Z",
+      "memoryRssMb": 104.47,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:18:42.146Z",
+      "memoryRssMb": 104.48,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:18:47.148Z",
+      "memoryRssMb": 104.48,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:18:52.152Z",
+      "memoryRssMb": 104.48,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:18:57.152Z",
+      "memoryRssMb": 104.52,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:19:02.155Z",
+      "memoryRssMb": 104.53,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:19:07.155Z",
+      "memoryRssMb": 104.53,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:19:12.157Z",
+      "memoryRssMb": 104.53,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:19:17.162Z",
+      "memoryRssMb": 104.53,
+      "cpuPercent": 0.8
+    },
+    {
+      "timestamp": "2026-03-08T17:19:22.164Z",
+      "memoryRssMb": 104.55,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:19:27.165Z",
+      "memoryRssMb": 104.56,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:19:32.168Z",
+      "memoryRssMb": 104.56,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:19:37.166Z",
+      "memoryRssMb": 104.56,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:19:42.171Z",
+      "memoryRssMb": 104.58,
+      "cpuPercent": 1.7
+    },
+    {
+      "timestamp": "2026-03-08T17:19:47.173Z",
+      "memoryRssMb": 104.58,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:19:52.176Z",
+      "memoryRssMb": 104.58,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:19:57.173Z",
+      "memoryRssMb": 104.61,
+      "cpuPercent": 2
+    },
+    {
+      "timestamp": "2026-03-08T17:20:02.180Z",
+      "memoryRssMb": 104.88,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:20:07.180Z",
+      "memoryRssMb": 104.88,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:20:12.182Z",
+      "memoryRssMb": 104.88,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:20:17.184Z",
+      "memoryRssMb": 104.88,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T17:20:22.183Z",
+      "memoryRssMb": 104.89,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:20:27.182Z",
+      "memoryRssMb": 104.92,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:20:32.190Z",
+      "memoryRssMb": 104.92,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T17:20:37.190Z",
+      "memoryRssMb": 104.92,
+      "cpuPercent": 1.5
+    },
+    {
+      "timestamp": "2026-03-08T17:20:42.193Z",
+      "memoryRssMb": 104.95,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:20:47.195Z",
+      "memoryRssMb": 104.95,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:20:52.198Z",
+      "memoryRssMb": 104.95,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:20:57.201Z",
+      "memoryRssMb": 104.98,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:21:02.199Z",
+      "memoryRssMb": 104.98,
+      "cpuPercent": 1.5
+    },
+    {
+      "timestamp": "2026-03-08T17:21:07.203Z",
+      "memoryRssMb": 104.98,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:21:12.201Z",
+      "memoryRssMb": 104.98,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:21:17.204Z",
+      "memoryRssMb": 104.98,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:21:22.206Z",
+      "memoryRssMb": 105.02,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:21:27.209Z",
+      "memoryRssMb": 105.08,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:21:32.210Z",
+      "memoryRssMb": 105.09,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:21:37.214Z",
+      "memoryRssMb": 105.09,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:21:42.216Z",
+      "memoryRssMb": 105.09,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:21:47.216Z",
+      "memoryRssMb": 105.11,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:21:52.214Z",
+      "memoryRssMb": 105.14,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:21:57.218Z",
+      "memoryRssMb": 105.16,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:22:02.220Z",
+      "memoryRssMb": 105.16,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:07.223Z",
+      "memoryRssMb": 105.16,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:12.222Z",
+      "memoryRssMb": 105.16,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:17.228Z",
+      "memoryRssMb": 105.16,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:22.227Z",
+      "memoryRssMb": 105.16,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:27.233Z",
+      "memoryRssMb": 105.17,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:22:32.242Z",
+      "memoryRssMb": 105.19,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:37.235Z",
+      "memoryRssMb": 105.19,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:42.238Z",
+      "memoryRssMb": 105.2,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:22:47.241Z",
+      "memoryRssMb": 105.2,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:52.238Z",
+      "memoryRssMb": 105.2,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:22:57.244Z",
+      "memoryRssMb": 105.23,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:23:02.246Z",
+      "memoryRssMb": 105.27,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:23:07.248Z",
+      "memoryRssMb": 105.27,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:23:12.246Z",
+      "memoryRssMb": 105.27,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:23:17.251Z",
+      "memoryRssMb": 105.27,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:23:22.253Z",
+      "memoryRssMb": 105.28,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:23:27.246Z",
+      "memoryRssMb": 105.3,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:23:32.255Z",
+      "memoryRssMb": 105.3,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:23:37.256Z",
+      "memoryRssMb": 105.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:23:42.259Z",
+      "memoryRssMb": 105.31,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:23:47.259Z",
+      "memoryRssMb": 105.31,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:23:52.261Z",
+      "memoryRssMb": 105.31,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:23:57.256Z",
+      "memoryRssMb": 105.33,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:02.264Z",
+      "memoryRssMb": 105.38,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:07.264Z",
+      "memoryRssMb": 105.38,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:12.266Z",
+      "memoryRssMb": 105.38,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:24:17.267Z",
+      "memoryRssMb": 105.38,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:22.269Z",
+      "memoryRssMb": 105.39,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:27.270Z",
+      "memoryRssMb": 105.39,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:24:32.275Z",
+      "memoryRssMb": 105.41,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:37.275Z",
+      "memoryRssMb": 105.41,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:42.279Z",
+      "memoryRssMb": 105.42,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:47.279Z",
+      "memoryRssMb": 105.42,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:24:52.283Z",
+      "memoryRssMb": 105.42,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:24:57.283Z",
+      "memoryRssMb": 105.47,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:25:02.289Z",
+      "memoryRssMb": 105.48,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:25:07.287Z",
+      "memoryRssMb": 105.5,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:25:12.290Z",
+      "memoryRssMb": 105.5,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:25:17.294Z",
+      "memoryRssMb": 105.5,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:25:22.293Z",
+      "memoryRssMb": 105.52,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:25:27.289Z",
+      "memoryRssMb": 105.53,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:25:32.295Z",
+      "memoryRssMb": 105.56,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:25:37.297Z",
+      "memoryRssMb": 105.56,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:25:42.297Z",
+      "memoryRssMb": 105.58,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:25:47.301Z",
+      "memoryRssMb": 105.58,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:25:52.302Z",
+      "memoryRssMb": 105.59,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:25:57.316Z",
+      "memoryRssMb": 105.63,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:26:02.324Z",
+      "memoryRssMb": 105.64,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:26:07.324Z",
+      "memoryRssMb": 105.64,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:26:12.325Z",
+      "memoryRssMb": 105.66,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:26:17.328Z",
+      "memoryRssMb": 105.66,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:26:22.335Z",
+      "memoryRssMb": 105.67,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:26:27.335Z",
+      "memoryRssMb": 105.69,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:26:32.332Z",
+      "memoryRssMb": 105.69,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:26:37.337Z",
+      "memoryRssMb": 105.69,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:26:42.337Z",
+      "memoryRssMb": 105.7,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:26:47.340Z",
+      "memoryRssMb": 105.88,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:26:52.342Z",
+      "memoryRssMb": 105.88,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:26:57.351Z",
+      "memoryRssMb": 105.89,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:27:02.346Z",
+      "memoryRssMb": 105.91,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:27:07.349Z",
+      "memoryRssMb": 105.91,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:27:12.351Z",
+      "memoryRssMb": 105.91,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:27:17.354Z",
+      "memoryRssMb": 105.91,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:27:22.354Z",
+      "memoryRssMb": 105.92,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:27:27.358Z",
+      "memoryRssMb": 105.94,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:27:32.361Z",
+      "memoryRssMb": 105.94,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:27:37.359Z",
+      "memoryRssMb": 105.94,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:27:42.364Z",
+      "memoryRssMb": 105.95,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:27:47.362Z",
+      "memoryRssMb": 105.95,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:27:52.367Z",
+      "memoryRssMb": 105.95,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:27:57.370Z",
+      "memoryRssMb": 105.95,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:28:02.373Z",
+      "memoryRssMb": 105.97,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:28:07.371Z",
+      "memoryRssMb": 105.98,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:28:12.378Z",
+      "memoryRssMb": 105.98,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:28:17.380Z",
+      "memoryRssMb": 105.98,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:28:22.384Z",
+      "memoryRssMb": 105.98,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:28:27.383Z",
+      "memoryRssMb": 106.03,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:28:32.385Z",
+      "memoryRssMb": 106.03,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:28:37.385Z",
+      "memoryRssMb": 106.03,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:28:42.391Z",
+      "memoryRssMb": 106.05,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:28:47.392Z",
+      "memoryRssMb": 106.05,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:28:52.395Z",
+      "memoryRssMb": 106.05,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:28:57.397Z",
+      "memoryRssMb": 106.08,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:29:02.403Z",
+      "memoryRssMb": 106.09,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:29:07.398Z",
+      "memoryRssMb": 106.09,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:29:12.402Z",
+      "memoryRssMb": 106.09,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:29:17.404Z",
+      "memoryRssMb": 106.09,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:29:22.402Z",
+      "memoryRssMb": 106.11,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:29:27.401Z",
+      "memoryRssMb": 106.11,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:29:32.410Z",
+      "memoryRssMb": 106.11,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:29:37.410Z",
+      "memoryRssMb": 106.11,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:29:42.412Z",
+      "memoryRssMb": 106.13,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:29:47.415Z",
+      "memoryRssMb": 106.13,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:29:52.414Z",
+      "memoryRssMb": 106.13,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:29:57.415Z",
+      "memoryRssMb": 106.13,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:30:02.445Z",
+      "memoryRssMb": 106.14,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:30:07.425Z",
+      "memoryRssMb": 106.28,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:30:12.423Z",
+      "memoryRssMb": 106.28,
+      "cpuPercent": 0.8
+    },
+    {
+      "timestamp": "2026-03-08T17:30:17.426Z",
+      "memoryRssMb": 106.28,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:30:22.431Z",
+      "memoryRssMb": 106.3,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:30:27.426Z",
+      "memoryRssMb": 106.31,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:30:32.428Z",
+      "memoryRssMb": 106.31,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:30:37.434Z",
+      "memoryRssMb": 106.31,
+      "cpuPercent": 1.5
+    },
+    {
+      "timestamp": "2026-03-08T17:30:42.436Z",
+      "memoryRssMb": 106.33,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T17:30:47.441Z",
+      "memoryRssMb": 106.33,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:30:52.437Z",
+      "memoryRssMb": 106.33,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:30:57.438Z",
+      "memoryRssMb": 106.33,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:31:02.442Z",
+      "memoryRssMb": 106.34,
+      "cpuPercent": 1.7
+    },
+    {
+      "timestamp": "2026-03-08T17:31:07.447Z",
+      "memoryRssMb": 106.34,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:31:12.448Z",
+      "memoryRssMb": 106.34,
+      "cpuPercent": 2.1
+    },
+    {
+      "timestamp": "2026-03-08T17:31:17.455Z",
+      "memoryRssMb": 106.34,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:31:22.451Z",
+      "memoryRssMb": 106.36,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:31:27.449Z",
+      "memoryRssMb": 106.41,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:31:32.461Z",
+      "memoryRssMb": 106.41,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:31:37.456Z",
+      "memoryRssMb": 106.41,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:31:42.460Z",
+      "memoryRssMb": 106.42,
+      "cpuPercent": 1.7
+    },
+    {
+      "timestamp": "2026-03-08T17:31:47.463Z",
+      "memoryRssMb": 106.42,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:31:52.464Z",
+      "memoryRssMb": 106.42,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:31:57.464Z",
+      "memoryRssMb": 106.45,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:32:02.465Z",
+      "memoryRssMb": 106.47,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:32:07.464Z",
+      "memoryRssMb": 106.47,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:32:12.467Z",
+      "memoryRssMb": 106.47,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:32:17.468Z",
+      "memoryRssMb": 106.47,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:32:22.471Z",
+      "memoryRssMb": 106.48,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:32:27.475Z",
+      "memoryRssMb": 106.48,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:32:32.475Z",
+      "memoryRssMb": 106.48,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:32:37.477Z",
+      "memoryRssMb": 106.48,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:32:42.479Z",
+      "memoryRssMb": 106.5,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:32:47.476Z",
+      "memoryRssMb": 106.5,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:32:52.486Z",
+      "memoryRssMb": 106.5,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:32:57.485Z",
+      "memoryRssMb": 106.52,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:33:02.487Z",
+      "memoryRssMb": 106.53,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:07.510Z",
+      "memoryRssMb": 106.53,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:12.491Z",
+      "memoryRssMb": 106.53,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:17.490Z",
+      "memoryRssMb": 106.53,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:22.516Z",
+      "memoryRssMb": 107.06,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:27.494Z",
+      "memoryRssMb": 107.08,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:33:32.495Z",
+      "memoryRssMb": 107.09,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:37.496Z",
+      "memoryRssMb": 107.28,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:42.501Z",
+      "memoryRssMb": 107.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:47.500Z",
+      "memoryRssMb": 107.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:52.505Z",
+      "memoryRssMb": 107.3,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:33:57.505Z",
+      "memoryRssMb": 107.3,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:34:02.507Z",
+      "memoryRssMb": 107.33,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:07.506Z",
+      "memoryRssMb": 107.34,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:12.508Z",
+      "memoryRssMb": 107.34,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:17.506Z",
+      "memoryRssMb": 107.34,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:34:22.509Z",
+      "memoryRssMb": 107.36,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:27.543Z",
+      "memoryRssMb": 107.36,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:34:32.513Z",
+      "memoryRssMb": 107.36,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:37.516Z",
+      "memoryRssMb": 107.36,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:42.514Z",
+      "memoryRssMb": 107.39,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:47.547Z",
+      "memoryRssMb": 107.39,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:52.527Z",
+      "memoryRssMb": 107.39,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:34:57.515Z",
+      "memoryRssMb": 107.42,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:35:02.523Z",
+      "memoryRssMb": 107.44,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:07.525Z",
+      "memoryRssMb": 107.44,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:12.554Z",
+      "memoryRssMb": 107.44,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:17.531Z",
+      "memoryRssMb": 107.44,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:22.528Z",
+      "memoryRssMb": 107.47,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:27.528Z",
+      "memoryRssMb": 107.48,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:35:32.535Z",
+      "memoryRssMb": 107.5,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:37.533Z",
+      "memoryRssMb": 107.5,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:42.538Z",
+      "memoryRssMb": 107.52,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:47.543Z",
+      "memoryRssMb": 107.52,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:35:52.542Z",
+      "memoryRssMb": 107.53,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:35:57.539Z",
+      "memoryRssMb": 107.55,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:36:02.544Z",
+      "memoryRssMb": 107.56,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:36:07.550Z",
+      "memoryRssMb": 107.56,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:36:12.550Z",
+      "memoryRssMb": 107.56,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:36:17.551Z",
+      "memoryRssMb": 107.56,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:36:22.554Z",
+      "memoryRssMb": 107.58,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:36:27.554Z",
+      "memoryRssMb": 107.59,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:36:32.556Z",
+      "memoryRssMb": 107.59,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:36:37.561Z",
+      "memoryRssMb": 107.59,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:36:42.560Z",
+      "memoryRssMb": 107.63,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:36:47.565Z",
+      "memoryRssMb": 107.63,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:36:52.566Z",
+      "memoryRssMb": 107.63,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:36:57.564Z",
+      "memoryRssMb": 107.67,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:37:02.570Z",
+      "memoryRssMb": 107.69,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:37:07.564Z",
+      "memoryRssMb": 107.69,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:37:12.568Z",
+      "memoryRssMb": 107.69,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:37:17.567Z",
+      "memoryRssMb": 107.69,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:37:22.573Z",
+      "memoryRssMb": 107.7,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:37:27.571Z",
+      "memoryRssMb": 107.72,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:37:32.583Z",
+      "memoryRssMb": 107.73,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:37:37.579Z",
+      "memoryRssMb": 107.73,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:37:42.578Z",
+      "memoryRssMb": 107.77,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:37:47.579Z",
+      "memoryRssMb": 107.77,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:37:52.584Z",
+      "memoryRssMb": 107.77,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:37:57.585Z",
+      "memoryRssMb": 107.77,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:38:02.588Z",
+      "memoryRssMb": 107.8,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:38:07.587Z",
+      "memoryRssMb": 107.8,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:38:12.594Z",
+      "memoryRssMb": 107.8,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:38:17.622Z",
+      "memoryRssMb": 107.8,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:38:22.596Z",
+      "memoryRssMb": 107.81,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:38:27.597Z",
+      "memoryRssMb": 107.84,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:38:32.601Z",
+      "memoryRssMb": 107.84,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:38:37.602Z",
+      "memoryRssMb": 107.84,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:38:42.602Z",
+      "memoryRssMb": 107.86,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:38:47.607Z",
+      "memoryRssMb": 107.88,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:38:52.608Z",
+      "memoryRssMb": 107.88,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:38:57.611Z",
+      "memoryRssMb": 107.89,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:39:02.610Z",
+      "memoryRssMb": 107.91,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:39:07.613Z",
+      "memoryRssMb": 107.92,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:39:12.645Z",
+      "memoryRssMb": 107.92,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:39:17.617Z",
+      "memoryRssMb": 107.92,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:39:22.615Z",
+      "memoryRssMb": 107.94,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:39:27.621Z",
+      "memoryRssMb": 108.02,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:39:32.616Z",
+      "memoryRssMb": 108.02,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:39:37.621Z",
+      "memoryRssMb": 108.02,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:39:42.621Z",
+      "memoryRssMb": 108.02,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:39:47.626Z",
+      "memoryRssMb": 108.02,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:39:52.656Z",
+      "memoryRssMb": 108.02,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:39:57.624Z",
+      "memoryRssMb": 108.03,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:40:02.631Z",
+      "memoryRssMb": 108.03,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:40:07.633Z",
+      "memoryRssMb": 108.03,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:40:12.633Z",
+      "memoryRssMb": 108.27,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:40:17.637Z",
+      "memoryRssMb": 108.27,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:40:22.639Z",
+      "memoryRssMb": 108.3,
+      "cpuPercent": 0.5
+    },
+    {
+      "timestamp": "2026-03-08T17:40:27.638Z",
+      "memoryRssMb": 108.39,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:40:32.645Z",
+      "memoryRssMb": 108.41,
+      "cpuPercent": 0.8
+    },
+    {
+      "timestamp": "2026-03-08T17:40:37.645Z",
+      "memoryRssMb": 108.41,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:40:42.649Z",
+      "memoryRssMb": 108.41,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:40:47.645Z",
+      "memoryRssMb": 108.41,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:40:52.652Z",
+      "memoryRssMb": 108.41,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T17:40:57.649Z",
+      "memoryRssMb": 108.42,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:41:02.653Z",
+      "memoryRssMb": 108.44,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:41:07.656Z",
+      "memoryRssMb": 108.45,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:41:12.657Z",
+      "memoryRssMb": 108.45,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:41:17.656Z",
+      "memoryRssMb": 108.45,
+      "cpuPercent": 1.3
+    },
+    {
+      "timestamp": "2026-03-08T17:41:22.659Z",
+      "memoryRssMb": 108.45,
+      "cpuPercent": 1
+    },
+    {
+      "timestamp": "2026-03-08T17:41:27.660Z",
+      "memoryRssMb": 108.58,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:41:32.666Z",
+      "memoryRssMb": 108.58,
+      "cpuPercent": 1.9
+    },
+    {
+      "timestamp": "2026-03-08T17:41:37.666Z",
+      "memoryRssMb": 108.59,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:41:42.670Z",
+      "memoryRssMb": 108.59,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T17:41:47.667Z",
+      "memoryRssMb": 108.59,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:41:52.676Z",
+      "memoryRssMb": 108.59,
+      "cpuPercent": 1.6
+    },
+    {
+      "timestamp": "2026-03-08T17:41:57.675Z",
+      "memoryRssMb": 108.59,
+      "cpuPercent": 0.7
+    },
+    {
+      "timestamp": "2026-03-08T17:42:02.676Z",
+      "memoryRssMb": 108.59,
+      "cpuPercent": 1.1
+    },
+    {
+      "timestamp": "2026-03-08T17:42:07.677Z",
+      "memoryRssMb": 108.59,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:42:12.680Z",
+      "memoryRssMb": 108.59,
+      "cpuPercent": 1.9
+    },
+    {
+      "timestamp": "2026-03-08T17:42:17.681Z",
+      "memoryRssMb": 108.61,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:42:22.687Z",
+      "memoryRssMb": 108.61,
+      "cpuPercent": 1.8
+    },
+    {
+      "timestamp": "2026-03-08T17:42:27.687Z",
+      "memoryRssMb": 108.69,
+      "cpuPercent": 1.5
+    },
+    {
+      "timestamp": "2026-03-08T17:42:32.689Z",
+      "memoryRssMb": 108.69,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:42:37.689Z",
+      "memoryRssMb": 108.69,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:42:42.698Z",
+      "memoryRssMb": 108.7,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:42:47.696Z",
+      "memoryRssMb": 108.7,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:42:52.698Z",
+      "memoryRssMb": 108.7,
+      "cpuPercent": 0.9
+    },
+    {
+      "timestamp": "2026-03-08T17:42:57.698Z",
+      "memoryRssMb": 108.72,
+      "cpuPercent": 1.2
+    },
+    {
+      "timestamp": "2026-03-08T17:43:02.696Z",
+      "memoryRssMb": 108.72,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:07.701Z",
+      "memoryRssMb": 108.72,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:12.701Z",
+      "memoryRssMb": 108.72,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:17.705Z",
+      "memoryRssMb": 108.72,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:22.705Z",
+      "memoryRssMb": 108.75,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:27.708Z",
+      "memoryRssMb": 108.81,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:32.707Z",
+      "memoryRssMb": 108.81,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:37.711Z",
+      "memoryRssMb": 108.81,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:42.709Z",
+      "memoryRssMb": 108.81,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:47.716Z",
+      "memoryRssMb": 108.81,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:52.713Z",
+      "memoryRssMb": 108.81,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:43:57.723Z",
+      "memoryRssMb": 108.86,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:02.717Z",
+      "memoryRssMb": 108.86,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:07.726Z",
+      "memoryRssMb": 108.86,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:12.723Z",
+      "memoryRssMb": 108.86,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:17.728Z",
+      "memoryRssMb": 108.86,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:22.729Z",
+      "memoryRssMb": 108.88,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:27.727Z",
+      "memoryRssMb": 108.92,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:44:32.733Z",
+      "memoryRssMb": 108.92,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:37.738Z",
+      "memoryRssMb": 108.92,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:42.735Z",
+      "memoryRssMb": 108.94,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:44:47.739Z",
+      "memoryRssMb": 108.94,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:52.742Z",
+      "memoryRssMb": 108.94,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:44:57.743Z",
+      "memoryRssMb": 109,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:45:02.745Z",
+      "memoryRssMb": 109,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:45:07.750Z",
+      "memoryRssMb": 109,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:45:12.750Z",
+      "memoryRssMb": 109,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:45:17.748Z",
+      "memoryRssMb": 109.02,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:45:22.752Z",
+      "memoryRssMb": 109.03,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:45:27.749Z",
+      "memoryRssMb": 109.03,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:45:32.759Z",
+      "memoryRssMb": 109.03,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:45:37.757Z",
+      "memoryRssMb": 109.03,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:45:42.761Z",
+      "memoryRssMb": 109.06,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:45:47.759Z",
+      "memoryRssMb": 109.06,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:45:52.763Z",
+      "memoryRssMb": 109.06,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:45:57.758Z",
+      "memoryRssMb": 109.14,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:46:02.768Z",
+      "memoryRssMb": 109.16,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:46:07.764Z",
+      "memoryRssMb": 109.16,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:46:12.770Z",
+      "memoryRssMb": 109.16,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:46:17.770Z",
+      "memoryRssMb": 109.16,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:46:22.776Z",
+      "memoryRssMb": 109.17,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:46:27.776Z",
+      "memoryRssMb": 109.19,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:46:32.780Z",
+      "memoryRssMb": 109.19,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:46:37.779Z",
+      "memoryRssMb": 109.19,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:46:42.782Z",
+      "memoryRssMb": 109.2,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:46:47.783Z",
+      "memoryRssMb": 109.2,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:46:52.789Z",
+      "memoryRssMb": 109.2,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:46:57.792Z",
+      "memoryRssMb": 109.22,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:47:02.795Z",
+      "memoryRssMb": 109.67,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:47:07.796Z",
+      "memoryRssMb": 109.67,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:47:12.797Z",
+      "memoryRssMb": 109.69,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:47:17.798Z",
+      "memoryRssMb": 109.69,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:47:22.798Z",
+      "memoryRssMb": 109.69,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:47:27.804Z",
+      "memoryRssMb": 109.69,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:47:32.802Z",
+      "memoryRssMb": 109.7,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:47:37.808Z",
+      "memoryRssMb": 109.7,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:47:42.809Z",
+      "memoryRssMb": 109.7,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:47:47.811Z",
+      "memoryRssMb": 109.7,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:47:52.810Z",
+      "memoryRssMb": 109.72,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:47:57.817Z",
+      "memoryRssMb": 109.72,
+      "cpuPercent": 0
+    },
+    {
+      "timestamp": "2026-03-08T17:48:02.814Z",
+      "memoryRssMb": 109.72,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:48:07.820Z",
+      "memoryRssMb": 109.72,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:48:12.818Z",
+      "memoryRssMb": 109.73,
+      "cpuPercent": 0.2
+    },
+    {
+      "timestamp": "2026-03-08T17:48:17.821Z",
+      "memoryRssMb": 109.73,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:48:22.846Z",
+      "memoryRssMb": 109.73,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:48:27.824Z",
+      "memoryRssMb": 109.73,
+      "cpuPercent": 0.1
+    },
+    {
+      "timestamp": "2026-03-08T17:48:32.826Z",
+      "memoryRssMb": 109.75,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:48:37.830Z",
+      "memoryRssMb": 109.75,
+      "cpuPercent": 0.3
+    },
+    {
+      "timestamp": "2026-03-08T17:48:42.828Z",
+      "memoryRssMb": 109.75,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:48:47.831Z",
+      "memoryRssMb": 109.75,
+      "cpuPercent": 0.4
+    },
+    {
+      "timestamp": "2026-03-08T17:48:52.830Z",
+      "memoryRssMb": 109.77,
+      "cpuPercent": 0.6
+    },
+    {
+      "timestamp": "2026-03-08T17:48:56.493Z",
+      "memoryRssMb": 109.81,
+      "cpuPercent": 1.3
+    }
+  ]
+}

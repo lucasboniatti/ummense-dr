@@ -2,6 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
 import { authenticateUser } from '../services/auth.service';
 import { logger } from '../utils/logger';
+import { DeltaDetector } from './delta-detector';
 
 interface WSClient {
   ws: WebSocket;
@@ -9,6 +10,10 @@ interface WSClient {
   channel: string;
   heartbeat: NodeJS.Timeout;
   lastActivity: number;
+}
+
+interface WebSocketDependencies {
+  deltaDetector?: DeltaDetector;
 }
 
 // Circuit breaker state machine
@@ -91,9 +96,14 @@ export class ExecutionWebSocketServer {
   private redisSubscriber: any = null;
   private redisPublisher: any = null;
   private inMemorySubscriptions = new Map<string, Set<string>>();
+  private userPollers = new Map<string, NodeJS.Timeout>();
+  private maintenanceInterval: NodeJS.Timeout | null = null;
   private circuitBreaker: RedisCircuitBreaker;
+  private deltaDetector?: DeltaDetector;
   private config: {
     port: number;
+    path: string;
+    updateInterval: number;
     heartbeatInterval: number;
     heartbeatAdaptive: boolean;
     idleTimeout: number;
@@ -106,9 +116,14 @@ export class ExecutionWebSocketServer {
     };
   };
 
-  constructor(config?: Partial<typeof ExecutionWebSocketServer.prototype.config>) {
+  constructor(
+    config?: Partial<typeof ExecutionWebSocketServer.prototype.config>,
+    dependencies?: WebSocketDependencies
+  ) {
     this.config = {
       port: parseInt(process.env.WEBSOCKET_PORT || '9001'),
+      path: process.env.WEBSOCKET_PATH || '/ws',
+      updateInterval: parseInt(process.env.WEBSOCKET_UPDATE_INTERVAL || '10000'),
       heartbeatInterval: parseInt(process.env.WEBSOCKET_HEARTBEAT || '30000'),
       heartbeatAdaptive: process.env.WEBSOCKET_HEARTBEAT_ADAPTIVE === 'true',
       idleTimeout: parseInt(process.env.WEBSOCKET_IDLE_TIMEOUT || '300000'),
@@ -121,6 +136,7 @@ export class ExecutionWebSocketServer {
       },
       ...config,
     };
+    this.deltaDetector = dependencies?.deltaDetector;
 
     // Initialize circuit breaker for Redis
     this.circuitBreaker = new RedisCircuitBreaker({
@@ -130,13 +146,23 @@ export class ExecutionWebSocketServer {
     });
 
     this.httpServer = createServer();
-    this.wss = new WebSocketServer({ server: this.httpServer });
+    this.wss = new WebSocketServer({
+      server: this.httpServer,
+      path: this.config.path,
+    });
   }
 
   private parseCorsOrigins(corsEnv?: string): string[] {
     if (!corsEnv) {
       // Default: allow localhost and same-origin
-      return ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1'];
+      return [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3001',
+        'http://localhost:3010',
+        'http://127.0.0.1:3010',
+      ];
     }
     return corsEnv.split(',').map(origin => origin.trim());
   }
@@ -176,11 +202,24 @@ export class ExecutionWebSocketServer {
     this.wss.on('connection', (ws, req) => this.handleConnection(ws, req));
 
     // Setup idle timeout check
-    setInterval(() => this.checkIdleConnections(), this.config.idleTimeout / 2);
+    this.maintenanceInterval = setInterval(
+      () => this.checkIdleConnections(),
+      this.config.idleTimeout / 2
+    );
 
-    // Start HTTP server
-    this.httpServer.listen(this.config.port, () => {
-      logger.info(`[WebSocket] Server listening on port ${this.config.port}`);
+    // Start HTTP server and only resolve once the socket is actually ready.
+    await new Promise<void>((resolve, reject) => {
+      const handleError = (error: Error) => {
+        this.httpServer.off('error', handleError);
+        reject(error);
+      };
+
+      this.httpServer.once('error', handleError);
+      this.httpServer.listen(this.config.port, () => {
+        this.httpServer.off('error', handleError);
+        logger.info(`[WebSocket] Server listening on port ${this.config.port}`);
+        resolve();
+      });
     });
   }
 
@@ -247,6 +286,8 @@ export class ExecutionWebSocketServer {
         this.inMemorySubscriptions.get(channel)!.add(clientId);
       }
 
+      this.ensureUserPolling(userId);
+
       // Handle messages from client
       ws.on('message', (data: Buffer) => {
         client.lastActivity = Date.now();
@@ -272,6 +313,21 @@ export class ExecutionWebSocketServer {
             logger.warn(`[WebSocket] Invalid message format from ${clientId}: missing type field`);
             return;
           }
+
+          if (message.type === 'unsubscribe') {
+            logger.debug(`[WebSocket] Client ${clientId} unsubscribed from ${message.channel || channel}`);
+            return;
+          }
+
+          if (message.type === 'subscribe') {
+            ws.send(JSON.stringify({
+              type: 'subscribed',
+              channel,
+              timestamp: new Date().toISOString(),
+            }));
+            return;
+          }
+
           logger.debug(`[WebSocket] Message from ${clientId}:`, message);
         } catch (error) {
           logger.warn(`[WebSocket] Invalid message format from ${clientId}:`, error);
@@ -308,6 +364,10 @@ export class ExecutionWebSocketServer {
   }
 
   private handleDisconnect(clientId: string, client: WSClient): void {
+    if (!this.clients.has(clientId)) {
+      return;
+    }
+
     this.clients.delete(clientId);
     clearInterval(client.heartbeat);
 
@@ -321,6 +381,7 @@ export class ExecutionWebSocketServer {
       }
     }
 
+    this.teardownUserPolling(client.userId);
     logger.info(`[WebSocket] Client disconnected: ${clientId}`);
   }
 
@@ -334,6 +395,59 @@ export class ExecutionWebSocketServer {
         client.ws.close(1000, 'Idle timeout');
         this.handleDisconnect(clientId, client);
       }
+    }
+  }
+
+  private ensureUserPolling(userId: string): void {
+    if (!this.deltaDetector || this.userPollers.has(userId)) {
+      return;
+    }
+
+    // Prime current state so the first scheduled poll emits only true deltas.
+    void this.deltaDetector.detectDeltas(userId).catch((error) => {
+      logger.error(`[WebSocket] Failed to warm delta cache for ${userId}:`, error);
+    });
+
+    const poller = setInterval(async () => {
+      await this.pollAndPublishDeltas(userId);
+    }, this.config.updateInterval);
+
+    this.userPollers.set(userId, poller);
+  }
+
+  private teardownUserPolling(userId: string): void {
+    const hasRemainingClients = Array.from(this.clients.values()).some(
+      (client) => client.userId === userId
+    );
+
+    if (hasRemainingClients) {
+      return;
+    }
+
+    const poller = this.userPollers.get(userId);
+    if (poller) {
+      clearInterval(poller);
+      this.userPollers.delete(userId);
+    }
+  }
+
+  private async pollAndPublishDeltas(userId: string): Promise<void> {
+    if (!this.deltaDetector) {
+      return;
+    }
+
+    try {
+      const deltas = await this.deltaDetector.detectDeltas(userId);
+
+      for (const delta of deltas) {
+        if (!this.deltaDetector.validateDeltaSize(delta)) {
+          continue;
+        }
+
+        await this.publishDelta(userId, delta);
+      }
+    } catch (error) {
+      logger.error(`[WebSocket] Failed to publish execution deltas for ${userId}:`, error);
     }
   }
 
@@ -406,6 +520,16 @@ export class ExecutionWebSocketServer {
 
     await Promise.all(closePromises);
 
+    for (const poller of this.userPollers.values()) {
+      clearInterval(poller);
+    }
+    this.userPollers.clear();
+
+    if (this.maintenanceInterval) {
+      clearInterval(this.maintenanceInterval);
+      this.maintenanceInterval = null;
+    }
+
     // Cleanup Redis
     if (this.redisSubscriber) {
       await this.redisSubscriber.quit();
@@ -414,7 +538,27 @@ export class ExecutionWebSocketServer {
       await this.redisPublisher.quit();
     }
 
-    this.httpServer.close();
+    await new Promise<void>((resolve, reject) => {
+      this.wss.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve();
+      });
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      this.httpServer.close((error?: Error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve();
+      });
+    });
     logger.info('[WebSocket] Server shut down complete');
   }
 
@@ -423,6 +567,7 @@ export class ExecutionWebSocketServer {
     return {
       activeConnections: this.clients.size,
       channels: this.inMemorySubscriptions.size,
+      activeUserPollers: this.userPollers.size,
       timestamp: new Date().toISOString(),
     };
   }
@@ -431,9 +576,12 @@ export class ExecutionWebSocketServer {
 // Singleton instance
 let wsServer: ExecutionWebSocketServer | null = null;
 
-export async function initializeWebSocketServer(config?: any): Promise<ExecutionWebSocketServer> {
+export async function initializeWebSocketServer(
+  config?: any,
+  dependencies?: WebSocketDependencies
+): Promise<ExecutionWebSocketServer> {
   if (!wsServer) {
-    wsServer = new ExecutionWebSocketServer(config);
+    wsServer = new ExecutionWebSocketServer(config, dependencies);
     await wsServer.initialize();
   }
   return wsServer;

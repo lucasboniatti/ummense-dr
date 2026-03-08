@@ -9,6 +9,55 @@ interface WebSocketContextType {
   unsubscribe: (channel: string) => void;
 }
 
+const DEFAULT_WEBSOCKET_PORT = '9001';
+const DEFAULT_WEBSOCKET_PATH = '/ws';
+
+function getStoredAuthToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return (
+    window.localStorage.getItem('synkra_dev_token') ||
+    window.localStorage.getItem('token')
+  );
+}
+
+export function buildWebSocketUrl(): string {
+  const explicitUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+  const path = process.env.NEXT_PUBLIC_WEBSOCKET_ENDPOINT || DEFAULT_WEBSOCKET_PATH;
+  const token = getStoredAuthToken();
+
+  if (explicitUrl) {
+    const url = new URL(explicitUrl);
+    if (path && path !== '/') {
+      url.pathname = path;
+    }
+    if (token) {
+      url.searchParams.set('token', token);
+    }
+    return url.toString();
+  }
+
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:3000');
+  const apiUrl = new URL(apiBase);
+  const protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+  const websocketPort = process.env.NEXT_PUBLIC_WEBSOCKET_PORT || DEFAULT_WEBSOCKET_PORT;
+
+  apiUrl.protocol = protocol;
+  apiUrl.port = websocketPort;
+  apiUrl.pathname = path;
+  apiUrl.search = '';
+
+  if (token) {
+    apiUrl.searchParams.set('token', token);
+  }
+
+  return apiUrl.toString();
+}
+
 /**
  * WebSocket Hook for Real-Time Updates
  *
@@ -26,29 +75,13 @@ export function useWebSocket(): WebSocketContextType {
   const reconnectDelayRef = useRef<number>(3000); // Start with 3s
   const subscribedChannelsRef = useRef<Set<string>>(new Set());
 
-  // HIGH #1: Get WebSocket URL and endpoint from environment variables
-  const getWebSocketUrl = useCallback(() => {
-    if (typeof window === 'undefined') {
-      return 'ws://localhost:9001/ws';
-    }
-
-    // Build base URL with protocol and host
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const baseUrl = `${protocol}//${window.location.host}`;
-
-    // Get endpoint path from environment variable or use default
-    const endpointPath = process.env.NEXT_PUBLIC_WEBSOCKET_ENDPOINT || '/ws';
-
-    return `${baseUrl}${endpointPath}`;
-  }, []);
-
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return; // Already connected
     }
 
     try {
-      const wsUrl = getWebSocketUrl();
+      const wsUrl = buildWebSocketUrl();
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
@@ -85,10 +118,15 @@ export function useWebSocket(): WebSocketContextType {
         setIsConnected(false);
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         console.log('[WebSocket] Disconnected');
         setIsConnected(false);
         wsRef.current = null;
+
+        if (event.code === 1008) {
+          console.warn('[WebSocket] Authentication or policy rejection, skipping auto-reconnect');
+          return;
+        }
 
         // Exponential backoff reconnection
         if (reconnectTimeoutRef.current) {
@@ -107,7 +145,7 @@ export function useWebSocket(): WebSocketContextType {
       console.error('[WebSocket] Connection failed:', err);
       setIsConnected(false);
     }
-  }, [getWebSocketUrl]);
+  }, []);
 
   const subscribe = useCallback(
     (channel: string) => {

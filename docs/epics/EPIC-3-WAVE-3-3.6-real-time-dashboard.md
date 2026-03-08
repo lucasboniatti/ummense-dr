@@ -2,7 +2,7 @@
 
 **Epic ID:** EPIC-3.6
 **Wave:** Wave 3 (Advanced Automation, Reliability & Scaling)
-**Status:** In Progress (1/4 sub-stories closed)
+**Status:** In Progress (2/4 sub-stories closed)
 **Created:** 2026-03-03
 **Priority:** HIGH (P1)
 
@@ -26,12 +26,12 @@ Enable platform operators to monitor automation execution history in real-time w
 
 **Technology Stack:**
 - Frontend: React + TypeScript (ExecutionHistoryTable component)
-- Backend: Node.js + Express (ExecutionHistoryService with searchExecutionHistory API)
+- Backend: Node.js + Express (ExecutionHistoryService with `queryExecutionHistory()` + `searchExecutionHistory()`)
 - Database: PostgreSQL (tsvector, triggers, GIN indexes)
 - Search: PostgreSQL full-text search (plainto_tsquery)
 
 **Integration Points:**
-- `searchExecutionHistory()` API (Story 3.5.1) — filtering, relevance ranking, pagination
+- `queryExecutionHistory()` + `searchExecutionHistory()` API (Story 3.5.1) — delta polling, filtering, relevance ranking, pagination
 - `ExecutionHistoryTable` component — frontend UI for results
 - Audit logs (sanitized) — metadata and change tracking
 - S3 archival service — long-term data retention
@@ -47,7 +47,7 @@ Enable platform operators to monitor automation execution history in real-time w
 
 **How It Integrates:**
 - Extends existing `ExecutionHistoryTable` component with WebSocket polling layer
-- Leverages `searchExecutionHistory()` API from 3.5.1 for all filtering
+- Leverages `queryExecutionHistory()` for delta polling and `searchExecutionHistory()` for user-driven filtering
 - Adds `DashboardAnalyticsService` for trend calculation and cost metrics
 - Uses existing sanitization (no new security concerns)
 
@@ -59,8 +59,9 @@ Enable platform operators to monitor automation execution history in real-time w
 - Export functionality maintains data sanitization (no PII leakage)
 
 **Revalidation Note (2026-03-08):**
-- Story `3.6.2` remains `Done`
-- Stories `3.6.1`, `3.6.3` and `3.6.4` remain `Ready for Review` after PO/QA revalidation
+- Stories `3.6.1` and `3.6.2` are `Done`
+- Stories `3.6.3` and `3.6.4` remain `Ready for Review` after PO/QA revalidation
+- `3.6.1` was promoted after a sustained 1-hour benchmark with `100/100` successful connections, `p95=1ms`, `memoryDelta=13.08MB`, and `cpuAvg=0.43%`
 - The remaining gaps are not scope invention; they are mismatches between story claims and the code currently wired in the product
 
 ---
@@ -74,7 +75,7 @@ Enable platform operators to monitor automation execution history in real-time w
 **Complexity:** STANDARD
 
 **Description:**
-Implement WebSocket server to push execution history updates to connected clients in real-time (5-10s cadence). Use existing `searchExecutionHistory()` API to fetch deltas, emit only changed records.
+Implement WebSocket server to push execution history updates to connected clients in real-time (5-10s cadence). Use existing `queryExecutionHistory()` API to fetch deltas, emit only changed records.
 
 **Acceptance Criteria:**
 - WebSocket server listens on dedicated port (9001)
@@ -194,7 +195,7 @@ Display real-time cost metrics comparing DB storage vs. S3 archival savings. Int
 
 ### Upstream Dependencies (Must Complete First)
 - ✅ **Story 3.5.1** (Post-Deployment Execution History Improvements)
-  - Provides: `searchExecutionHistory()` API
+  - Provides: `queryExecutionHistory()` and `searchExecutionHistory()` APIs
   - Provides: Full-text search implementation
   - Provides: Stack trace sanitization
   - Provides: S3 archival cost calculator

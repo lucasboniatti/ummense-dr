@@ -21,6 +21,19 @@ test('authenticateUser aceita token assinado e extrai user id', async () => {
   assert.equal(userId, 'user-123');
 });
 
+test('authenticateUser aceita token assinado via query string do websocket', async () => {
+  const token = jwt.sign({ id: 'user-query-123' }, JWT_SECRET, {
+    expiresIn: '1h',
+  });
+
+  const userId = await authenticateUser({
+    headers: {},
+    url: `/ws?token=${encodeURIComponent(token)}`,
+  });
+
+  assert.equal(userId, 'user-query-123');
+});
+
 test('authenticateUser rejeita token com assinatura inválida', async () => {
   const token = jwt.sign({ id: 'user-123' }, 'wrong-secret', {
     expiresIn: '1h',

@@ -1,103 +1,315 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import jwt from 'jsonwebtoken';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { DeltaDetector } from '../websocket/delta-detector';
 import { ExecutionWebSocketServer } from '../websocket/websocket-server';
 
-describe('WebSocket Server - Unit Tests', () => {
-  let server: ExecutionWebSocketServer;
+const JWT_SECRET = 'unit-test-secret';
 
-  beforeEach(async () => {
-    server = new ExecutionWebSocketServer({
-      port: 9002, // Use different port for tests
-      heartbeatInterval: 5000,
-      idleTimeout: 10000,
-      redisEnabled: false,
+let portSequence = 9200;
+
+function nextPort(): number {
+  portSequence += 1;
+  return portSequence;
+}
+
+function signToken(userId: string): string {
+  return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '1h' });
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function waitForSocketOpen(ws: WebSocket): Promise<void> {
+  return new Promise((resolve, reject) => {
+    ws.once('open', () => resolve());
+    ws.once('error', (error) => reject(error));
+  });
+}
+
+function waitForSocketClose(ws: WebSocket): Promise<{ code: number; reason: string }> {
+  return new Promise((resolve) => {
+    ws.once('close', (code, reason) => {
+      resolve({ code, reason: reason.toString() });
     });
+  });
+}
+
+function waitForJsonMessage<T = any>(
+  ws: WebSocket,
+  predicate: (payload: T) => boolean,
+  timeoutMs = 1500
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      ws.off('message', onMessage);
+      reject(new Error(`Timed out after ${timeoutMs}ms waiting for matching WebSocket message`));
+    }, timeoutMs);
+
+    const onMessage = (raw: WebSocket.RawData) => {
+      try {
+        const payload = JSON.parse(raw.toString()) as T;
+        if (!predicate(payload)) {
+          return;
+        }
+
+        clearTimeout(timeout);
+        ws.off('message', onMessage);
+        resolve(payload);
+      } catch (error) {
+        clearTimeout(timeout);
+        ws.off('message', onMessage);
+        reject(error);
+      }
+    };
+
+    ws.on('message', onMessage);
+  });
+}
+
+async function waitForCondition(
+  assertion: () => void,
+  timeoutMs = 1500,
+  stepMs = 25
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    try {
+      assertion();
+      return;
+    } catch {
+      await wait(stepMs);
+    }
+  }
+
+  assertion();
+}
+
+type MockDeltaDetector = Pick<DeltaDetector, 'detectDeltas' | 'validateDeltaSize'> & {
+  detectDeltas: ReturnType<typeof vi.fn>;
+  validateDeltaSize: ReturnType<typeof vi.fn>;
+};
+
+async function createTestServer(
+  config: Record<string, any> = {},
+  detectorOverrides: Partial<MockDeltaDetector> = {}
+): Promise<{
+  server: ExecutionWebSocketServer;
+  port: number;
+  detector: MockDeltaDetector;
+}> {
+  const port = nextPort();
+  const detector: MockDeltaDetector = {
+    detectDeltas: vi.fn().mockResolvedValue([]),
+    validateDeltaSize: vi.fn().mockReturnValue(true),
+    ...detectorOverrides,
+  };
+
+  const server = new ExecutionWebSocketServer(
+    {
+      port,
+      path: '/ws',
+      updateInterval: 25,
+      heartbeatInterval: 5_000,
+      idleTimeout: 2_000,
+      redisEnabled: false,
+      ...config,
+    },
+    {
+      deltaDetector: detector as unknown as DeltaDetector,
+    }
+  );
+
+  await server.initialize();
+
+  return { server, port, detector };
+}
+
+async function connectClient(
+  port: number,
+  token: string,
+  options: { origin?: string } = {}
+): Promise<WebSocket> {
+  const ws = new WebSocket(`ws://127.0.0.1:${port}/ws?token=${encodeURIComponent(token)}`, {
+    headers: options.origin ? { Origin: options.origin } : undefined,
+  });
+
+  await waitForSocketOpen(ws);
+  return ws;
+}
+
+describe('WebSocket Server - Contract Tests', () => {
+  let server: ExecutionWebSocketServer | undefined;
+
+  beforeAll(() => {
+    process.env.JWT_SECRET = JWT_SECRET;
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
   afterEach(async () => {
     if (server) {
       await server.shutdown();
+      server = undefined;
     }
   });
 
-  describe('Connection Lifecycle', () => {
-    it('should handle successful connection and authentication', async () => {
-      expect(server).toBeDefined();
-      expect(server.getMetrics().activeConnections).toBe(0);
-    });
+  it('aceita conexao autenticada e confirma inscricao no canal do usuario', async () => {
+    const setup = await createTestServer();
+    server = setup.server;
 
-    it('should reject connection with invalid token', async () => {
-      // Mock authentication failure
-      const mockRequest = {
-        headers: {
-          authorization: 'Bearer invalid-token',
-        },
-      };
-      // Note: Actual test would require a running server and WebSocket client
-    });
+    const ws = await connectClient(setup.port, signToken('user-1'));
+    const subscribedPromise = waitForJsonMessage<{ type: string; channel: string }>(
+      ws,
+      (payload) => payload.type === 'subscribed'
+    );
 
-    it('should track client connection time', async () => {
-      const metrics = server.getMetrics();
-      expect(metrics).toHaveProperty('timestamp');
-      expect(metrics).toHaveProperty('activeConnections');
+    ws.send(JSON.stringify({ type: 'subscribe', channel: 'execution-updates:user-1' }));
+    const subscribed = await subscribedPromise;
+
+    expect(subscribed.channel).toBe('execution-updates:user-1');
+    expect(server.getMetrics().activeConnections).toBe(1);
+    expect(server.getMetrics().activeUserPollers).toBe(1);
+
+    ws.close();
+    await waitForSocketClose(ws);
+
+    await waitForCondition(() => {
+      expect(server?.getMetrics().activeConnections).toBe(0);
+      expect(server?.getMetrics().activeUserPollers).toBe(0);
     });
   });
 
-  describe('Heartbeat & Timeout', () => {
-    it('should send heartbeat ping every 30 seconds', async () => {
-      const config = {
-        heartbeatInterval: 30000,
-      };
-      expect(config.heartbeatInterval).toBe(30000);
-    });
+  it('rejeita token invalido com close code 1008', async () => {
+    const setup = await createTestServer();
+    server = setup.server;
 
-    it('should close connection on idle timeout (5 minutes)', async () => {
-      const config = {
-        idleTimeout: 300000, // 5 minutes
-      };
-      expect(config.idleTimeout).toBe(300000);
-    });
+    const ws = new WebSocket(`ws://127.0.0.1:${setup.port}/ws?token=invalid-token`);
+    const closed = await waitForSocketClose(ws);
 
-    it('should reset idle timer on client activity', async () => {
-      // Activity includes: incoming messages, pong responses
-      expect(true).toBe(true); // Placeholder
-    });
+    expect(closed.code).toBe(1008);
   });
 
-  describe('Error Handling', () => {
-    it('should handle missing authentication header', async () => {
-      expect(true).toBe(true); // Placeholder
+  it('rejeita origem fora da allowlist com close code 1008', async () => {
+    const setup = await createTestServer();
+    server = setup.server;
+
+    const ws = new WebSocket(`ws://127.0.0.1:${setup.port}/ws?token=${encodeURIComponent(signToken('user-1'))}`, {
+      headers: {
+        Origin: 'http://malicious.local',
+      },
     });
 
-    it('should recover from Redis connection failure', async () => {
-      const fallbackServer = new ExecutionWebSocketServer({
-        redisEnabled: true,
-        redisUrl: 'redis://invalid-host', // Should fallback to in-memory
-      });
-      // Config allows fallback
-      expect(fallbackServer).toBeDefined();
-    });
+    const closed = await waitForSocketClose(ws);
 
-    it('should log WebSocket connection errors', async () => {
-      expect(true).toBe(true); // Placeholder
+    expect(closed.code).toBe(1008);
+    expect(closed.reason).toContain('CORS');
+  });
+
+  it('fecha conexao ociosa no timeout configurado', async () => {
+    const setup = await createTestServer({
+      idleTimeout: 60,
+      heartbeatInterval: 1_000,
     });
+    server = setup.server;
+
+    const ws = await connectClient(setup.port, signToken('idle-user'));
+
+    const closed = await waitForSocketClose(ws);
+
+    expect(closed.code).toBe(1000);
+    expect(closed.reason).toContain('Idle timeout');
+  });
+
+  it('fecha conexao quando a mensagem recebida nao e JSON valido', async () => {
+    const setup = await createTestServer();
+    server = setup.server;
+
+    const ws = await connectClient(setup.port, signToken('user-invalid-json'));
+
+    ws.send('not-json');
+
+    const closed = await waitForSocketClose(ws);
+
+    expect(closed.code).toBe(1008);
+    expect(closed.reason).toContain('Invalid message format');
+  });
+
+  it('aplica rate limit e encerra a conexao apos burst acima do limite', async () => {
+    const setup = await createTestServer({
+      rateLimit: {
+        messagesPerSecond: 2,
+        windowMs: 1_000,
+      },
+    });
+    server = setup.server;
+
+    const ws = await connectClient(setup.port, signToken('user-rate-limit'));
+
+    ws.send(JSON.stringify({ type: 'subscribe' }));
+    ws.send(JSON.stringify({ type: 'subscribe' }));
+    ws.send(JSON.stringify({ type: 'subscribe' }));
+
+    const closed = await waitForSocketClose(ws);
+
+    expect(closed.code).toBe(1008);
+    expect(closed.reason).toContain('Rate limit exceeded');
+  });
+
+  it('publica deltas reais detectados pelo poller do usuario', async () => {
+    const delta = {
+      execution_id: 'exec-1',
+      changes: { status: 'completed' },
+      updated_at: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
+    };
+
+    const setup = await createTestServer(
+      {
+        updateInterval: 20,
+      },
+      {
+        detectDeltas: vi
+          .fn()
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([delta])
+          .mockResolvedValue([]),
+      }
+    );
+    server = setup.server;
+
+    const ws = await connectClient(setup.port, signToken('user-poller'));
+
+    const message = await waitForJsonMessage<{ type: string; data: { execution_id: string } }>(
+      ws,
+      (payload) => payload.type === 'execution-update'
+    );
+
+    expect(message.data.execution_id).toBe('exec-1');
+    expect(setup.detector.detectDeltas).toHaveBeenCalledWith('user-poller');
+
+    ws.close();
+    await waitForSocketClose(ws);
   });
 });
 
 describe('Delta Detection - Unit Tests', () => {
   let deltaDetector: DeltaDetector;
-  let mockExecutionService: any;
+  let mockExecutionService: { queryExecutionHistory: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     mockExecutionService = {
-      searchExecutionHistory: vi.fn(),
+      queryExecutionHistory: vi.fn(),
     };
-    deltaDetector = new DeltaDetector(mockExecutionService);
+    deltaDetector = new DeltaDetector(mockExecutionService as any);
   });
 
   describe('Delta Detection', () => {
-    it('should detect status changes only', async () => {
+    it('detecta apenas campos alterados do snapshot', async () => {
       const exec1 = {
         id: 'exec-1',
         status: 'running',
@@ -108,29 +320,47 @@ describe('Delta Detection - Unit Tests', () => {
 
       const exec2 = {
         id: 'exec-1',
-        status: 'completed', // Changed
-        duration: 100, // Unchanged
-        error_context: null, // Unchanged
+        status: 'completed',
+        duration: 100,
+        error_context: null,
+        updated_at: new Date(Date.now() + 1_000).toISOString(),
+      };
+
+      mockExecutionService.queryExecutionHistory.mockResolvedValueOnce({
+        executions: [exec1],
+      });
+      await deltaDetector.detectDeltas('user-1');
+
+      mockExecutionService.queryExecutionHistory.mockResolvedValueOnce({
+        executions: [exec2],
+      });
+
+      const deltas = await deltaDetector.detectDeltas('user-1');
+
+      expect(deltas).toHaveLength(1);
+      expect(deltas[0]?.changes).toEqual({ status: 'completed', updated_at: exec2.updated_at });
+    });
+
+    it('nao repete delta quando error_context permanece nulo', async () => {
+      const exec = {
+        id: 'exec-null',
+        status: 'completed',
+        duration: 100,
+        error_context: null,
         updated_at: new Date().toISOString(),
       };
 
-      // Simulate initial state
-      mockExecutionService.searchExecutionHistory.mockResolvedValue([exec1]);
-      const deltas1 = await deltaDetector.detectDeltas('user-1');
+      mockExecutionService.queryExecutionHistory.mockResolvedValue({
+        executions: [exec],
+      });
 
-      // Simulate state change
-      mockExecutionService.searchExecutionHistory.mockResolvedValue([exec2]);
-      const deltas2 = await deltaDetector.detectDeltas('user-1');
+      await deltaDetector.detectDeltas('user-1');
+      const deltas = await deltaDetector.detectDeltas('user-1');
 
-      // Should only report status change
-      expect(deltas2.length).toBeGreaterThan(0);
-      if (deltas2.length > 0) {
-        expect(deltas2[0].changes).toHaveProperty('status');
-        expect(deltas2[0].changes.status).toBe('completed');
-      }
+      expect(deltas).toEqual([]);
     });
 
-    it('should detect multiple field changes', async () => {
+    it('reporta multiplos campos alterados na primeira observacao', async () => {
       const exec = {
         id: 'exec-1',
         status: 'failed',
@@ -139,14 +369,21 @@ describe('Delta Detection - Unit Tests', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockExecutionService.searchExecutionHistory.mockResolvedValue([exec]);
+      mockExecutionService.queryExecutionHistory.mockResolvedValue({
+        executions: [exec],
+      });
+
       const deltas = await deltaDetector.detectDeltas('user-1');
 
-      // First detection should report all fields as changed
-      expect(deltas.length).toBeGreaterThan(0);
+      expect(deltas).toHaveLength(1);
+      expect(deltas[0]?.changes).toMatchObject({
+        status: 'failed',
+        duration: 250,
+        error_context: { message: 'Timeout' },
+      });
     });
 
-    it('should NOT send unchanged data', async () => {
+    it('nao envia payload sem mudanca', async () => {
       const exec = {
         id: 'exec-1',
         status: 'completed',
@@ -155,70 +392,64 @@ describe('Delta Detection - Unit Tests', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockExecutionService.searchExecutionHistory.mockResolvedValue([exec]);
+      mockExecutionService.queryExecutionHistory.mockResolvedValue({
+        executions: [exec],
+      });
 
-      // First call - establishes baseline
       await deltaDetector.detectDeltas('user-1');
-
-      // Second call - same data
       const deltas = await deltaDetector.detectDeltas('user-1');
 
-      // Should be empty since nothing changed
-      expect(deltas.length).toBe(0);
+      expect(deltas).toEqual([]);
     });
 
-    it('should query only last 10 minutes by default', async () => {
-      mockExecutionService.searchExecutionHistory.mockResolvedValue([]);
+    it('consulta a janela padrao dos ultimos 10 minutos', async () => {
+      mockExecutionService.queryExecutionHistory.mockResolvedValue({
+        executions: [],
+      });
 
       await deltaDetector.detectDeltas('user-1');
 
-      const call = mockExecutionService.searchExecutionHistory.mock.calls[0][0];
+      const call = mockExecutionService.queryExecutionHistory.mock.calls[0]?.[0];
       expect(call).toHaveProperty('userId', 'user-1');
-      expect(call).toHaveProperty('since');
+      expect(call).toHaveProperty('startDate');
+      expect(call).toHaveProperty('endDate');
       expect(call).toHaveProperty('limit', 100);
     });
 
-    it('should handle empty results gracefully', async () => {
-      mockExecutionService.searchExecutionHistory.mockResolvedValue([]);
+    it('retorna lista vazia para consultas sem resultados', async () => {
+      mockExecutionService.queryExecutionHistory.mockResolvedValue({
+        executions: [],
+      });
 
-      const deltas = await deltaDetector.detectDeltas('user-1');
-
-      expect(deltas).toEqual([]);
+      await expect(deltaDetector.detectDeltas('user-1')).resolves.toEqual([]);
     });
 
-    it('should handle API errors gracefully', async () => {
-      mockExecutionService.searchExecutionHistory.mockRejectedValue(
+    it('retorna lista vazia quando a consulta falha', async () => {
+      mockExecutionService.queryExecutionHistory.mockRejectedValue(
         new Error('Database error')
       );
 
-      const deltas = await deltaDetector.detectDeltas('user-1');
-
-      expect(deltas).toEqual([]);
+      await expect(deltaDetector.detectDeltas('user-1')).resolves.toEqual([]);
     });
   });
 
   describe('Cache Management', () => {
-    it('should clear specific execution from cache', async () => {
-      const stats1 = deltaDetector.getCacheStats();
-      const initialSize = stats1.size;
+    it('limpa cache de execucao sem aumentar o tamanho armazenado', () => {
+      const before = deltaDetector.getCacheStats().size;
 
-      // Simulate some cached entries (in real scenario)
       deltaDetector.clearExecutionFromCache('exec-1');
 
-      const stats2 = deltaDetector.getCacheStats();
-      // Cache size should not increase after clearing
-      expect(stats2.size).toBeLessThanOrEqual(initialSize + 1);
+      expect(deltaDetector.getCacheStats().size).toBeLessThanOrEqual(before);
     });
 
-    it('should clear all cache', async () => {
+    it('limpa todo o cache', () => {
       deltaDetector.clearAllCache();
-      const stats = deltaDetector.getCacheStats();
-      expect(stats.size).toBe(0);
+      expect(deltaDetector.getCacheStats().size).toBe(0);
     });
   });
 
   describe('Message Size Validation', () => {
-    it('should validate delta message size <1KB', async () => {
+    it('aceita delta menor que 1KB', () => {
       const delta = {
         execution_id: 'exec-1',
         changes: { status: 'completed' },
@@ -226,76 +457,20 @@ describe('Delta Detection - Unit Tests', () => {
         timestamp: new Date().toISOString(),
       };
 
-      const isValid = deltaDetector.validateDeltaSize(delta);
-      expect(isValid).toBe(true);
+      expect(deltaDetector.validateDeltaSize(delta)).toBe(true);
     });
 
-    it('should warn on oversized messages', async () => {
-      const largeContext = 'x'.repeat(2000); // Large error context
+    it('sinaliza payload grande sem quebrar a avaliacao', () => {
       const delta = {
         execution_id: 'exec-1',
         changes: {
-          error_context: { message: largeContext },
+          error_context: { message: 'x'.repeat(2_000) },
         },
         updated_at: new Date().toISOString(),
         timestamp: new Date().toISOString(),
       };
 
-      const isValid = deltaDetector.validateDeltaSize(delta);
-      // Should warn but not fail
-      expect(typeof isValid).toBe('boolean');
-    });
-  });
-
-  describe('Latency Metrics', () => {
-    it('should calculate latency from execution updated_at', async () => {
-      const pastDate = new Date(Date.now() - 50).toISOString();
-      const latency = deltaDetector.calculateLatency(pastDate);
-
-      expect(latency).toBeGreaterThan(0);
-      expect(latency).toBeLessThan(100); // Should be ~50ms
-    });
-
-    it('should handle current timestamp', async () => {
-      const now = new Date().toISOString();
-      const latency = deltaDetector.calculateLatency(now);
-
-      expect(latency).toBeGreaterThanOrEqual(0);
-      expect(latency).toBeLessThan(10); // Should be <10ms
-    });
-  });
-});
-
-describe('Integration Tests', () => {
-  describe('End-to-End: Execution → WebSocket Update', () => {
-    it('should broadcast update when execution completes', async () => {
-      // Simulate: execute automation → receive WebSocket update
-      expect(true).toBe(true); // Placeholder for E2E test
-    });
-  });
-
-  describe('Multi-User Isolation', () => {
-    it('should isolate updates between users', async () => {
-      // Verify user-1 receives only their updates, user-2 receives only theirs
-      expect(true).toBe(true); // Placeholder
-    });
-
-    it('should handle 5 concurrent users without crosstalk', async () => {
-      // Simulate 5 users with simultaneous updates
-      expect(true).toBe(true); // Placeholder
-    });
-  });
-
-  describe('Horizontal Scaling with Redis', () => {
-    it('should deliver messages across multiple server instances', async () => {
-      // Run 2 server instances with Redis pub/sub
-      // Verify messages reach all connected clients
-      expect(true).toBe(true); // Placeholder
-    });
-
-    it('should maintain message order with Redis pub/sub', async () => {
-      // Verify FIFO delivery via Redis
-      expect(true).toBe(true); // Placeholder
+      expect(typeof deltaDetector.validateDeltaSize(delta)).toBe('boolean');
     });
   });
 });
