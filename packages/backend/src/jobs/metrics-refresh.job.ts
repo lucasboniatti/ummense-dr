@@ -1,21 +1,21 @@
-// Metrics Refresh Job — Hourly aggregation of automation logs to automation_metrics
-// Runs every hour to pre-aggregate metrics for fast dashboard loads
+import { supabase } from '../lib/supabase';
+import { automationService } from '../services/automation.service';
 
 export const metricsRefreshJob = {
-  // Job name
   name: 'metrics-refresh',
-
-  // Schedule: Every hour (cron format)
   schedule: '0 * * * *',
 
-  // Execute job
-  execute: async () => {
+  async execute() {
     console.log(`[${new Date().toISOString()}] Starting metrics refresh job...`);
 
     try {
-      // Call database function: refresh_automation_metrics()
-      // This calculates aggregate metrics from automation_logs and updates automation_metrics table
-      // SELECT refresh_automation_metrics();
+      const { data, error } = await supabase.rpc('refresh_automation_metrics');
+
+      if (error) {
+        throw error;
+      }
+
+      const metricsUpdated = Array.isArray(data) ? data.length : 0;
 
       console.log(`[${new Date().toISOString()}] Metrics refresh completed successfully`);
 
@@ -23,6 +23,7 @@ export const metricsRefreshJob = {
         success: true,
         timestamp: new Date().toISOString(),
         message: 'Automation metrics refreshed',
+        metricsUpdated,
       };
     } catch (err) {
       console.error(`[${new Date().toISOString()}] Metrics refresh job failed:`, err);
@@ -30,37 +31,48 @@ export const metricsRefreshJob = {
       return {
         success: false,
         timestamp: new Date().toISOString(),
-        error: (err as Error).message,
+        error: err instanceof Error ? err.message : 'Unknown error',
       };
     }
   },
 };
 
-// Alert Threshold Check Job — Every minute, check if any rules exceeded alert thresholds
-// Triggers notifications if failure rate > threshold in last hour
-
 export const alertThresholdJob = {
   name: 'alert-threshold-check',
-  schedule: '*/1 * * * *', // Every minute
+  schedule: '*/1 * * * *',
 
-  execute: async () => {
+  async execute() {
     console.log(`[${new Date().toISOString()}] Checking alert thresholds...`);
 
     try {
-      // Query automation_logs for all rules with executions in last hour
-      // Calculate failure rate for each
-      // Compare against automation_alerts config
-      // For each rule exceeding threshold:
-      //   1. Check last alert time (cooldown: 5 minutes)
-      //   2. If not alerted recently, trigger notification
-      //   3. Update last_alert_at timestamp
+      const { data, error } = await supabase
+        .from('automation_alerts')
+        .select('user_id, rule_id, enabled')
+        .eq('enabled', true);
+
+      if (error) {
+        throw error;
+      }
+
+      let alertsTriggered = 0;
+
+      for (const alert of data ?? []) {
+        const result = await automationService.checkAlertThresholds(
+          String(alert.user_id),
+          String(alert.rule_id)
+        );
+
+        if (result.shouldAlert) {
+          alertsTriggered += 1;
+        }
+      }
 
       console.log(`[${new Date().toISOString()}] Alert threshold check completed`);
 
       return {
         success: true,
         timestamp: new Date().toISOString(),
-        alertsTriggered: 0,
+        alertsTriggered,
       };
     } catch (err) {
       console.error(`[${new Date().toISOString()}] Alert threshold check failed:`, err);
@@ -68,7 +80,7 @@ export const alertThresholdJob = {
       return {
         success: false,
         timestamp: new Date().toISOString(),
-        error: (err as Error).message,
+        error: err instanceof Error ? err.message : 'Unknown error',
       };
     }
   },
