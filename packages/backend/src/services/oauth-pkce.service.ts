@@ -47,7 +47,8 @@ export class OAuthPKCEService {
   static getSlackAuthUrl(
     clientId: string,
     codeChallenge: string,
-    redirectUri: string = process.env.SLACK_REDIRECT_URI || 'http://localhost:3000/oauth/slack/callback'
+    redirectUri: string = process.env.SLACK_REDIRECT_URI || 'http://127.0.0.1:3000/auth/integration-callback?provider=slack',
+    state: string = uuid()
   ): string {
     const params = new URLSearchParams({
       client_id: clientId,
@@ -55,7 +56,7 @@ export class OAuthPKCEService {
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
       redirect_uri: redirectUri,
-      state: uuid(), // CSRF protection
+      state,
     });
 
     return `https://slack.com/oauth/v2/authorize?${params.toString()}`;
@@ -67,7 +68,8 @@ export class OAuthPKCEService {
   static getDiscordAuthUrl(
     clientId: string,
     codeChallenge: string,
-    redirectUri: string = process.env.DISCORD_REDIRECT_URI || 'http://localhost:3000/oauth/discord/callback'
+    redirectUri: string = process.env.DISCORD_REDIRECT_URI || 'http://127.0.0.1:3000/auth/integration-callback?provider=discord',
+    state: string = uuid()
   ): string {
     const params = new URLSearchParams({
       client_id: clientId,
@@ -76,7 +78,7 @@ export class OAuthPKCEService {
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
       redirect_uri: redirectUri,
-      state: uuid(), // CSRF protection
+      state,
     });
 
     return `https://discord.com/api/oauth2/authorize?${params.toString()}`;
@@ -139,7 +141,6 @@ export class OAuthPKCEService {
     code: string,
     codeVerifier: string,
     clientId: string,
-    clientSecret?: string, // Discord might still require this for server-to-server
     redirectUri?: string
   ): Promise<{
     access_token: string;
@@ -156,7 +157,6 @@ export class OAuthPKCEService {
         code_verifier: codeVerifier,
         grant_type: 'authorization_code',
         redirect_uri: redirectUri || process.env.DISCORD_REDIRECT_URI || '',
-        ...(clientSecret && { client_secret: clientSecret }),
       }).toString(),
     });
 

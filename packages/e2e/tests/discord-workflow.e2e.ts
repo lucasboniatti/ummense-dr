@@ -5,6 +5,7 @@ import { DiscordClientService } from '../../backend/src/services/discord-client.
 import { OAuthPKCEService } from '../../backend/src/services/oauth-pkce.service';
 import { IntegrationDisconnectService } from '../../backend/src/services/integration-disconnect.service';
 import { integrationRateLimiter } from '../../backend/src/services/integration-rate-limiter.service';
+import { IntegrationTokenService } from '../../backend/src/services/integration-token.service';
 
 describe('Discord E2E Workflow', () => {
   beforeEach(() => {
@@ -55,7 +56,10 @@ describe('Discord E2E Workflow', () => {
     });
 
     const discordClient = new DiscordClientService();
-    vi.spyOn(discordClient as any, 'getDiscordToken').mockResolvedValue('discord-token');
+    vi.spyOn(IntegrationTokenService.prototype, 'getDiscordTokenRecord').mockResolvedValue({
+      token: 'discord-token',
+      tokenType: 'Bearer',
+    });
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: 'upload-1' }),
@@ -108,9 +112,10 @@ describe('Discord E2E Workflow', () => {
   });
 
   it('should revoke the Discord token during disconnect when one is available', async () => {
-    vi.spyOn(DiscordClientService.prototype as any, 'getDiscordToken').mockResolvedValue(
+    vi.spyOn(IntegrationTokenService.prototype, 'getDiscordToken').mockResolvedValue(
       'discord-token'
     );
+    vi.spyOn(IntegrationTokenService.prototype, 'deleteDiscordToken').mockResolvedValue();
 
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,

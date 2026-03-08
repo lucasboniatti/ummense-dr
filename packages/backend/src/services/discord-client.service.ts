@@ -42,8 +42,8 @@ export class DiscordClientService {
     serverId: string,
     message: DiscordMessage
   ): Promise<{ id: string; channel_id: string }> {
-    const token = await this.getDiscordToken(userId, serverId);
-    if (!token) {
+    const auth = await this.getDiscordAuth(userId, serverId);
+    if (!auth) {
       throw new Error('Discord token not found');
     }
 
@@ -53,7 +53,7 @@ export class DiscordClientService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bot ${token}`,
+          Authorization: `${auth.tokenType} ${auth.token}`,
         },
         body: JSON.stringify(message),
       }
@@ -76,8 +76,8 @@ export class DiscordClientService {
     serverId: string,
     file: DiscordFile
   ): Promise<{ message_id: string }> {
-    const token = await this.getDiscordToken(userId, serverId);
-    if (!token) {
+    const auth = await this.getDiscordAuth(userId, serverId);
+    if (!auth) {
       throw new Error('Discord token not found');
     }
 
@@ -97,7 +97,7 @@ export class DiscordClientService {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bot ${token}`,
+          Authorization: `${auth.tokenType} ${auth.token}`,
         },
         body: formData,
       }
@@ -116,14 +116,14 @@ export class DiscordClientService {
    * List guilds (servers) for bot
    */
   async listGuilds(userId: string): Promise<any[]> {
-    const token = await this.getDiscordTokenForUser(userId);
-    if (!token) {
+    const auth = await this.getDiscordTokenForUser(userId);
+    if (!auth) {
       throw new Error('Discord token not found for user');
     }
 
     const response = await fetch(`${this.apiBaseUrl}/users/@me/guilds`, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `${auth.tokenType} ${auth.token}`,
       },
     });
 
@@ -138,14 +138,14 @@ export class DiscordClientService {
    * List channels in guild
    */
   async listChannels(userId: string, serverId: string): Promise<DiscordChannel[]> {
-    const token = await this.getDiscordToken(userId, serverId);
-    if (!token) {
+    const auth = await this.getDiscordAuth(userId, serverId);
+    if (!auth) {
       throw new Error('Discord token not found');
     }
 
     const response = await fetch(`${this.apiBaseUrl}/guilds/${serverId}/channels`, {
       headers: {
-        Authorization: `Bot ${token}`,
+        Authorization: `${auth.tokenType} ${auth.token}`,
       },
     });
 
@@ -167,16 +167,28 @@ export class DiscordClientService {
    * Get stored Discord token (for bot operations)
    */
   private async getDiscordToken(userId: string, serverId: string): Promise<string | null> {
-    // Note: Discord tokens are stored differently than Slack
-    // This is a placeholder - would need Discord-specific storage table
-    return null;
+    const auth = await this.getDiscordAuth(userId, serverId);
+    return auth?.token || null;
   }
 
   /**
    * Get user's Discord token (for user operations)
    */
-  private async getDiscordTokenForUser(userId: string): Promise<string | null> {
-    // Placeholder - would need Discord user token storage
-    return null;
+  private async getDiscordTokenForUser(
+    userId: string
+  ): Promise<{ token: string; tokenType: string } | null> {
+    const [firstIntegration] = await this.tokenService.listDiscordTokens(userId);
+    if (!firstIntegration) {
+      return null;
+    }
+
+    return this.getDiscordAuth(userId, firstIntegration.guild_id);
+  }
+
+  private async getDiscordAuth(
+    userId: string,
+    serverId: string
+  ): Promise<{ token: string; tokenType: string } | null> {
+    return this.tokenService.getDiscordTokenRecord(userId, serverId);
   }
 }

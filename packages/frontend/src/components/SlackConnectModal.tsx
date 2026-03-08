@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from './ui/Dialog';
-import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
+import { integrationService } from '../services/integration.service';
 
 interface SlackConnectModalProps {
   open?: boolean;
@@ -18,8 +18,6 @@ export function SlackConnectModal({
   onOpenChange,
   isOpen,
   onClose,
-  onSuccess,
-  onConnect,
 }: SlackConnectModalProps) {
   const resolvedOpen = open ?? isOpen ?? false;
   const close = () => {
@@ -27,36 +25,30 @@ export function SlackConnectModal({
     onClose?.();
   };
 
-  const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleConnect = async () => {
-    if (!token.trim()) {
-      setError('Token is required');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch('/api/integrations/slack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      });
+      const response = await integrationService.getSlackAuthUrl();
 
-      if (!response.ok) {
-        throw new Error('Failed to connect Slack');
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(
+          'integration_oauth_pending',
+          JSON.stringify({
+            provider: 'slack',
+            state: response.state,
+            code_verifier: response.code_verifier,
+          })
+        );
+
+        window.location.assign(response.auth_url);
       }
-
-      onConnect?.(token);
-      onSuccess?.();
-      setToken('');
-      close();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Connection failed');
+      setError(err instanceof Error ? err.message : 'Failed to start Slack OAuth');
     } finally {
       setLoading(false);
     }
@@ -71,17 +63,9 @@ export function SlackConnectModal({
 
         <DialogBody className="space-y-4">
           <p className="text-sm text-neutral-600">
-            Enter your Slack Bot Token to enable notifications.
+            Você será redirecionado para o Slack para autorizar a integração com PKCE.
           </p>
-
-          <FormInput
-            label="Bot Token"
-            type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="xoxb-..."
-            error={error}
-          />
+          {error && <p className="text-sm text-error-600">{error}</p>}
         </DialogBody>
 
         <DialogFooter>
@@ -89,7 +73,7 @@ export function SlackConnectModal({
             Cancel
           </Button>
           <Button variant="primary" onClick={handleConnect} disabled={loading}>
-            {loading ? 'Connecting...' : 'Connect'}
+            {loading ? 'Redirecting...' : 'Continue with Slack'}
           </Button>
         </DialogFooter>
       </DialogContent>

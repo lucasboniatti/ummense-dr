@@ -15,6 +15,21 @@ interface SlackToken {
   deleted_at: string | null;
 }
 
+interface DiscordToken {
+  id: string;
+  user_id: string;
+  guild_id: string;
+  guild_name: string | null;
+  encrypted_token: string;
+  kms_key_id: string;
+  token_type: string;
+  scopes: string[];
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 interface IntegrationLog {
   id: string;
   user_id: string | null;
@@ -32,7 +47,7 @@ interface IntegrationLog {
 export class IntegrationTokenService {
   private supabase = createClient(
     process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_ANON_KEY || ''
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || ''
   );
   private encryption = new TokenEncryptionService();
 
@@ -77,6 +92,57 @@ export class IntegrationTokenService {
   }
 
   /**
+   * Store Discord token (encrypted)
+   */
+  async storeDiscordToken(
+    userId: string,
+    guildId: string,
+    plainToken: string,
+    kmsKeyId: string,
+    scopes: string[],
+    options: {
+      tokenType?: string;
+      expiresAt?: Date;
+      guildName?: string;
+    } = {}
+  ): Promise<DiscordToken> {
+    const encryptedToken = await this.encryption.encryptToken(plainToken, kmsKeyId);
+
+    const { data, error } = await this.supabase
+      .from('discord_tokens')
+      .upsert(
+        {
+          user_id: userId,
+          guild_id: guildId,
+          guild_name: options.guildName || null,
+          encrypted_token: encryptedToken,
+          kms_key_id: kmsKeyId,
+          token_type: options.tokenType || 'Bearer',
+          scopes,
+          expires_at: options.expiresAt?.toISOString() || null,
+          updated_at: new Date().toISOString(),
+          deleted_at: null,
+        },
+        { onConflict: 'user_id,guild_id' }
+      )
+      .select()
+      .single();
+
+    if (error) {
+      await this.logIntegrationEvent(userId, 'discord', 'error', guildId, {
+        error: error.message,
+      });
+      throw new Error(`Failed to store Discord token: ${error.message}`);
+    }
+
+    await this.logIntegrationEvent(userId, 'discord', 'created', guildId, {
+      guild_name: options.guildName || null,
+    });
+
+    return data as DiscordToken;
+  }
+
+  /**
    * Retrieve Slack token (decrypted on-demand)
    */
   async getSlackToken(userId: string, workspaceId: string): Promise<string | null> {
@@ -101,6 +167,45 @@ export class IntegrationTokenService {
   }
 
   /**
+   * Retrieve Discord token (decrypted on-demand)
+   */
+  async getDiscordToken(userId: string, guildId: string): Promise<string | null> {
+    const record = await this.getDiscordTokenRecord(userId, guildId);
+    if (!record) {
+      return null;
+    }
+
+    return record.token;
+  }
+
+  async getDiscordTokenRecord(
+    userId: string,
+    guildId: string
+  ): Promise<{ token: string; tokenType: string } | null> {
+    const { data, error } = await this.supabase
+      .from('discord_tokens')
+      .select('encrypted_token, token_type')
+      .eq('user_id', userId)
+      .eq('guild_id', guildId)
+      .is('deleted_at', null)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    try {
+      return {
+        token: await this.encryption.decryptToken(data.encrypted_token),
+        tokenType: data.token_type || 'Bearer',
+      };
+    } catch (e) {
+      console.error('Failed to decrypt Discord token:', e);
+      return null;
+    }
+  }
+
+  /**
    * List user's Slack integrations (without exposing tokens)
    */
   async listSlackTokens(userId: string): Promise<Omit<SlackToken, 'encrypted_token'>[]> {
@@ -118,6 +223,25 @@ export class IntegrationTokenService {
   }
 
   /**
+   * List user's Discord integrations (without exposing tokens)
+   */
+  async listDiscordTokens(userId: string): Promise<Omit<DiscordToken, 'encrypted_token'>[]> {
+    const { data, error } = await this.supabase
+      .from('discord_tokens')
+      .select(
+        'id, user_id, guild_id, guild_name, token_type, scopes, expires_at, created_at, updated_at'
+      )
+      .eq('user_id', userId)
+      .is('deleted_at', null);
+
+    if (error) {
+      throw new Error(`Failed to list Discord tokens: ${error.message}`);
+    }
+
+    return (data || []) as Omit<DiscordToken, 'encrypted_token'>[];
+  }
+
+  /**
    * Delete/revoke Slack token (soft delete)
    */
   async deleteSlackToken(userId: string, workspaceId: string): Promise<void> {
@@ -132,6 +256,26 @@ export class IntegrationTokenService {
     }
 
     await this.logIntegrationEvent(userId, 'slack', 'deleted', workspaceId);
+  }
+
+  /**
+   * Delete/revoke Discord token (soft delete)
+   */
+  async deleteDiscordToken(userId: string, guildId: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('discord_tokens')
+      .update({
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+      .eq('guild_id', guildId);
+
+    if (error) {
+      throw new Error(`Failed to delete Discord token: ${error.message}`);
+    }
+
+    await this.logIntegrationEvent(userId, 'discord', 'deleted', guildId);
   }
 
   /**
@@ -156,6 +300,27 @@ export class IntegrationTokenService {
     }
 
     await this.logIntegrationEvent(userId, 'slack', 'auth_refreshed', workspaceId);
+  }
+
+  async updateDiscordTokenExpiration(
+    userId: string,
+    guildId: string,
+    newExpiresAt: Date
+  ): Promise<void> {
+    const { error } = await this.supabase
+      .from('discord_tokens')
+      .update({
+        expires_at: newExpiresAt.toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+      .eq('guild_id', guildId);
+
+    if (error) {
+      throw new Error(`Failed to update Discord token expiration: ${error.message}`);
+    }
+
+    await this.logIntegrationEvent(userId, 'discord', 'auth_refreshed', guildId);
   }
 
   /**

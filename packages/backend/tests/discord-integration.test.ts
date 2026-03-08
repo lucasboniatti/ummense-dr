@@ -5,6 +5,7 @@ import { DiscordClientService } from '../src/services/discord-client.service';
 import { OAuthPKCEService } from '../src/services/oauth-pkce.service';
 import { IntegrationDisconnectService } from '../src/services/integration-disconnect.service';
 import { integrationRateLimiter } from '../src/services/integration-rate-limiter.service';
+import { IntegrationTokenService } from '../src/services/integration-token.service';
 
 describe('Discord Integration Tests', () => {
   beforeEach(() => {
@@ -60,7 +61,10 @@ describe('Discord Integration Tests', () => {
 
     it('should upload files to Discord channels with a stored bot token', async () => {
       const discordClient = new DiscordClientService();
-      vi.spyOn(discordClient as any, 'getDiscordToken').mockResolvedValue('discord-bot-token');
+      vi.spyOn(IntegrationTokenService.prototype, 'getDiscordTokenRecord').mockResolvedValue({
+        token: 'discord-bot-token',
+        tokenType: 'Bearer',
+      });
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
@@ -80,14 +84,17 @@ describe('Discord Integration Tests', () => {
         'https://discord.com/api/v14/channels/channel-123/messages',
         expect.objectContaining({
           method: 'POST',
-          headers: expect.objectContaining({ Authorization: 'Bot discord-bot-token' }),
+          headers: expect.objectContaining({ Authorization: 'Bearer discord-bot-token' }),
         })
       );
     });
 
     it('should return only text channels when listing guild channels', async () => {
       const discordClient = new DiscordClientService();
-      vi.spyOn(discordClient as any, 'getDiscordToken').mockResolvedValue('discord-bot-token');
+      vi.spyOn(IntegrationTokenService.prototype, 'getDiscordTokenRecord').mockResolvedValue({
+        token: 'discord-bot-token',
+        tokenType: 'Bearer',
+      });
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
@@ -143,9 +150,10 @@ describe('Discord Integration Tests', () => {
 
   describe('Disconnect & Cleanup', () => {
     it('should revoke the Discord token when one is available', async () => {
-      vi.spyOn(DiscordClientService.prototype as any, 'getDiscordToken').mockResolvedValue(
+      vi.spyOn(IntegrationTokenService.prototype, 'getDiscordToken').mockResolvedValue(
         'discord-bot-token'
       );
+      vi.spyOn(IntegrationTokenService.prototype, 'deleteDiscordToken').mockResolvedValue();
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,

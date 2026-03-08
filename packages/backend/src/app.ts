@@ -10,6 +10,9 @@ import taskRoutes from './routes/tasks';
 import tagRoutes from './routes/tags';
 import eventRoutes from './routes/events';
 import panelRoutes from './routes/panel';
+import oauthRoutes from './routes/oauth.routes';
+import integrationsRoutes from './routes/integrations.routes';
+import slackSlashCommandsRoutes from './routes/slack-slash-commands.routes';
 import { authMiddleware } from './middleware/auth.middleware';
 import { controlRoutes } from './api/automations/control.routes';
 import { statusRoutes } from './api/status/status.routes';
@@ -91,6 +94,9 @@ app.use('/api/tags', tagRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/panel', panelRoutes);
 app.use('/api/status', statusRoutes);
+app.use('/api/slack', slackSlashCommandsRoutes);
+app.use('/api/oauth', authMiddleware, oauthRoutes);
+app.use('/api/integrations', authMiddleware, integrationsRoutes);
 
 // Unified automations surface consumed by frontend pages/services.
 app.use('/api/automations', authMiddleware, controlRoutes);

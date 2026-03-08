@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { IntegrationTokenService } from '../services/integration-token.service';
 
 /**
  * Token Refresh Job
@@ -9,9 +8,8 @@ import { IntegrationTokenService } from '../services/integration-token.service';
 export class TokenRefreshJob {
   private supabase = createClient(
     process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_ANON_KEY || ''
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || ''
   );
-  private tokenService = new IntegrationTokenService();
 
   /**
    * Execute token refresh check
@@ -24,18 +22,41 @@ export class TokenRefreshJob {
     let alerts = 0;
 
     try {
-      // Get all non-deleted Slack tokens
-      const { data: tokens, error } = await this.supabase
-        .from('slack_tokens')
-        .select('id, user_id, workspace_id, expires_at')
-        .is('deleted_at', null)
-        .not('expires_at', 'is', null);
+      const [slackResult, discordResult] = await Promise.all([
+        this.supabase
+          .from('slack_tokens')
+          .select('id, user_id, workspace_id, expires_at')
+          .is('deleted_at', null)
+          .not('expires_at', 'is', null),
+        this.supabase
+          .from('discord_tokens')
+          .select('id, user_id, guild_id, expires_at')
+          .is('deleted_at', null)
+          .not('expires_at', 'is', null),
+      ]);
 
-      if (error) {
-        throw new Error(`Failed to fetch tokens: ${error.message}`);
+      if (slackResult.error) {
+        throw new Error(`Failed to fetch Slack tokens: ${slackResult.error.message}`);
       }
 
-      if (!tokens || tokens.length === 0) {
+      if (discordResult.error) {
+        throw new Error(`Failed to fetch Discord tokens: ${discordResult.error.message}`);
+      }
+
+      const tokens = [
+        ...(slackResult.data || []).map((token) => ({
+          ...token,
+          integration: 'slack',
+          resource_id: token.workspace_id,
+        })),
+        ...(discordResult.data || []).map((token) => ({
+          ...token,
+          integration: 'discord',
+          resource_id: token.guild_id,
+        })),
+      ];
+
+      if (tokens.length === 0) {
         return { processed: 0, refreshed: 0, alerts: 0, errors };
       }
 
@@ -55,7 +76,7 @@ export class TokenRefreshJob {
         if (expiresAt < sevenDaysFromNow) {
           alerts++;
           console.warn(
-            `[TOKEN REFRESH] Token expiring soon: user=${token.user_id}, workspace=${token.workspace_id}, expires=${expiresAt.toISOString()}`
+            `[TOKEN REFRESH] Token expiring soon: integration=${token.integration}, user=${token.user_id}, resource=${token.resource_id}, expires=${expiresAt.toISOString()}`
           );
 
           // In production, would send notification to user
@@ -72,7 +93,7 @@ export class TokenRefreshJob {
             // Note: This would require storing refresh token
             // For now, just log that manual refresh is needed
             console.error(
-              `[TOKEN REFRESH] Token expired: user=${token.user_id}, workspace=${token.workspace_id}`
+              `[TOKEN REFRESH] Token expired: integration=${token.integration}, user=${token.user_id}, resource=${token.resource_id}`
             );
 
             // In production, would attempt to refresh using refresh_token
@@ -81,7 +102,7 @@ export class TokenRefreshJob {
           } catch (e) {
             const msg = e instanceof Error ? e.message : 'Unknown error';
             errors.push(
-              `Failed to refresh token for user=${token.user_id}, workspace=${token.workspace_id}: ${msg}`
+              `Failed to refresh token for integration=${token.integration}, user=${token.user_id}, resource=${token.resource_id}: ${msg}`
             );
           }
         }

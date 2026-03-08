@@ -10,7 +10,7 @@ export default function IntegrationCallbackPage() {
   useEffect(() => {
     const processCallback = async () => {
       try {
-        const { code, state, error: oauthError } = router.query;
+        const { code, state, error: oauthError, provider } = router.query;
 
         if (oauthError) {
           setStatus('error');
@@ -24,13 +24,39 @@ export default function IntegrationCallbackPage() {
           return;
         }
 
-        // Determine which integration type from the state or referrer
-        const integrationType = state?.toString().startsWith('slack') ? 'slack' : 'discord';
+        const pendingRaw =
+          typeof window !== 'undefined'
+            ? window.sessionStorage.getItem('integration_oauth_pending')
+            : null;
+
+        if (!pendingRaw) {
+          setStatus('error');
+          setMessage('Fluxo OAuth expirado ou inexistente');
+          return;
+        }
+
+        const pending = JSON.parse(pendingRaw) as {
+          provider: 'slack' | 'discord';
+          state: string;
+          code_verifier: string;
+        };
+
+        const integrationType =
+          provider === 'slack' || provider === 'discord'
+            ? provider
+            : pending.provider;
+
+        if (pending.state !== state.toString()) {
+          setStatus('error');
+          setMessage('Estado OAuth inválido. Tente conectar novamente.');
+          return;
+        }
 
         if (integrationType === 'slack') {
           await integrationService.handleSlackCallback({
             code: code.toString(),
             state: state.toString(),
+            code_verifier: pending.code_verifier,
           });
           setStatus('success');
           setMessage('Slack conectado com sucesso!');
@@ -38,9 +64,14 @@ export default function IntegrationCallbackPage() {
           await integrationService.handleDiscordCallback({
             code: code.toString(),
             state: state.toString(),
+            code_verifier: pending.code_verifier,
           });
           setStatus('success');
           setMessage('Discord conectado com sucesso!');
+        }
+
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('integration_oauth_pending');
         }
 
         // Redirect back to integrations page after 2 seconds
@@ -48,6 +79,9 @@ export default function IntegrationCallbackPage() {
           router.push('/dashboard/integrations');
         }, 2000);
       } catch (err) {
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('integration_oauth_pending');
+        }
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Erro ao processar autenticação');
       }

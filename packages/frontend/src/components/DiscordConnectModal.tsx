@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from './ui/Dialog';
-import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
+import { integrationService } from '../services/integration.service';
 
 interface DiscordConnectModalProps {
   open?: boolean;
@@ -18,8 +18,6 @@ export function DiscordConnectModal({
   onOpenChange,
   isOpen,
   onClose,
-  onSuccess,
-  onConnect,
 }: DiscordConnectModalProps) {
   const resolvedOpen = open ?? isOpen ?? false;
   const close = () => {
@@ -27,36 +25,30 @@ export function DiscordConnectModal({
     onClose?.();
   };
 
-  const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleConnect = async () => {
-    if (!token.trim()) {
-      setError('Token is required');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch('/api/integrations/discord', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      });
+      const response = await integrationService.getDiscordAuthUrl();
 
-      if (!response.ok) {
-        throw new Error('Failed to connect Discord');
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(
+          'integration_oauth_pending',
+          JSON.stringify({
+            provider: 'discord',
+            state: response.state,
+            code_verifier: response.code_verifier,
+          })
+        );
+
+        window.location.assign(response.auth_url);
       }
-
-      onConnect?.(token);
-      onSuccess?.();
-      setToken('');
-      close();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Connection failed');
+      setError(err instanceof Error ? err.message : 'Failed to start Discord OAuth');
     } finally {
       setLoading(false);
     }
@@ -71,17 +63,9 @@ export function DiscordConnectModal({
 
         <DialogBody className="space-y-4">
           <p className="text-sm text-neutral-600">
-            Enter your Discord Bot Token for notifications.
+            Você será redirecionado para o Discord para autorizar a integração com PKCE.
           </p>
-
-          <FormInput
-            label="Bot Token"
-            type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="MTA4NzY..."
-            error={error}
-          />
+          {error && <p className="text-sm text-error-600">{error}</p>}
         </DialogBody>
 
         <DialogFooter>
@@ -89,7 +73,7 @@ export function DiscordConnectModal({
             Cancel
           </Button>
           <Button variant="primary" onClick={handleConnect} disabled={loading}>
-            {loading ? 'Connecting...' : 'Connect'}
+            {loading ? 'Redirecting...' : 'Continue with Discord'}
           </Button>
         </DialogFooter>
       </DialogContent>

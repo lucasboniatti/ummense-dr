@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { OAuthPKCEService } from '../src/services/oauth-pkce.service';
-import crypto from 'crypto';
 
 describe('OAuthPKCEService', () => {
   describe('generatePKCEPair', () => {
@@ -50,26 +49,38 @@ describe('OAuthPKCEService', () => {
   describe('getSlackAuthUrl', () => {
     it('should return valid Slack auth URL', () => {
       const { codeChallenge } = OAuthPKCEService.generatePKCEPair();
-      const url = OAuthPKCEService.getSlackAuthUrl('test-client-id', codeChallenge);
+      const url = OAuthPKCEService.getSlackAuthUrl(
+        'test-client-id',
+        codeChallenge,
+        'http://127.0.0.1:3000/auth/integration-callback?provider=slack',
+        'slack:test-state'
+      );
 
       expect(url).toContain('slack.com/oauth/v2/authorize');
       expect(url).toContain('client_id=test-client-id');
       expect(url).toContain(`code_challenge=${codeChallenge}`);
       expect(url).toContain('code_challenge_method=S256');
-      expect(url).toContain('scope=chat:write');
+      expect(url).toContain('scope=chat%3Awrite');
+      expect(url).toContain('state=slack%3Atest-state');
     });
   });
 
   describe('getDiscordAuthUrl', () => {
     it('should return valid Discord auth URL', () => {
       const { codeChallenge } = OAuthPKCEService.generatePKCEPair();
-      const url = OAuthPKCEService.getDiscordAuthUrl('test-client-id', codeChallenge);
+      const url = OAuthPKCEService.getDiscordAuthUrl(
+        'test-client-id',
+        codeChallenge,
+        'http://127.0.0.1:3000/auth/integration-callback?provider=discord',
+        'discord:test-state'
+      );
 
       expect(url).toContain('discord.com/api/oauth2/authorize');
       expect(url).toContain('client_id=test-client-id');
       expect(url).toContain(`code_challenge=${codeChallenge}`);
       expect(url).toContain('code_challenge_method=S256');
       expect(url).toContain('scope=chat.write');
+      expect(url).toContain('state=discord%3Atest-state');
     });
   });
 });

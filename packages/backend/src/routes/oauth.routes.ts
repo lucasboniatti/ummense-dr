@@ -1,160 +1,228 @@
-import { Router, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
+import { Router, Response } from 'express';
 import { OAuthPKCEService } from '../services/oauth-pkce.service';
 import { IntegrationTokenService } from '../services/integration-token.service';
+import { IntegrationDisconnectService } from '../services/integration-disconnect.service';
+import { AuthRequest } from '../middleware/auth.middleware';
 import { asString } from '../utils/http';
 
 const router = Router();
-const oauthService = new OAuthPKCEService();
 const tokenService = new IntegrationTokenService();
+const disconnectService = new IntegrationDisconnectService();
 
-/**
- * GET /oauth/slack/start
- * Initiate Slack OAuth flow
- * Returns authorization URL to redirect user to Slack
- */
-router.get('/slack/start', (req: Request, res: Response) => {
+type OAuthCallbackBody = {
+  code?: string;
+  state?: string;
+  code_verifier?: string;
+};
+
+function getUserId(req: AuthRequest, res: Response): string | null {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return null;
+  }
+
+  return String(userId);
+}
+
+function getFrontendBaseUrl(): string {
+  return (
+    process.env.FRONTEND_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    'http://127.0.0.1:3000'
+  );
+}
+
+function buildFrontendCallbackUrl(provider: 'slack' | 'discord'): string {
+  return `${getFrontendBaseUrl()}/auth/integration-callback?provider=${provider}`;
+}
+
+router.get('/slack/start', (req: AuthRequest, res: Response) => {
+  if (!getUserId(req, res)) {
+    return;
+  }
+
   try {
     const { codeVerifier, codeChallenge } = OAuthPKCEService.generatePKCEPair();
-
-    // Store in session for later verification
-    req.session = req.session || {};
-    (req.session as any).code_verifier = codeVerifier;
-    (req.session as any).code_challenge = codeChallenge;
-
+    const state = `slack:${randomUUID()}`;
     const authUrl = OAuthPKCEService.getSlackAuthUrl(
       process.env.SLACK_CLIENT_ID || '',
-      codeChallenge
+      codeChallenge,
+      buildFrontendCallbackUrl('slack'),
+      state
     );
 
-    res.json({ auth_url: authUrl });
-  } catch (error) {
+    res.json({
+      auth_url: authUrl,
+      state,
+      code_verifier: codeVerifier,
+      provider: 'slack',
+    });
+  } catch {
     res.status(500).json({ error: 'Failed to generate auth URL' });
   }
 });
 
-/**
- * GET /oauth/slack/callback
- * Slack OAuth callback endpoint
- * Exchanges authorization code for access token
- */
-router.get('/slack/callback', async (req: Request, res: Response) => {
-  try {
-    const { code, state } = req.query as { code: string; state: string };
-    const codeVerifier = (req.session as any)?.code_verifier;
+router.post('/slack/callback', async (req: AuthRequest, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) {
+    return;
+  }
 
-    if (!code || !codeVerifier) {
-      return res.status(400).json({ error: 'Missing authorization code or code_verifier' });
+  try {
+    const { code, state, code_verifier } = req.body as OAuthCallbackBody;
+
+    if (!code || !state || !code_verifier) {
+      return res
+        .status(400)
+        .json({ error: 'Missing authorization code, state, or code_verifier' });
     }
 
-    // Exchange code for token (backend only)
+    if (!state.startsWith('slack:')) {
+      return res.status(400).json({ error: 'Invalid OAuth state for Slack' });
+    }
+
     const tokenResponse = await OAuthPKCEService.exchangeCodeForSlackToken(
       code,
-      codeVerifier,
-      process.env.SLACK_CLIENT_ID || ''
+      code_verifier,
+      process.env.SLACK_CLIENT_ID || '',
+      buildFrontendCallbackUrl('slack')
     );
 
-    // Get user ID from auth context (would come from session/JWT in real app)
-    const userId = (req.session as any)?.userId || 'placeholder-user-id';
-
-    // Store encrypted token
     await tokenService.storeSlackToken(
       userId,
       tokenResponse.team_id,
       tokenResponse.access_token,
       process.env.KMS_KEY_ID || '',
-      tokenResponse.scope.split(',')
+      tokenResponse.scope.split(',').filter(Boolean),
+      tokenResponse.expires_in
+        ? new Date(Date.now() + tokenResponse.expires_in * 1000)
+        : undefined
     );
 
-    // Clear session
-    delete (req.session as any).code_verifier;
-    delete (req.session as any).code_challenge;
-
-    // Redirect to success page
-    res.redirect(`/integrations/success?type=slack&workspace=${tokenResponse.team_id}`);
+    res.json({
+      success: true,
+      integration: {
+        id: tokenResponse.team_id,
+        workspace_id: tokenResponse.team_id,
+        workspace_name: tokenResponse.team_name || tokenResponse.team_id,
+        team_id: tokenResponse.team_id,
+        bot_user_id: tokenResponse.bot_user_id || '',
+        enabled: true,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ error: 'OAuth callback failed' });
+    const message = error instanceof Error ? error.message : 'OAuth callback failed';
+    res.status(500).json({ error: message });
   }
 });
 
-/**
- * GET /oauth/discord/start
- * Initiate Discord OAuth flow
- */
-router.get('/discord/start', (req: Request, res: Response) => {
+router.get('/discord/start', (req: AuthRequest, res: Response) => {
+  if (!getUserId(req, res)) {
+    return;
+  }
+
   try {
     const { codeVerifier, codeChallenge } = OAuthPKCEService.generatePKCEPair();
-
-    req.session = req.session || {};
-    (req.session as any).code_verifier = codeVerifier;
-    (req.session as any).code_challenge = codeChallenge;
-
+    const state = `discord:${randomUUID()}`;
     const authUrl = OAuthPKCEService.getDiscordAuthUrl(
       process.env.DISCORD_CLIENT_ID || '',
-      codeChallenge
+      codeChallenge,
+      buildFrontendCallbackUrl('discord'),
+      state
     );
 
-    res.json({ auth_url: authUrl });
-  } catch (error) {
+    res.json({
+      auth_url: authUrl,
+      state,
+      code_verifier: codeVerifier,
+      provider: 'discord',
+    });
+  } catch {
     res.status(500).json({ error: 'Failed to generate auth URL' });
   }
 });
 
-/**
- * GET /oauth/discord/callback
- * Discord OAuth callback endpoint
- */
-router.get('/discord/callback', async (req: Request, res: Response) => {
-  try {
-    const { code, state } = req.query as { code: string; state: string };
-    const codeVerifier = (req.session as any)?.code_verifier;
+router.post('/discord/callback', async (req: AuthRequest, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) {
+    return;
+  }
 
-    if (!code || !codeVerifier) {
-      return res.status(400).json({ error: 'Missing authorization code or code_verifier' });
+  try {
+    const { code, state, code_verifier } = req.body as OAuthCallbackBody;
+
+    if (!code || !state || !code_verifier) {
+      return res
+        .status(400)
+        .json({ error: 'Missing authorization code, state, or code_verifier' });
     }
 
-    // Exchange code for token
+    if (!state.startsWith('discord:')) {
+      return res.status(400).json({ error: 'Invalid OAuth state for Discord' });
+    }
+
     const tokenResponse = await OAuthPKCEService.exchangeCodeForDiscordToken(
       code,
-      codeVerifier,
+      code_verifier,
       process.env.DISCORD_CLIENT_ID || '',
-      process.env.DISCORD_CLIENT_SECRET
+      buildFrontendCallbackUrl('discord')
     );
 
-    // Future: Store Discord token (needs separate table)
-    // Similar to Slack token storage
+    await tokenService.storeDiscordToken(
+      userId,
+      tokenResponse.guild.id,
+      tokenResponse.access_token,
+      process.env.KMS_KEY_ID || '',
+      ['chat.write'],
+      {
+        tokenType: tokenResponse.token_type || 'Bearer',
+        expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000),
+        guildName: tokenResponse.guild.name,
+      }
+    );
 
-    // Clear session
-    delete (req.session as any).code_verifier;
-    delete (req.session as any).code_challenge;
-
-    // Redirect to success page
-    res.redirect(`/integrations/success?type=discord&server=${tokenResponse.guild.id}`);
+    res.json({
+      success: true,
+      integration: {
+        id: tokenResponse.guild.id,
+        guild_id: tokenResponse.guild.id,
+        guild_name: tokenResponse.guild.name,
+        bot_id: userId,
+        enabled: true,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ error: 'OAuth callback failed' });
+    const message = error instanceof Error ? error.message : 'OAuth callback failed';
+    res.status(500).json({ error: message });
   }
 });
 
-/**
- * POST /oauth/disconnect/:type/:id
- * Disconnect an integration
- */
-router.post('/disconnect/:type/:id', async (req: Request, res: Response) => {
+router.post('/disconnect/:type/:id', async (req: AuthRequest, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) {
+    return;
+  }
+
   try {
-    const type = asString((req.params as any).type);
-    const id = asString((req.params as any).id);
-    const userId = (req.session as any)?.userId || 'placeholder-user-id';
+    const type = asString((req.params as Record<string, string>).type);
+    const id = asString((req.params as Record<string, string>).id);
 
     if (type === 'slack') {
-      await tokenService.deleteSlackToken(userId, id);
-      res.json({ success: true, message: 'Slack integration disconnected' });
-    } else if (type === 'discord') {
-      // Future: Discord disconnect
-      res.json({ success: true, message: 'Discord integration disconnected' });
-    } else {
-      res.status(400).json({ error: 'Unknown integration type' });
+      const result = await disconnectService.disconnectSlack(userId, id);
+      return res.status(result.success ? 200 : 500).json(result);
     }
+
+    if (type === 'discord') {
+      const result = await disconnectService.disconnectDiscord(userId, id);
+      return res.status(result.success ? 200 : 500).json(result);
+    }
+
+    res.status(400).json({ error: 'Unknown integration type' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to disconnect integration' });
+    const message = error instanceof Error ? error.message : 'Failed to disconnect integration';
+    res.status(500).json({ error: message });
   }
 });
 

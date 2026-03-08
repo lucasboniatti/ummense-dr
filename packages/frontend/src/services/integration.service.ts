@@ -28,18 +28,41 @@ export interface DiscordIntegration {
 interface AuthCallbackPayload {
   code: string;
   state: string;
+  code_verifier: string;
+}
+
+interface AuthStartResponse {
+  auth_url: string;
+  state: string;
+  code_verifier: string;
+  provider: 'slack' | 'discord';
+}
+
+function getStoredToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return (
+    window.localStorage.getItem('synkra_dev_token') ||
+    window.localStorage.getItem('token')
+  );
 }
 
 async function request(
   endpoint: string,
   options: RequestInit = {}
 ) {
+  const token = getStoredToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
   const response = await fetch(`${API_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
     ...options,
+    credentials: 'include',
+    headers,
   });
 
   if (!response.ok) {
@@ -75,7 +98,7 @@ export const integrationService = {
   /**
    * Get Slack auth URL (PKCE flow)
    */
-  async getSlackAuthUrl(): Promise<{ auth_url: string; state: string }> {
+  async getSlackAuthUrl(): Promise<AuthStartResponse> {
     return request('/oauth/slack/start');
   },
 
@@ -92,7 +115,7 @@ export const integrationService = {
   /**
    * Get Discord auth URL (PKCE flow)
    */
-  async getDiscordAuthUrl(): Promise<{ auth_url: string; state: string }> {
+  async getDiscordAuthUrl(): Promise<AuthStartResponse> {
     return request('/oauth/discord/start');
   },
 

@@ -1,6 +1,4 @@
 import { IntegrationTokenService } from './integration-token.service';
-import { DiscordClientService } from './discord-client.service';
-import { SlackClientService } from './slack-client.service';
 
 /**
  * Integration Disconnection Service
@@ -8,8 +6,6 @@ import { SlackClientService } from './slack-client.service';
  */
 export class IntegrationDisconnectService {
   private tokenService = new IntegrationTokenService();
-  private slackClient = new SlackClientService();
-  private discordClient = new DiscordClientService();
 
   /**
    * Disconnect Slack integration
@@ -50,6 +46,8 @@ export class IntegrationDisconnectService {
       if (token) {
         await this.revokeDiscordToken(token, process.env.DISCORD_CLIENT_ID || '');
       }
+
+      await this.tokenService.deleteDiscordToken(userId, serverId);
 
       return { success: true };
     } catch (error) {
@@ -102,6 +100,6 @@ export class IntegrationDisconnectService {
   }
 
   private async getDiscordToken(userId: string, serverId: string): Promise<string | null> {
-    return (this.discordClient as any).getDiscordToken(userId, serverId);
+    return this.tokenService.getDiscordToken(userId, serverId);
   }
 }

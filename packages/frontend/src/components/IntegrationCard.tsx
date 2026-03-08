@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/CardUI';
 import { Button } from './ui/Button';
+import { integrationService } from '../services/integration.service';
 
 interface IntegrationCardProps {
   name?: string;
@@ -10,7 +11,9 @@ interface IntegrationCardProps {
   integration?: {
     id: string;
     enabled?: boolean;
+    workspace_id?: string;
     workspace_name?: string;
+    guild_id?: string;
     guild_name?: string;
   };
   type?: 'slack' | 'discord' | string;
@@ -28,6 +31,7 @@ export function IntegrationCard({
   onConnect,
   onDisconnect,
 }: IntegrationCardProps) {
+  const [loading, setLoading] = React.useState(false);
   const resolvedName =
     name ||
     integration?.workspace_name ||
@@ -41,6 +45,25 @@ export function IntegrationCard({
   const resolvedIcon = icon || (type === 'discord' ? '🎮' : '💬');
   const resolvedStatus =
     status || (integration?.enabled ? 'connected' : 'disconnected');
+
+  const handleDisconnect = async () => {
+    if (!integration) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (type === 'discord') {
+        await integrationService.disconnectDiscord(integration.guild_id || integration.id);
+      } else {
+        await integrationService.disconnectSlack(integration.workspace_id || integration.id);
+      }
+
+      onDisconnect?.();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -63,8 +86,8 @@ export function IntegrationCard({
           </span>
 
           {resolvedStatus === 'connected' ? (
-            <Button variant="outline" size="sm" onClick={onDisconnect}>
-              Disconnect
+            <Button variant="outline" size="sm" onClick={handleDisconnect} disabled={loading}>
+              {loading ? 'Disconnecting...' : 'Disconnect'}
             </Button>
           ) : (
             <Button variant="primary" size="sm" onClick={onConnect}>
