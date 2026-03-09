@@ -1,0 +1,33 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-09T21:25:00-03:00"
+  from_agent: "qa"
+  to_agent: "sm"
+  consumed: false
+
+  story_context:
+    story_id: "EPIC-8-UX-UI-VISUAL-PARITY"
+    story_path: "docs/stories/8.1.story.md"
+    story_status: "Needs Revision Before PM Review"
+    current_task: "SM must revise drafts 8.1-8.5 using QA findings"
+    branch: "master"
+
+  decisions:
+    - "QA spec review decision is NEEDS REVISION."
+    - "Story 8.1 is too broad unless regression scope is expanded across all affected operational surfaces."
+    - "Stories 8.2 and 8.3 need explicit empty/loading/error-state acceptance criteria and tests."
+    - "Story 8.4 needs explicit preservation of advanced editing capability when raw technical controls leave the main path."
+    - "Story 8.5 must align final validation convention and define objective visual pass/fail criteria."
+
+  files_modified:
+    - "docs/stories/8.1.story.md"
+    - "docs/stories/8.2.story.md"
+    - "docs/stories/8.3.story.md"
+    - "docs/stories/8.4.story.md"
+    - "docs/stories/8.5.story.md"
+    - ".aios/handoffs/handoff-qa-to-sm-ux-ui-story-drafts-revision-20260309.yaml"
+
+  blockers:
+    - "Do not hand off to PM until the draft revisions above are applied."
+
+  next_action: "Revise stories 8.1-8.5 to address QA findings, then return them for QA spec re-review before PM approval."

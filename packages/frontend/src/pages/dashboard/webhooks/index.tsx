@@ -119,8 +119,11 @@ export default function WebhooksPage() {
               {webhooks.map((webhook) => (
                 <tr key={webhook.id} className="border-b border-neutral-200 hover:bg-neutral-50">
                   <td className="px-6 py-4">
-                    <Link href={`/dashboard/webhooks/${webhook.id}`}>
-                      <a className="text-primary-600 hover:underline font-medium">{webhook.url}</a>
+                    <Link
+                      href={`/dashboard/webhooks/${webhook.id}`}
+                      className="font-medium text-primary-600 hover:underline"
+                    >
+                      {webhook.url}
                     </Link>
                   </td>
                   <td className="px-6 py-4">
@@ -147,10 +150,11 @@ export default function WebhooksPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <Link href={`/dashboard/webhooks/${webhook.id}`}>
-                        <a className="text-neutral-600 hover:text-neutral-900">
-                          <Edit2 size={18} />
-                        </a>
+                      <Link
+                        href={`/dashboard/webhooks/${webhook.id}`}
+                        className="text-neutral-600 hover:text-neutral-900"
+                      >
+                        <Edit2 size={18} />
                       </Link>
                       <button
                         onClick={() => handleDelete(webhook.id)}

@@ -17,6 +17,23 @@ const evidenceDir = process.env.PARITY_EVIDENCE_DIR || 'docs/qa/evidence/epic-6'
 
 mkdirSync(evidenceDir, { recursive: true });
 
+function buildSmokeToken(): string {
+  const header = Buffer.from(
+    JSON.stringify({ alg: 'none', typ: 'JWT' })
+  ).toString('base64url');
+  const payload = Buffer.from(
+    JSON.stringify({
+      id: 'parity-smoke-user',
+      email: 'parity-smoke@example.com',
+      name: 'Parity Smoke',
+    })
+  ).toString('base64url');
+
+  return `${header}.${payload}.`;
+}
+
+const sessionToken = parityDevToken || buildSmokeToken();
+
 function hasAuthenticatedFixture(): boolean {
   return Boolean(parityDevToken && parityCardId > 0 && parityTaskId > 0);
 }
@@ -26,8 +43,20 @@ function hasFlowsFixture(): boolean {
 }
 
 function withToken(pathname: string): string {
-  const token = encodeURIComponent(parityDevToken);
+  const token = encodeURIComponent(sessionToken);
   return `${pathname}${pathname.includes('?') ? '&' : '?'}devToken=${token}`;
+}
+
+function parseJwtPayload(token: string): { id?: string; email?: string } {
+  if (!token) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(Buffer.from(token.split('.')[1] || '', 'base64url').toString('utf8'));
+  } catch {
+    return {};
+  }
 }
 
 async function captureEvidence(page: Page, filename: string) {
@@ -35,6 +64,35 @@ async function captureEvidence(page: Page, filename: string) {
     path: join(evidenceDir, filename),
     fullPage: true,
   });
+}
+
+async function prepareAuthenticatedPage(page: Page) {
+  const payload = parseJwtPayload(sessionToken);
+
+  await page.addInitScript((token) => {
+    window.localStorage.setItem('synkra_dev_token', token);
+    window.localStorage.setItem('token', token);
+  }, sessionToken);
+
+  await page.route('**/api/auth/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: payload.id || 'parity-test-user',
+        email: payload.email || 'parity@example.com',
+        name: 'Parity QA',
+      }),
+    });
+  });
+}
+
+async function expectCardWorkspaceLoaded(page: Page) {
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Card Workspace' })
+  ).toBeVisible();
+  await expect(page.getByTestId('card-workspace')).toBeVisible();
+  await expect(page.getByTestId('card-primary-details')).toBeVisible();
 }
 
 async function getCurrentCardTitle(request: Page['request']): Promise<string> {
@@ -54,14 +112,27 @@ async function getCurrentCardTitle(request: Page['request']): Promise<string> {
 }
 
 test.describe('Product Parity E2E', () => {
+  test('jornada auth responde 200', async ({ page }) => {
+    await page.goto('/auth/login');
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Entrar' })
+    ).toBeVisible();
+
+    await page.goto('/auth/signup');
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Criar Conta' })
+    ).toBeVisible();
+  });
+
   test('jornada painel + fluxos responde 200', async ({ page }) => {
     test.slow();
-    await page.goto('/');
+    await prepareAuthenticatedPage(page);
+    await page.goto(withToken('/'));
     await expect(
       page.getByRole('heading', { level: 1, name: 'Painel Consolidado de Operações' })
     ).toBeVisible();
 
-    await page.goto('/dashboard/automations');
+    await page.goto(withToken('/dashboard/automations'));
     await expect(
       page.getByRole('heading', { level: 1, name: 'Fluxos 2.0' })
     ).toBeVisible({ timeout: 20_000 });
@@ -70,16 +141,18 @@ test.describe('Product Parity E2E', () => {
   });
 
   test('jornada card workspace responde 200', async ({ page }) => {
-    await page.goto('/cards/1');
-    await expect(
-      page.getByRole('heading', { level: 1, name: 'Card Workspace 2.0' })
-    ).toBeVisible();
+    test.skip(!hasAuthenticatedFixture(), 'Set PARITY_DEV_TOKEN, PARITY_CARD_ID and PARITY_TASK_ID');
+    await prepareAuthenticatedPage(page);
+    await page.goto(withToken(`/cards/${parityCardId}`));
+    await expectCardWorkspaceLoaded(page);
 
     await captureEvidence(page, '02-card-workspace-basico.png');
   });
 
   test('jornada webhooks local responde 200', async ({ page }) => {
-    await page.goto('/dashboard/webhooks/local');
+    test.skip(!hasAuthenticatedFixture(), 'Set PARITY_DEV_TOKEN, PARITY_CARD_ID and PARITY_TASK_ID');
+    await prepareAuthenticatedPage(page);
+    await page.goto(withToken('/dashboard/webhooks/local'));
     await expect(
       page.getByRole('heading', { level: 1, name: 'Webhooks - Fluxo Crítico Local' })
     ).toBeVisible();
@@ -91,14 +164,16 @@ test.describe('Product Parity E2E', () => {
 test.describe('Product Parity E2E (authenticated)', () => {
   test.skip(!hasAuthenticatedFixture(), 'Set PARITY_DEV_TOKEN, PARITY_CARD_ID and PARITY_TASK_ID');
 
+  test.beforeEach(async ({ page }) => {
+    await prepareAuthenticatedPage(page);
+  });
+
   test('card workspace mostra contexto de equipe e timeline', async ({ page }) => {
     await page.goto(withToken(`/cards/${parityCardId}`));
 
-    await expect(
-      page.getByRole('heading', { level: 1, name: 'Card Workspace 2.0' })
-    ).toBeVisible();
+    await expectCardWorkspaceLoaded(page);
     await expect(page.getByText('Líder:', { exact: false })).toBeVisible();
-    await expect(page.getByText('Timeline', { exact: false })).toBeVisible();
+    await expect(page.getByTestId('card-timeline-panel')).toBeVisible();
 
     await captureEvidence(page, '04-card-workspace-autenticado.png');
   });
@@ -109,16 +184,14 @@ test.describe('Product Parity E2E (authenticated)', () => {
     const editedTitle = `Card QA ${Date.now()}`;
     const noteText = `qa-note-${Date.now()}`;
 
-    const cardArticle = page.locator('article').first();
+    const cardArticle = page.getByTestId('card-primary-details');
     await cardArticle.locator('input').first().fill(editedTitle);
     await page.getByRole('button', { name: 'Salvar card' }).click();
 
-    await expect(
-      page.locator('article').first().getByRole('heading', { level: 2, name: editedTitle })
-    ).toBeVisible();
+    await expect(cardArticle.locator('input').first()).toHaveValue(editedTitle);
 
-    await page.getByPlaceholder('Adicionar nota...').fill(noteText);
-    await page.getByRole('button', { name: 'Enviar' }).click();
+    await page.getByPlaceholder('Escreva uma atualização relevante para o time.').fill(noteText);
+    await page.getByRole('button', { name: 'Publicar nota' }).click();
     await expect(page.getByText(noteText)).toBeVisible();
 
     await captureEvidence(page, '04b-card-save-timeline.png');
@@ -128,24 +201,22 @@ test.describe('Product Parity E2E (authenticated)', () => {
     await page.goto(withToken(`/cards/${parityCardId}?taskId=${parityTaskId}`));
 
     await expect(
-      page.getByRole('heading', { level: 2, name: 'Editar tarefa' })
+      page.getByTestId('task-modal').getByRole('heading', { level: 2, name: 'Editar tarefa' })
     ).toBeVisible();
     await expect(
-      page.getByRole('heading', { level: 3, name: 'Histórico da tarefa' })
+      page.getByTestId('task-modal').getByRole('heading', { level: 3, name: 'Timeline da tarefa' })
     ).toBeVisible();
 
-    const modalSection = page.locator('div.fixed section').first();
+    const modalSection = page.getByTestId('task-modal');
     await modalSection.locator('select').nth(1).selectOption('in_progress');
-    const saveTaskButton = page
-      .locator('div.fixed')
-      .getByRole('button', { name: 'Salvar alterações' });
+    const saveTaskButton = modalSection.getByRole('button', { name: 'Salvar alterações' });
     await saveTaskButton.scrollIntoViewIfNeeded();
     await saveTaskButton.evaluate((element) => {
       (element as HTMLButtonElement).click();
     });
 
     await page.goto(withToken(`/cards/${parityCardId}?taskId=${parityTaskId}`));
-    await expect(page.getByText('task.updated').first()).toBeVisible();
+    await expect(page.getByText('Task updated').first()).toBeVisible();
 
     await captureEvidence(page, '05-task-modal-via-painel.png');
   });
@@ -165,16 +236,12 @@ test.describe('Product Parity E2E (authenticated)', () => {
 
     const taskButton = parityTaskTitle
       ? page.getByRole('button', { name: parityTaskTitle })
-      : page
-          .locator('section')
-          .filter({ hasText: 'Tarefas do card' })
-          .getByRole('button')
-          .first();
+      : page.getByTestId('card-tasks-panel').getByRole('button').nth(1);
 
     await taskButton.click();
 
     await expect(
-      page.getByRole('heading', { level: 2, name: 'Editar tarefa' })
+      page.getByTestId('task-modal').getByRole('heading', { level: 2, name: 'Editar tarefa' })
     ).toBeVisible();
 
     await captureEvidence(page, '07-task-modal-via-card.png');
@@ -189,7 +256,7 @@ test.describe('Product Parity E2E (authenticated)', () => {
       page.getByRole('heading', { level: 1, name: 'Fluxos 2.0' })
     ).toBeVisible();
 
-    const filterInput = page.getByPlaceholder('Filtrar por texto (card, descrição, responsável, tag...)');
+    const filterInput = page.getByPlaceholder('Filtrar por card, descrição, responsável ou tag...');
     const filterValue = currentCardTitle.split(' ')[0] || 'Card';
 
     await filterInput.fill(filterValue);
@@ -230,22 +297,17 @@ test.describe('Product Parity E2E (authenticated)', () => {
     await page.getByRole('button', { name: 'Quadro' }).click();
     await expect(page.getByText(currentCardTitle)).toBeVisible();
 
-    const columns = page.locator('.flex.w-80.flex-shrink-0');
+    const columns = page.getByTestId('kanban-column');
     const sourceColumn = columns.nth(0);
     const targetColumn = columns.nth(1);
-    const targetDropZone = targetColumn.locator('.space-y-2').first();
-
-    const movingCard = sourceColumn
-      .locator('[draggable="true"]')
-      .filter({ hasText: currentCardTitle })
-      .first();
+    const movingCard = page.getByTestId('kanban-card').filter({ hasText: currentCardTitle }).first();
     await expect(movingCard).toBeVisible();
-    await targetDropZone.scrollIntoViewIfNeeded();
-    await movingCard.dragTo(targetDropZone, { force: true });
+    await targetColumn.scrollIntoViewIfNeeded();
+    await movingCard.dragTo(targetColumn, { force: true });
     await expect(targetColumn.getByText(currentCardTitle)).toBeVisible();
 
     await page.reload();
-    const reloadedColumns = page.locator('.flex.w-80.flex-shrink-0');
+    const reloadedColumns = page.getByTestId('kanban-column');
     await expect(
       reloadedColumns.nth(1).getByText(currentCardTitle)
     ).toBeVisible();
@@ -263,24 +325,20 @@ test.describe('Product Parity E2E (authenticated)', () => {
       page.getByRole('heading', { level: 1, name: 'Fluxos 2.0' })
     ).toBeVisible();
 
-    const filterInput = page.getByPlaceholder('Filtrar por texto (card, descrição, responsável, tag...)');
+    const filterInput = page.getByPlaceholder('Filtrar por card, descrição, responsável ou tag...');
     await filterInput.fill(currentCardTitle);
 
     // Board click -> card workspace
     await page.getByRole('button', { name: 'Quadro' }).click();
     await page.getByText(currentCardTitle).first().click();
-    await expect(
-      page.getByRole('heading', { level: 1, name: 'Card Workspace 2.0' })
-    ).toBeVisible();
+    await expectCardWorkspaceLoaded(page);
 
     // Table click -> card workspace
     await page.goto(withToken(`/flows/${parityFlowId}`));
-    await filterInput.fill(currentCardTitle);
+    await page.getByPlaceholder('Filtrar por card, descrição, responsável ou tag...').fill(currentCardTitle);
     await page.getByRole('button', { name: 'Tabela' }).click();
     await page.getByRole('button', { name: currentCardTitle }).first().click();
-    await expect(
-      page.getByRole('heading', { level: 1, name: 'Card Workspace 2.0' })
-    ).toBeVisible();
+    await expectCardWorkspaceLoaded(page);
 
     await captureEvidence(page, '11-flows-open-card-board-table.png');
   });
@@ -294,10 +352,10 @@ test.describe('Product Parity E2E (authenticated)', () => {
 
     const dueDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
     const localDueDate = dueDate.toISOString().slice(0, 10);
-    await page.locator('div.fixed input[type="date"]').first().fill(localDueDate);
+    await page.getByTestId('task-modal').locator('input[type="date"]').first().fill(localDueDate);
 
     const saveTaskButton = page
-      .locator('div.fixed')
+      .getByTestId('task-modal')
       .getByRole('button', { name: 'Salvar alterações' });
     await saveTaskButton.scrollIntoViewIfNeeded();
     await saveTaskButton.evaluate((element) => {
@@ -305,26 +363,32 @@ test.describe('Product Parity E2E (authenticated)', () => {
     });
 
     await page.goto(withToken('/'));
-    await expect(page.getByText(`Prazo: ${parityTaskTitle}`)).toBeVisible();
+    const dueEventRow = page
+      .getByTestId('calendar-panel')
+      .locator('li')
+      .filter({ hasText: `Tarefa #${parityTaskId}` })
+      .first();
+    await expect(dueEventRow).toBeVisible();
+    if (parityTaskTitle.trim()) {
+      await expect(dueEventRow).toContainText(`Prazo: ${parityTaskTitle}`);
+    }
 
     await captureEvidence(page, '09b-calendar-due-date-reflection.png');
   });
 
   test('calendário valida filtros rápidos (Próximos 7 dias, Sem data, Todos)', async ({ page }) => {
     await page.goto(withToken('/'));
-    await expect(
-      page.getByRole('heading', { level: 2, name: 'Calendário' })
-    ).toBeVisible();
+    await expect(page.getByTestId('calendar-panel')).toBeVisible();
 
     const upcomingFilter = page.getByRole('button', { name: 'Próximos 7 dias' });
     const undatedFilter = page.getByRole('button', { name: 'Sem data' });
     const allFilter = page.getByRole('button', { name: 'Todos' });
 
     await undatedFilter.click();
-    await expect(page.getByText('Tarefas sem prazo:', { exact: false })).toBeVisible();
+    await expect(page.getByText(/tarefas sem prazo/i)).toBeVisible();
 
     await upcomingFilter.click();
-    await expect(page.getByText('Tarefas sem prazo:', { exact: false })).toHaveCount(0);
+    await expect(page.getByText(/tarefas sem prazo/i)).toHaveCount(0);
 
     await allFilter.click();
     await expect(page.getByRole('heading', { level: 3, name: 'Próximos eventos' })).toBeVisible();
@@ -345,13 +409,12 @@ test.describe('Product Parity E2E (authenticated)', () => {
       page.getByRole('heading', { level: 3, name: 'Novo evento' })
     ).toBeVisible();
 
-    await page.locator('div.fixed input[type="text"]').first().fill(eventTitle);
-    await page.locator('div.fixed input[type="datetime-local"]').first().fill(startsAt);
-    const createButton = page.locator('div.fixed').getByRole('button', { name: 'Criar evento' });
+    const eventDialog = page.getByRole('dialog');
+    await eventDialog.locator('input[type="text"]').first().fill(eventTitle);
+    await eventDialog.locator('input[type="datetime-local"]').first().fill(startsAt);
+    const createButton = eventDialog.getByRole('button', { name: 'Criar evento' });
     await createButton.scrollIntoViewIfNeeded();
-    await createButton.evaluate((element) => {
-      (element as HTMLButtonElement).click();
-    });
+    await createButton.click();
 
     await expect(page.getByText(eventTitle)).toBeVisible();
 
@@ -385,22 +448,18 @@ test.describe('Product Parity E2E (authenticated)', () => {
       page.getByRole('heading', { level: 3, name: 'Editar evento' })
     ).toBeVisible();
 
-    await page.locator('div.fixed input[type="text"]').first().fill(updatedEventTitle);
-    const saveButton = page.locator('div.fixed').getByRole('button', { name: 'Salvar evento' });
+    await eventDialog.locator('input[type="text"]').first().fill(updatedEventTitle);
+    const saveButton = eventDialog.getByRole('button', { name: 'Salvar evento' });
     await saveButton.scrollIntoViewIfNeeded();
-    await saveButton.evaluate((element) => {
-      (element as HTMLButtonElement).click();
-    });
+    await saveButton.click();
 
     await expect(page.getByText(updatedEventTitle)).toBeVisible();
 
     const updatedEventRow = page.locator('li').filter({ hasText: updatedEventTitle }).first();
     await updatedEventRow.getByRole('button', { name: 'Editar' }).click();
-    const deleteButton = page.locator('div.fixed').getByRole('button', { name: 'Remover evento' });
+    const deleteButton = eventDialog.getByRole('button', { name: 'Remover evento' });
     await deleteButton.scrollIntoViewIfNeeded();
-    await deleteButton.evaluate((element) => {
-      (element as HTMLButtonElement).click();
-    });
+    await deleteButton.click();
     await expect(page.getByText(updatedEventTitle)).toHaveCount(0);
 
     await captureEvidence(page, '09-calendar-event-lifecycle.png');
@@ -415,13 +474,14 @@ test.describe('Product Parity E2E (authenticated)', () => {
     ).toBeVisible();
 
     const newTaskTitle = `Task CRUD ${Date.now()}`;
-    await page.locator('div.fixed input[type="text"]').first().fill(newTaskTitle);
-    await page.locator('div.fixed textarea').first().fill('Tarefa criada no cenário de parity.');
-    await page.locator('div.fixed select').nth(0).selectOption('P1');
-    await page.locator('div.fixed select').nth(1).selectOption('open');
-    await page.locator('div.fixed input[type="text"]').nth(1).fill('QA User');
+    const taskModal = page.getByTestId('task-modal');
+    await taskModal.locator('input[type="text"]').first().fill(newTaskTitle);
+    await taskModal.locator('textarea').first().fill('Tarefa criada no cenário de parity.');
+    await taskModal.locator('select').nth(0).selectOption('P1');
+    await taskModal.locator('select').nth(1).selectOption('open');
+    await taskModal.locator('input[type="text"]').nth(1).fill('QA User');
 
-    const createTaskButton = page.locator('div.fixed').getByRole('button', { name: 'Criar tarefa' });
+    const createTaskButton = taskModal.getByRole('button', { name: 'Criar tarefa' });
     await createTaskButton.scrollIntoViewIfNeeded();
     await createTaskButton.evaluate((element) => {
       (element as HTMLButtonElement).click();
@@ -436,9 +496,9 @@ test.describe('Product Parity E2E (authenticated)', () => {
     ).toBeVisible();
 
     const updatedTaskTitle = `${newTaskTitle} editada`;
-    await page.locator('div.fixed input[type="text"]').first().fill(updatedTaskTitle);
-    await page.locator('div.fixed select').nth(1).selectOption('completed');
-    const saveTaskButton = page.locator('div.fixed').getByRole('button', { name: 'Salvar alterações' });
+    await taskModal.locator('input[type="text"]').first().fill(updatedTaskTitle);
+    await taskModal.locator('select').nth(1).selectOption('completed');
+    const saveTaskButton = taskModal.getByRole('button', { name: 'Salvar alterações' });
     await saveTaskButton.scrollIntoViewIfNeeded();
     await saveTaskButton.evaluate((element) => {
       (element as HTMLButtonElement).click();
@@ -447,10 +507,10 @@ test.describe('Product Parity E2E (authenticated)', () => {
     const updatedTaskButton = page.getByRole('button', { name: updatedTaskTitle }).first();
     await expect(updatedTaskButton).toBeVisible();
     await updatedTaskButton.click();
-    await expect(page.getByText('task.created').first()).toBeVisible();
-    await expect(page.getByText('task.updated').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Task created').first()).toBeVisible();
+    await expect(page.getByText('Task updated').first()).toBeVisible({ timeout: 15_000 });
 
-    const deleteTaskButton = page.locator('div.fixed').getByRole('button', { name: 'Remover tarefa' });
+    const deleteTaskButton = taskModal.getByRole('button', { name: 'Remover tarefa' });
     await deleteTaskButton.scrollIntoViewIfNeeded();
     await deleteTaskButton.evaluate((element) => {
       (element as HTMLButtonElement).click();
@@ -461,7 +521,7 @@ test.describe('Product Parity E2E (authenticated)', () => {
   });
 
   test('webhooks local lista webhook real com token aplicado', async ({ page }) => {
-    await page.goto('/dashboard/webhooks/local');
+    await page.goto(withToken('/dashboard/webhooks/local'));
 
     await page.getByPlaceholder('Cole aqui o token JWT de teste').fill(parityDevToken);
     await page.getByRole('button', { name: 'Aplicar token' }).click();

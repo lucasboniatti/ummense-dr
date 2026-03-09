@@ -173,6 +173,7 @@ export default function HomePage() {
 
   const [devToken, setDevToken] = useState('');
   const [reloadCount, setReloadCount] = useState(0);
+  const [todayLabel, setTodayLabel] = useState('Hoje');
 
   const [summary, setSummary] = useState<SummaryState>(fallbackSummary);
 
@@ -201,6 +202,16 @@ export default function HomePage() {
     setDevToken(getLocalDevToken());
   }, []);
 
+  useEffect(() => {
+    setTodayLabel(
+      new Intl.DateTimeFormat('pt-BR', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+      }).format(new Date())
+    );
+  }, []);
+
   const loadData = useCallback(async () => {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -219,9 +230,9 @@ export default function HomePage() {
 
     try {
       const [tasksResult, eventsResult, panelResult] = await Promise.allSettled([
-        apiClient.get<ApiTasksResponse>('/tasks?limit=12&offset=0'),
-        apiClient.get<ApiEventsResponse>('/events?limit=8&offset=0'),
-        apiClient.get<ApiPanelResponse>('/panel/overview?limit=6'),
+        apiClient.get<ApiTasksResponse>('/api/tasks?limit=12&offset=0'),
+        apiClient.get<ApiEventsResponse>('/api/events?limit=8&offset=0'),
+        apiClient.get<ApiPanelResponse>('/api/panel/overview?limit=6'),
       ]);
 
       if (panelResult.status === 'fulfilled') {
@@ -253,7 +264,7 @@ export default function HomePage() {
         const cardDetails = await Promise.allSettled(
           cardIds.map(async (cardId) => {
             try {
-              const cardResponse = await apiClient.get<ApiCardDetail>(`/cards/${cardId}`);
+              const cardResponse = await apiClient.get<ApiCardDetail>(`/api/cards/${cardId}`);
               return { cardId, cardPayload: cardResponse.data };
             } catch {
               return null;
@@ -509,54 +520,100 @@ export default function HomePage() {
       value: summary.flowsCount,
       icon: SquareKanban,
       color: 'bg-primary-50 text-primary-700 border-primary-200',
+      note: 'visão em andamento',
     },
     {
       label: 'Cards em operação',
       value: summary.cardsCount,
       icon: ShieldCheck,
       color: 'bg-success-50 text-success-700 border-success-200',
+      note: 'pipeline ativo',
     },
     {
       label: 'Tarefas abertas',
       value: summary.openTasksCount,
       icon: ListTodo,
       color: 'bg-warning-50 text-warning-700 border-warning-200',
+      note: 'trabalho pendente',
     },
     {
       label: 'Vencendo hoje',
       value: summary.dueTodayTasksCount,
       icon: CalendarClock,
       color: 'bg-error-50 text-error-700 border-error-200',
+      note: 'atenção imediata',
     },
   ];
 
+  const activeFilters = [
+    querySearch ? `Busca: ${querySearch}` : null,
+    queryPriority !== 'all' ? `Prioridade: ${queryPriority}` : null,
+  ].filter((value): value is string => Boolean(value));
+
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h1 className="text-3xl font-bold text-neutral-900">Painel Consolidado de Operações</h1>
-        <p className="mt-2 max-w-3xl text-sm text-neutral-600">
-          Visualize tarefas, progresso diário e agenda em uma única superfície. Use os filtros na topbar para
-          refinar por palavra-chave e prioridade.
-        </p>
+      <section className="app-surface overflow-hidden p-5 md:p-6">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <p className="app-kicker">Painel operacional</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <h1 className="text-3xl font-bold tracking-[-0.03em] text-neutral-900">
+                Painel Consolidado de Operações
+              </h1>
+              <span className="rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-700">
+                {todayLabel}
+              </span>
+            </div>
+            <p className="mt-3 max-w-3xl text-sm text-neutral-600">
+              Visualize tarefas, progresso diário e agenda em uma única superfície. Use os filtros na topbar para
+              refinar por palavra-chave e prioridade sem perder o contexto do dia.
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {activeFilters.length > 0 ? (
+                activeFilters.map((filter) => (
+                  <span
+                    key={filter}
+                    className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-neutral-700 shadow-[0_10px_18px_-16px_rgba(15,23,42,0.45)]"
+                  >
+                    {filter}
+                  </span>
+                ))
+              ) : (
+                <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-neutral-700 shadow-[0_10px_18px_-16px_rgba(15,23,42,0.45)]">
+                  Sem filtros adicionais ativos
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:max-w-[42rem] xl:grid-cols-4">
+            {summaryCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <article
+                  key={card.label}
+                  className={`rounded-[22px] border p-4 shadow-[0_18px_32px_-28px_rgba(15,23,42,0.42)] ${card.color}`}
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-white/70">
+                      <Icon size={18} />
+                    </div>
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em]">
+                      Live
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold leading-none">{card.value}</p>
+                  <p className="mt-2 text-sm font-semibold">{card.label}</p>
+                  <p className="mt-1 text-xs font-medium opacity-80">{card.note}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {summaryCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <article key={card.label} className={`rounded-xl border p-4 ${card.color}`}>
-              <div className="mb-2 flex items-center justify-between">
-                <Icon size={18} />
-                <span className="text-xs font-semibold uppercase tracking-wide">Live</span>
-              </div>
-              <p className="text-2xl font-bold">{card.value}</p>
-              <p className="text-sm font-semibold">{card.label}</p>
-            </article>
-          );
-        })}
-      </section>
-
-      <section className="grid grid-cols-1 gap-5 2xl:grid-cols-[1.5fr_1fr]">
+      <section className="grid grid-cols-1 gap-5 2xl:grid-cols-[1.45fr_0.95fr]">
         <TasksPanel
           tasks={filteredTasks}
           loading={tasksLoading}

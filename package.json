@@ -34,7 +34,7 @@
     "test:wave3:cost": "npm run test:cost-monitoring --workspace @ummense/backend",
     "benchmark:wave3:websocket": "npm run benchmark:websocket --workspace @ummense/backend",
     "benchmark:wave3:websocket:smoke": "npm run benchmark:websocket:smoke --workspace @ummense/backend",
-    "test:e2e:parity": "playwright test -c packages/e2e/playwright.parity.config.ts",
+    "test:e2e:parity": "node ./scripts/run-parity-e2e.mjs",
     "typecheck:backend:full": "npm run typecheck:full --workspace @ummense/backend",
     "test:wave2:integrations": "npx vitest run -c vitest.wave2-integrations.config.ts"
   },

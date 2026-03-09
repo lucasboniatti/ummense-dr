@@ -1,0 +1,41 @@
+handoff:
+  from_agent: pm
+  to_agent: devops
+  timestamp: '2026-03-09T20:10:00Z'
+
+story_context:
+  story_id: '8.5'
+  story_title: Visual QA/UAT + PM Go/No-Go
+  story_path: docs/stories/8.5.story.md
+  story_status: Done
+  epic: EPIC-8-UX-UI-VISUAL-PARITY
+
+product_gate:
+  decision: GO
+  qa_gate: docs/qa/gates/story-8.5-qa-gate.md
+  pm_validation: docs/qa/gates/story-8.5-pm-validation.md
+  readiness: release-approved
+  blockers: []
+
+evidence:
+  - docs/qa/uat-epic-8-visual-parity-report.md
+  - docs/qa/uat-epic-8-visual-parity-checklist.md
+  - docs/qa/epic-8-visual-validation-report.md
+
+validated_checks:
+  - npm run lint => PASS
+  - npm run typecheck => PASS
+  - npm test => PASS
+  - npm run build => PASS
+  - npm run test:e2e:parity => PASS (17 passed)
+
+release_guardrails:
+  - Do not push or deploy before honoring both formal gates: QA PASS and PM GO.
+  - Use the repository standard pre-push and PR workflow.
+  - If new functional changes are introduced after this handoff, re-run validation before deployment.
+
+next_action: '@devops *push'
+
+notes: 'Epic 8 visual parity is approved for release handoff. Product scope is closed; next actor is DevOps for push/PR/deploy.'
+
+consumed: false

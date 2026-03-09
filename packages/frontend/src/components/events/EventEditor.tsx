@@ -4,6 +4,8 @@ import {
   fromLocalDateTimeInput,
   toLocalDateTimeInput,
 } from '../../utils/datetime-local';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 
 interface EventEditorProps {
   open: boolean;
@@ -117,24 +119,28 @@ export default function EventEditor({
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-2xl rounded-xl border border-neutral-200 bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
-          <h3 className="text-lg font-bold text-neutral-900">
-            {isEdit ? 'Editar evento' : 'Novo evento'}
-          </h3>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-700"
-          >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={isEdit ? 'Editar evento' : 'Novo evento'}
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-neutral-950/55 px-4 py-6 backdrop-blur-sm"
+    >
+      <div className="app-surface w-full max-w-2xl overflow-hidden bg-[var(--surface-raised)]">
+        <header className="flex items-start justify-between gap-3 border-b border-[color:var(--border-subtle)] px-5 py-4">
+          <div>
+            <p className="app-kicker">Agenda operacional</p>
+            <h3 className="mt-2 text-xl font-bold tracking-[-0.02em] text-neutral-900">
+              {isEdit ? 'Editar evento' : 'Novo evento'}
+            </h3>
+          </div>
+          <Button type="button" onClick={onCancel} variant="outline" size="sm">
             Fechar
-          </button>
+          </Button>
         </header>
 
-        <div className="space-y-3 p-5">
+        <div className="space-y-4 p-5">
           {error && (
-            <div className="rounded-lg border border-error-200 bg-error-50 px-3 py-2 text-sm text-error-800">
+            <div className="rounded-[18px] border border-error-200 bg-error-50 px-3 py-2 text-sm text-error-800">
               {error}
             </div>
           )}
@@ -143,11 +149,10 @@ export default function EventEditor({
             <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
               Título
             </label>
-            <input
+            <Input
               type="text"
               value={form.title}
-              onChange={(event) => setForm((previous) => ({ ...previous, title: event.target.value }))}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+              onChange={(nextEvent) => setForm((previous) => ({ ...previous, title: nextEvent.target.value }))}
             />
           </div>
 
@@ -157,10 +162,10 @@ export default function EventEditor({
             </label>
             <textarea
               value={form.description}
-              onChange={(event) =>
-                setForm((previous) => ({ ...previous, description: event.target.value }))
+              onChange={(nextEvent) =>
+                setForm((previous) => ({ ...previous, description: nextEvent.target.value }))
               }
-              className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+              className="app-control h-24 w-full px-3.5 py-2.5 text-sm"
             />
           </div>
 
@@ -169,39 +174,36 @@ export default function EventEditor({
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
                 Início
               </label>
-              <input
+              <Input
                 type="datetime-local"
                 value={form.startsAt}
-                onChange={(event) =>
-                  setForm((previous) => ({ ...previous, startsAt: event.target.value }))
+                onChange={(nextEvent) =>
+                  setForm((previous) => ({ ...previous, startsAt: nextEvent.target.value }))
                 }
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
                 Término
               </label>
-              <input
+              <Input
                 type="datetime-local"
                 value={form.endsAt}
-                onChange={(event) =>
-                  setForm((previous) => ({ ...previous, endsAt: event.target.value }))
+                onChange={(nextEvent) =>
+                  setForm((previous) => ({ ...previous, endsAt: nextEvent.target.value }))
                 }
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
                 Card (opcional)
               </label>
-              <input
+              <Input
                 type="number"
                 value={form.cardId}
-                onChange={(event) =>
-                  setForm((previous) => ({ ...previous, cardId: event.target.value }))
+                onChange={(nextEvent) =>
+                  setForm((previous) => ({ ...previous, cardId: nextEvent.target.value }))
                 }
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="ID do card"
               />
             </div>
@@ -209,38 +211,32 @@ export default function EventEditor({
               <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
                 Tarefa (opcional)
               </label>
-              <input
+              <Input
                 type="number"
                 value={form.taskId}
-                onChange={(event) =>
-                  setForm((previous) => ({ ...previous, taskId: event.target.value }))
+                onChange={(nextEvent) =>
+                  setForm((previous) => ({ ...previous, taskId: nextEvent.target.value }))
                 }
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="ID da tarefa"
               />
             </div>
           </div>
         </div>
 
-        <footer className="flex flex-wrap items-center gap-2 border-t border-neutral-200 px-5 py-4">
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => void submit()}
-            className="rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
-          >
+        <footer className="flex flex-wrap items-center gap-2 border-t border-[color:var(--border-subtle)] px-5 py-4">
+          <Button type="button" disabled={loading} onClick={() => void submit()}>
             {loading ? 'Salvando...' : isEdit ? 'Salvar evento' : 'Criar evento'}
-          </button>
+          </Button>
 
           {isEdit && event?.id && (
-            <button
+            <Button
               type="button"
               disabled={loading}
               onClick={() => void onDelete(event.id)}
-              className="rounded-lg bg-error-600 px-3 py-2 text-sm font-semibold text-white hover:bg-error-700 disabled:opacity-60"
+              variant="destructive"
             >
               Remover evento
-            </button>
+            </Button>
           )}
         </footer>
       </div>

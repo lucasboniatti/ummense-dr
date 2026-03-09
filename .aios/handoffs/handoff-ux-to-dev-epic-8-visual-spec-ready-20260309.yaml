@@ -1,0 +1,36 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-09T17:44:58Z"
+  from_agent: "ux-design-expert"
+  to_agent: "dev"
+  consumed: false
+
+  story_context:
+    story_id: "EPIC-8-UX-UI-VISUAL-PARITY"
+    story_path: "docs/epics/EPIC-8-UX-UI-VISUAL-PARITY.md"
+    story_status: "Ready for Development"
+    current_task: "Dev must implement stories 8.1-8.4 in the approved sequence using the UX specification as the source of interaction and visual guidance"
+    branch: "master"
+
+  decisions:
+    - "UX specification is complete for stories 8.1-8.4."
+    - "Epic 8 remains a visual parity and product-polish follow-up, not a feature-expansion epic."
+    - "Story 8.1 must be implemented first to establish shared tokens and shell behavior."
+    - "Stories 8.2 and 8.3 should reuse the foundation from 8.1 and preserve all current explicit states."
+    - "Story 8.4 must preserve real operator capability while moving JWT/JSON controls to a secondary technical surface."
+    - "Story 8.5 remains untouched as the final QA/UAT plus PM go/no-go gate."
+
+  files_modified:
+    - "docs/epics/EPIC-8-UX-UI-VISUAL-PARITY.md"
+    - "docs/stories/8.1.story.md"
+    - "docs/stories/8.2.story.md"
+    - "docs/stories/8.3.story.md"
+    - "docs/stories/8.4.story.md"
+    - "docs/guides/ux-ui-visual-parity-spec.md"
+    - ".aios/handoffs/handoff-ux-to-dev-epic-8-visual-spec-ready-20260309.yaml"
+
+  blockers:
+    - "Do not start Story 8.2, 8.3 or 8.4 before Story 8.1 establishes the shared visual foundation."
+    - "Do not remove explicit loading, empty, error or hint states while applying the new visual language."
+
+  next_action: "Dev implements Story 8.1 first, then proceeds through the approved order with evidence capture and project quality gates."

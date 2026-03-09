@@ -37,6 +37,22 @@ const localCorsDefaults = [
   'http://127.0.0.1:3010',
 ];
 
+function isLocalDevelopmentOrigin(origin: string): boolean {
+  if (process.env.NODE_ENV === 'production') {
+    return false;
+  }
+
+  try {
+    const url = new URL(origin);
+    return (
+      ['http:', 'https:'].includes(url.protocol) &&
+      ['localhost', '127.0.0.1'].includes(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function getAllowedOrigins(): string[] {
   const configured = (process.env.CORS_ALLOWED_ORIGINS || '')
     .split(',')
@@ -61,6 +77,11 @@ const corsOptions: CorsOptions = {
     }
 
     if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    if (isLocalDevelopmentOrigin(origin)) {
       callback(null, true);
       return;
     }

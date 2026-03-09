@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
-  Home,
-  KanbanSquare,
-  Users,
   FolderOpen,
   Grid2x2,
-  X,
+  Home,
+  KanbanSquare,
   LogOut,
+  Users,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -69,29 +69,35 @@ export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarPr
         <button
           type="button"
           aria-label="Fechar menu"
-          className="fixed inset-0 z-40 bg-neutral-950/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-neutral-950/50 backdrop-blur-sm lg:hidden"
           onClick={onCloseMobile}
         />
       )}
 
       <aside
         className={[
-          'fixed left-0 top-0 z-50 h-screen w-64 border-r border-neutral-200 bg-white/95 backdrop-blur transition-transform duration-200',
+          'fixed left-0 top-0 z-50 h-screen w-64 border-r border-[color:var(--border-subtle)] bg-[linear-gradient(180deg,rgba(248,251,255,0.96),rgba(238,244,251,0.92))] shadow-[var(--shadow-shell)] backdrop-blur-xl transition-transform duration-200',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         ].join(' ')}
       >
         <div className="flex h-full flex-col">
-          <header className="flex items-center justify-between border-b border-neutral-200 px-4 py-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
-                Synkra Ops
-              </p>
-              <h1 className="text-lg font-bold text-neutral-900">Meu Painel</h1>
+          <header className="flex items-start justify-between border-b border-[color:var(--border-subtle)] px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-primary-600 text-base font-black text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.95)]">
+                S
+              </div>
+              <div className="min-w-0">
+                <p className="app-kicker">Synkra Ops</p>
+                <h1 className="truncate text-lg font-bold tracking-[-0.02em] text-neutral-900">
+                  Meu Painel
+                </h1>
+                <p className="mt-1 text-xs font-medium text-neutral-500">Operação centralizada</p>
+              </div>
             </div>
             <button
               type="button"
               aria-label="Fechar menu lateral"
-              className="rounded-md p-2 text-neutral-500 hover:bg-neutral-100 lg:hidden"
+              className="app-control rounded-[var(--radius-control)] p-2 text-neutral-500 lg:hidden"
               onClick={onCloseMobile}
             >
               <X size={18} />
@@ -104,27 +110,32 @@ export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarPr
               const active = item.matches(router.pathname);
 
               return (
-                <Link key={item.label} href={item.href} passHref legacyBehavior>
-                  <a
-                    onClick={onCloseMobile}
-                    className={[
-                      'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',
-                      active
-                        ? 'bg-primary-50 text-primary-700 ring-1 ring-primary-200'
-                        : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900',
-                    ].join(' ')}
-                  >
-                    <Icon size={18} className={active ? 'text-primary-700' : 'text-neutral-500 group-hover:text-neutral-800'} />
-                    {item.label}
-                  </a>
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={onCloseMobile}
+                  aria-current={active ? 'page' : undefined}
+                  className={[
+                    'app-sidebar-link',
+                    active ? 'app-sidebar-link-active' : '',
+                  ].join(' ')}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`app-sidebar-link-indicator ${active ? 'opacity-100' : 'opacity-0'}`}
+                  />
+                  <span className="app-sidebar-icon" aria-hidden="true">
+                    <Icon size={18} />
+                  </span>
+                  <span className="truncate">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <footer className="border-t border-neutral-200 px-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100">
+          <footer className="border-t border-[color:var(--border-subtle)] px-4 py-4">
+            <div className="app-surface-muted flex items-center gap-3 p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100">
                 <span className="text-sm font-bold text-primary-700">
                   {user?.email?.[0]?.toUpperCase() || '?'}
                 </span>
@@ -133,12 +144,13 @@ export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarPr
                 <p className="truncate text-sm font-semibold text-neutral-800">
                   {user?.name || user?.email || 'Usuário'}
                 </p>
+                <p className="truncate text-xs font-medium text-neutral-500">Sessão operacional ativa</p>
               </div>
               <button
                 type="button"
                 onClick={logout}
                 title="Sair"
-                className="rounded-md p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-error-600"
+                className="app-control rounded-[var(--radius-control)] p-2 text-neutral-500 transition-colors hover:text-error-600"
               >
                 <LogOut size={16} />
               </button>

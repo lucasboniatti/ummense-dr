@@ -1,0 +1,29 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-09T23:59:00Z"
+  from_agent: "aios-master"
+  to_agent: "qa"
+  consumed: false
+
+  story_context:
+    story_id: "UX-UI-VISUAL-PARITY-FOLLOWUP"
+    story_path: "docs/ux-ui-visual-parity-follow-up-plan.md"
+    story_status: "Planning Ready"
+    current_task: "QA preflight review of plan before SM story breakdown"
+    branch: "master"
+
+  decisions:
+    - "Treat this as follow-up scope after completed Epic 7, not a rewrite of Stories 7.1-7.5."
+    - "Keep scope on current operational surfaces: shell, home, flows board, and card workspace."
+    - "Require QA plan validation before SM creates stories."
+    - "Require PM approval before UX-led specification and Dev implementation."
+    - "Remove raw JWT/JSON editing from the main operator journey."
+
+  files_modified:
+    - "docs/ux-ui-visual-parity-follow-up-plan.md"
+    - ".aios/handoffs/handoff-aios-master-to-qa-ux-ui-parity-20260309.yaml"
+
+  blockers:
+    - "Epic 7 is already marked Done, so this work should be treated as new follow-up scope."
+
+  next_action: "Review docs/ux-ui-visual-parity-follow-up-plan.md for risk, testability, accessibility, responsive coverage, and measurable acceptance criteria. If acceptable, hand off to @sm for story creation in the proposed order."
