@@ -10,6 +10,7 @@
   - `docs/stories/8.2.story.md`
   - `docs/stories/8.3.story.md`
   - `docs/stories/8.4.story.md`
+  - `docs/stories/8.5.story.md`
 
 ## Product Intent
 
@@ -285,7 +286,7 @@ Transformar o card workspace de uma tela técnica funcional em uma superfície c
 1. Implementar `8.1` primeiro e estabilizar tokens/shell.
 2. Implementar `8.2` e `8.3` na sequencia, podendo paralelizar apenas apos a fundacao estar firme.
 3. Implementar `8.4` por ultimo entre as telas, reaproveitando o sistema ja consolidado.
-4. Manter `8.5` como gate final; nao antecipar `GO/NOGO`.
+4. Manter `8.5` como gate final, conforme `docs/stories/8.5.story.md`; não antecipar `GO/NOGO`.
 
 ## Non-Negotiables
 

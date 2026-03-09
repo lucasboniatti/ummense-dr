@@ -317,6 +317,9 @@ function formatDate(value: string): string {
 
 export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceProps) {
   const router = useRouter();
+  const flowSelectId = 'selected-flow';
+  const flowSearchId = 'flow-search';
+  const flowTokenInputId = 'flow-token-input';
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
@@ -590,11 +593,15 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
           </div>
 
           <div className="app-surface-muted min-w-[280px] p-4">
-            <label className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">
+            <label
+              htmlFor={flowSelectId}
+              className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500"
+            >
               Fluxo ativo
             </label>
             <div className="mt-2 flex flex-col gap-3 sm:flex-row">
               <select
+                id={flowSelectId}
                 value={selectedFlowId}
                 onChange={(event) => setSelectedFlowId(Number(event.target.value))}
                 disabled={loadingFlows}
@@ -651,12 +658,18 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
               <Search
                 size={16}
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                aria-hidden="true"
               />
+              <label htmlFor={flowSearchId} className="sr-only">
+                Filtrar por card, descrição, responsável ou tag
+              </label>
               <Input
+                id={flowSearchId}
                 type="text"
                 value={searchText}
                 onChange={(event) => setSearchText(event.target.value)}
                 placeholder="Filtrar por card, descrição, responsável ou tag..."
+                aria-label="Filtrar por card, descrição, responsável ou tag"
                 className="pl-10"
               />
             </div>
@@ -712,11 +725,16 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
         </div>
 
         <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <label htmlFor={flowTokenInputId} className="sr-only">
+            Token JWT
+          </label>
           <Input
+            id={flowTokenInputId}
             type="text"
             value={tokenInput}
             onChange={(event) => setTokenInput(event.target.value)}
             placeholder="Cole aqui o token JWT"
+            aria-label="Token JWT"
           />
           <Button type="button" onClick={applyToken} size="sm" className="h-11">
             Aplicar token

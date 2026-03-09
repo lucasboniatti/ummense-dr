@@ -17,10 +17,10 @@
 - [x] Nenhum defeito `CRITICAL` ou `HIGH` permaneceu aberto no fechamento técnico do Epic 8.
 
 ## Evidências
-- Relatório UAT: [uat-epic-8-visual-parity-report.md](/Users/lucasboniatti/Desktop/Projetos/ummense-dr/docs/qa/uat-epic-8-visual-parity-report.md)
-- Checklist UAT: [uat-epic-8-visual-parity-checklist.md](/Users/lucasboniatti/Desktop/Projetos/ummense-dr/docs/qa/uat-epic-8-visual-parity-checklist.md)
-- Relatório visual: [epic-8-visual-validation-report.md](/Users/lucasboniatti/Desktop/Projetos/ummense-dr/docs/qa/epic-8-visual-validation-report.md)
-- Suíte parity: [product-parity.e2e.ts](/Users/lucasboniatti/Desktop/Projetos/ummense-dr/packages/e2e/tests/product-parity.e2e.ts)
+- Relatório UAT: [uat-epic-8-visual-parity-report.md](../uat-epic-8-visual-parity-report.md)
+- Checklist UAT: [uat-epic-8-visual-parity-checklist.md](../uat-epic-8-visual-parity-checklist.md)
+- Relatório visual: [epic-8-visual-validation-report.md](../epic-8-visual-validation-report.md)
+- Suíte parity: [product-parity.e2e.ts](../../../packages/e2e/tests/product-parity.e2e.ts)
 
 ## Findings
 1. `FIXED` - A suíte parity foi atualizada para o modelo autenticado atual, para os seletores reais da UI e para o bootstrap local de fixture.

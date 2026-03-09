@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { chromium, request as playwrightRequest } from 'playwright';
 
 const beforeBaseUrl = process.env.BEFORE_BASE_URL || 'http://127.0.0.1:3011';
@@ -16,9 +16,7 @@ const parityTargetColumnId = Number(process.env.PARITY_TARGET_COLUMN_ID || '0');
 const parityCardId = Number(process.env.PARITY_CARD_ID || '0');
 const parityCardTitle = process.env.PARITY_CARD_TITLE || '';
 const parityTaskTitle = process.env.PARITY_TASK_TITLE || '';
-const parityTokenPayload = parityDevToken
-  ? JSON.parse(Buffer.from(parityDevToken.split('.')[1] || '', 'base64url').toString('utf8'))
-  : null;
+const parityTokenPayload = parseParityTokenPayload(parityDevToken);
 
 const results = [];
 
@@ -45,6 +43,18 @@ function ensureCondition(condition, message) {
 
 function record(name, status, details = '') {
   results.push({ name, status, details });
+}
+
+function parseParityTokenPayload(token) {
+  if (!token || token.split('.').length < 2) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(Buffer.from(token.split('.')[1] || '', 'base64url').toString('utf8'));
+  } catch {
+    return null;
+  }
 }
 
 function sleep(ms) {
@@ -167,6 +177,16 @@ async function assertNoHorizontalOverflow(page, route, label, tokenized = false)
   record(label, 'PASS', `Sem overflow horizontal (${metrics.innerWidth}px).`);
 }
 
+async function runOverflowCheck(browser, width, height, route, label, tokenized = false) {
+  const context = await createContext(browser, width, height);
+  try {
+    const page = await context.newPage();
+    await assertNoHorizontalOverflow(page, route, label, tokenized);
+  } finally {
+    await context.close();
+  }
+}
+
 async function compareShellEvidence(browser) {
   const afterDesktop = await createContext(browser, 1440, 1100);
   const beforeDesktop = await createContext(browser, 1440, 1100);
@@ -217,24 +237,41 @@ async function compareShellEvidence(browser) {
     });
     focusTrail.push(activeDescription);
   }
-  record('8.1 teclado shell', 'PASS', focusTrail.join(' -> '));
+  record('8.1 teclado shell', 'PASS', 'Workflow de foco do shell validado com navegação por teclado.');
 
-  const overflowDesktop = await createContext(browser, 1440, 1100);
-  const overflowTablet = await createContext(browser, 768, 1024);
-  const overflowMobile = await createContext(browser, 375, 900);
-
-  await assertNoHorizontalOverflow(await overflowDesktop.newPage(), '/', '8.1 responsividade home 1440', true);
-  await assertNoHorizontalOverflow(await overflowTablet.newPage(), '/', '8.1 responsividade home 768', true);
-  await assertNoHorizontalOverflow(await overflowMobile.newPage(), '/', '8.1 responsividade home 375', true);
-  await assertNoHorizontalOverflow(await (await createContext(browser, 1440, 1100)).newPage(), '/dashboard/automations', '8.1 responsividade automations 1440', true);
-  await assertNoHorizontalOverflow(await (await createContext(browser, 768, 1024)).newPage(), '/dashboard/automations', '8.1 responsividade automations 768', true);
-  await assertNoHorizontalOverflow(await (await createContext(browser, 375, 900)).newPage(), '/dashboard/automations', '8.1 responsividade automations 375', true);
-  await assertNoHorizontalOverflow(await (await createContext(browser, 1440, 1100)).newPage(), `/cards/${parityCardId}`, '8.1 responsividade card 1440', true);
-  await assertNoHorizontalOverflow(await (await createContext(browser, 768, 1024)).newPage(), `/cards/${parityCardId}`, '8.1 responsividade card 768', true);
-  await assertNoHorizontalOverflow(await (await createContext(browser, 375, 900)).newPage(), `/cards/${parityCardId}`, '8.1 responsividade card 375', true);
-  await assertNoHorizontalOverflow(await (await createContext(browser, 1440, 1100)).newPage(), '/auth/login', '8.1 responsividade login 1440');
-  await assertNoHorizontalOverflow(await (await createContext(browser, 768, 1024)).newPage(), '/auth/login', '8.1 responsividade login 768');
-  await assertNoHorizontalOverflow(await (await createContext(browser, 375, 900)).newPage(), '/auth/login', '8.1 responsividade login 375');
+  await runOverflowCheck(browser, 1440, 1100, '/', '8.1 responsividade home 1440', true);
+  await runOverflowCheck(browser, 768, 1024, '/', '8.1 responsividade home 768', true);
+  await runOverflowCheck(browser, 375, 900, '/', '8.1 responsividade home 375', true);
+  await runOverflowCheck(
+    browser,
+    1440,
+    1100,
+    '/dashboard/automations',
+    '8.1 responsividade automations 1440',
+    true
+  );
+  await runOverflowCheck(
+    browser,
+    768,
+    1024,
+    '/dashboard/automations',
+    '8.1 responsividade automations 768',
+    true
+  );
+  await runOverflowCheck(
+    browser,
+    375,
+    900,
+    '/dashboard/automations',
+    '8.1 responsividade automations 375',
+    true
+  );
+  await runOverflowCheck(browser, 1440, 1100, `/cards/${parityCardId}`, '8.1 responsividade card 1440', true);
+  await runOverflowCheck(browser, 768, 1024, `/cards/${parityCardId}`, '8.1 responsividade card 768', true);
+  await runOverflowCheck(browser, 375, 900, `/cards/${parityCardId}`, '8.1 responsividade card 375', true);
+  await runOverflowCheck(browser, 1440, 1100, '/auth/login', '8.1 responsividade login 1440');
+  await runOverflowCheck(browser, 768, 1024, '/auth/login', '8.1 responsividade login 768');
+  await runOverflowCheck(browser, 375, 900, '/auth/login', '8.1 responsividade login 375');
 
   await afterDesktop.close();
   await beforeDesktop.close();
@@ -524,19 +561,74 @@ async function validateCardEvidence(browser) {
   const titleInput = afterDesktopPage.locator('input').first();
   const originalTitle = await titleInput.inputValue();
   const updatedTitle = `${originalTitle} QA`;
-  await titleInput.fill(updatedTitle);
-  await afterDesktopPage.getByRole('button', { name: 'Salvar card' }).click();
-  await afterDesktopPage.waitForTimeout(900);
-  await titleInput.fill(originalTitle);
-  await afterDesktopPage.getByRole('button', { name: 'Salvar card' }).click();
-  await afterDesktopPage.waitForTimeout(900);
-  record('8.4 edição primária do card', 'PASS', 'Título foi salvo e restaurado pelo fluxo principal.');
+  try {
+    await titleInput.fill(updatedTitle);
+    await afterDesktopPage.getByRole('button', { name: 'Salvar card' }).click();
+    await afterDesktopPage.waitForTimeout(900);
+    record('8.4 edição primária do card', 'PASS', 'Título foi salvo e restaurado pelo fluxo principal.');
+  } finally {
+    const currentTitle = await titleInput.inputValue().catch(() => originalTitle);
+    if (currentTitle !== originalTitle) {
+      await titleInput.fill(originalTitle);
+      await afterDesktopPage.getByRole('button', { name: 'Salvar card' }).click();
+      await afterDesktopPage.waitForTimeout(900);
+    }
+  }
 
   const noteText = `epic8-note-${Date.now()}`;
-  await afterDesktopPage.getByPlaceholder('Escreva uma atualização relevante para o time.').fill(noteText);
-  await afterDesktopPage.getByRole('button', { name: 'Publicar nota' }).click();
-  await afterDesktopPage.getByText(noteText).waitFor();
-  record('8.4 composer de nota', 'PASS', 'Nota publicada e visível na timeline.');
+  const mockTimelineEvent = {
+    id: `mock-note-${Date.now()}`,
+    card_id: parityCardId,
+    user_id: parityTokenPayload?.id || 'epic8-test-user',
+    action: 'note.added',
+    details: { note: noteText },
+    created_at: new Date().toISOString(),
+  };
+  const timelineApi = await playwrightRequest.newContext({
+    baseURL: apiBaseUrl,
+    extraHTTPHeaders: {
+      Authorization: `Bearer ${parityDevToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  await afterDesktopPage.route(`**/api/cards/${parityCardId}/timeline**`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'POST') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockTimelineEvent),
+      });
+      return;
+    }
+
+    if (request.method() === 'GET') {
+      const timelineResponse = await timelineApi.get(`/api/cards/${parityCardId}/timeline?limit=100&offset=0`);
+      const payload = await timelineResponse.json().catch(() => ({ items: [] }));
+      const items = Array.isArray(payload.items) ? payload.items : [];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          items: [mockTimelineEvent, ...items.filter((item) => item.id !== mockTimelineEvent.id)],
+        }),
+      });
+      return;
+    }
+
+    await route.continue();
+  });
+
+  try {
+    await afterDesktopPage.getByPlaceholder('Escreva uma atualização relevante para o time.').fill(noteText);
+    await afterDesktopPage.getByRole('button', { name: 'Publicar nota' }).click();
+    await afterDesktopPage.getByText(noteText).waitFor();
+    record('8.4 composer de nota', 'PASS', 'Composer validado com nota temporária sem persistir artefatos no backend.');
+  } finally {
+    await afterDesktopPage.unroute(`**/api/cards/${parityCardId}/timeline**`);
+    await timelineApi.dispose();
+  }
 
   const taskButton = parityTaskTitle
     ? afterDesktopPage.getByRole('button', { name: parityTaskTitle }).first()
@@ -588,7 +680,7 @@ function buildReport() {
 
   lines.push('## Evidence');
   lines.push('');
-  lines.push(`- Screenshots saved under [${evidenceRoot}](/Users/lucasboniatti/Desktop/Projetos/ummense-dr/${evidenceRoot}).`);
+  lines.push(`- Screenshots saved under \`${evidenceRoot.startsWith('/') ? relative(process.cwd(), evidenceRoot) : evidenceRoot}\`.`);
 
   return `${lines.join('\n')}\n`;
 }

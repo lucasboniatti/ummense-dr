@@ -173,6 +173,7 @@ export default function HomePage() {
 
   const [devToken, setDevToken] = useState('');
   const [reloadCount, setReloadCount] = useState(0);
+  const [todayLabel, setTodayLabel] = useState('Hoje');
 
   const [summary, setSummary] = useState<SummaryState>(fallbackSummary);
 
@@ -199,6 +200,16 @@ export default function HomePage() {
 
   useEffect(() => {
     setDevToken(getLocalDevToken());
+  }, []);
+
+  useEffect(() => {
+    setTodayLabel(
+      new Intl.DateTimeFormat('pt-BR', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+      }).format(new Date())
+    );
   }, []);
 
   const loadData = useCallback(async () => {
@@ -533,12 +544,6 @@ export default function HomePage() {
       note: 'atenção imediata',
     },
   ];
-
-  const todayLabel = new Intl.DateTimeFormat('pt-BR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-  }).format(new Date());
 
   const activeFilters = [
     querySearch ? `Busca: ${querySearch}` : null,

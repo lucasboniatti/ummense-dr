@@ -108,6 +108,7 @@ export default function TaskModal({
 
   const isEditMode = Boolean(task?.id);
   const modalTitle = isEditMode ? 'Editar tarefa' : 'Nova tarefa';
+  const fieldIdPrefix = `task-${task?.id ?? 'new'}`;
 
   useEffect(() => {
     setForm(getInitialForm(task));
@@ -338,10 +339,14 @@ export default function TaskModal({
             <article className="app-surface-muted p-4">
               <div className="grid gap-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <label
+                    htmlFor={`${fieldIdPrefix}-title`}
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                  >
                     Título
                   </label>
                   <Input
+                    id={`${fieldIdPrefix}-title`}
                     type="text"
                     value={form.title}
                     onChange={(event) =>
@@ -352,10 +357,14 @@ export default function TaskModal({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <label
+                    htmlFor={`${fieldIdPrefix}-description`}
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                  >
                     Descrição
                   </label>
                   <textarea
+                    id={`${fieldIdPrefix}-description`}
                     value={form.description}
                     onChange={(event) =>
                       setForm((previous) => ({ ...previous, description: event.target.value }))
@@ -377,10 +386,14 @@ export default function TaskModal({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <label
+                    htmlFor={`${fieldIdPrefix}-priority`}
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                  >
                     Prioridade
                   </label>
                   <select
+                    id={`${fieldIdPrefix}-priority`}
                     value={form.priority}
                     onChange={(event) =>
                       setForm((previous) => ({ ...previous, priority: event.target.value }))
@@ -394,10 +407,14 @@ export default function TaskModal({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <label
+                    htmlFor={`${fieldIdPrefix}-status`}
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                  >
                     Status
                   </label>
                   <select
+                    id={`${fieldIdPrefix}-status`}
                     value={form.status}
                     onChange={(event) =>
                       setForm((previous) => ({ ...previous, status: event.target.value }))
@@ -413,7 +430,10 @@ export default function TaskModal({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <label
+                    htmlFor={`${fieldIdPrefix}-assigned-to`}
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                  >
                     Responsável
                   </label>
                   <div className="relative">
@@ -422,6 +442,7 @@ export default function TaskModal({
                       className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
                     />
                     <Input
+                      id={`${fieldIdPrefix}-assigned-to`}
                       type="text"
                       value={form.assignedTo}
                       onChange={(event) =>
@@ -434,7 +455,10 @@ export default function TaskModal({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <label
+                    htmlFor={`${fieldIdPrefix}-due-date`}
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                  >
                     Prazo
                   </label>
                   <div className="relative">
@@ -443,6 +467,7 @@ export default function TaskModal({
                       className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
                     />
                     <Input
+                      id={`${fieldIdPrefix}-due-date`}
                       type="date"
                       value={form.dueDate}
                       onChange={(event) =>
@@ -489,7 +514,11 @@ export default function TaskModal({
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+                <label htmlFor={`${fieldIdPrefix}-tag`} className="sr-only">
+                  Selecionar tag
+                </label>
                 <select
+                  id={`${fieldIdPrefix}-tag`}
                   value={selectedTagId}
                   onChange={(event) => setSelectedTagId(event.target.value)}
                   className="app-control h-11 bg-white px-3.5 text-sm text-neutral-900"

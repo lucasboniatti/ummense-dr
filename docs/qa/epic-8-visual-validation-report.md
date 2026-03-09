@@ -6,7 +6,7 @@
 - Evidence root: docs/qa/evidence/epic-8
 
 ## Story 8.1
-- PASS: 8.1 teclado shell — input | Cole aqui o token JWT -> button | Aplicar token -> button | Limpar token -> div | Abrir card Card Parity 1773083450073-657502 | Card Parity 1773083450073-657502Card de fixture para UAT Epic 6AtivoQUQA UserAtualizado 09 de mar.Progresso0%0/1 tarefasPARITY-1773083450073-657502
+- PASS: 8.1 teclado shell — Workflow de foco do shell validado com navegação por teclado.
 - PASS: 8.1 responsividade home 1440 — Sem overflow horizontal (1440px).
 - PASS: 8.1 responsividade home 768 — Sem overflow horizontal (768px).
 - PASS: 8.1 responsividade home 375 — Sem overflow horizontal (375px).
@@ -42,4 +42,4 @@
 
 ## Evidence
 
-- Screenshots saved under [docs/qa/evidence/epic-8](/Users/lucasboniatti/Desktop/Projetos/ummense-dr/docs/qa/evidence/epic-8).
+- Screenshots saved under `docs/qa/evidence/epic-8`.

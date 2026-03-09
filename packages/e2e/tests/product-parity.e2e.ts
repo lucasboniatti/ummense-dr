@@ -346,7 +346,15 @@ test.describe('Product Parity E2E (authenticated)', () => {
     });
 
     await page.goto(withToken('/'));
-    await expect(page.getByText(`Prazo: ${parityTaskTitle}`).first()).toBeVisible();
+    const dueEventRow = page
+      .getByTestId('calendar-panel')
+      .locator('li')
+      .filter({ hasText: `Tarefa #${parityTaskId}` })
+      .first();
+    await expect(dueEventRow).toBeVisible();
+    if (parityTaskTitle.trim()) {
+      await expect(dueEventRow).toContainText(`Prazo: ${parityTaskTitle}`);
+    }
 
     await captureEvidence(page, '09b-calendar-due-date-reflection.png');
   });

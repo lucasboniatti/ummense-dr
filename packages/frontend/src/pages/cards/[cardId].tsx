@@ -819,9 +819,9 @@ export default function CardWorkspacePage() {
 
                   {contacts.length > 0 ? (
                     <div className="grid gap-2">
-                      {contacts.map((contact) => (
+                      {contacts.map((contact, index) => (
                         <div
-                          key={`${contact.name}-${contact.email || 'sem-email'}`}
+                          key={`${contact.name}-${contact.email || 'sem-email'}-${index}`}
                           className="rounded-[18px] border border-[color:var(--border-subtle)] bg-white/85 px-3 py-3"
                         >
                           <div className="flex items-center gap-3">
@@ -1135,9 +1135,9 @@ export default function CardWorkspacePage() {
 
                           {meta.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-2">
-                              {meta.map((item) => (
+                              {meta.map((item, index) => (
                                 <span
-                                  key={item}
+                                  key={`${item}-${index}`}
                                   className="rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-semibold text-neutral-700"
                                 >
                                   {item}

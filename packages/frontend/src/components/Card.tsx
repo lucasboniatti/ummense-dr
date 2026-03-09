@@ -164,10 +164,10 @@ export function Card({
   const statusStyle = STATUS_STYLES[visualStatus];
   const progressValue = clampProgress(progressPercent);
   const totalTasks =
-    tasksSummary?.open +
-      tasksSummary?.inProgress +
-      tasksSummary?.completed +
-      tasksSummary?.blocked || 0;
+    (tasksSummary?.open ?? 0) +
+    (tasksSummary?.inProgress ?? 0) +
+    (tasksSummary?.completed ?? 0) +
+    (tasksSummary?.blocked ?? 0);
   const hasInteraction = Boolean(onClick);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {

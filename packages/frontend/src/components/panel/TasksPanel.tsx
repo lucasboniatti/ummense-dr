@@ -62,13 +62,27 @@ function statusTone(status: string): string {
   return 'bg-warning-50 text-warning-700';
 }
 
+function parseDateValue(value: string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function formatDueDate(value: string | null): string {
   if (!value) {
     return 'Sem prazo';
   }
 
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseDateValue(value);
+  if (!parsed) {
     return value;
   }
 
@@ -83,8 +97,8 @@ function dueTone(value: string | null): string {
     return 'bg-neutral-100 text-neutral-600';
   }
 
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseDateValue(value);
+  if (!parsed) {
     return 'bg-neutral-100 text-neutral-600';
   }
 
@@ -218,6 +232,7 @@ export default function TasksPanel({
               <article
                 key={task.id}
                 data-testid="task-row"
+                data-task-id={task.id}
                 className="group relative overflow-hidden rounded-[22px] border border-[color:var(--border-subtle)] bg-white/95 p-4 shadow-[0_18px_30px_-26px_rgba(15,23,42,0.45)] transition duration-200 hover:-translate-y-0.5 hover:border-[color:var(--border-strong)] hover:shadow-[0_22px_38px_-28px_rgba(15,23,42,0.5)]"
               >
                 <div className={`absolute inset-y-0 left-0 w-1.5 ${priorityAccent(task.priority)}`} />

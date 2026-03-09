@@ -1,6 +1,6 @@
 handoff:
   version: "1.0"
-  timestamp: "2026-03-10T00:25:00Z"
+  timestamp: "2026-03-09T21:25:00-03:00"
   from_agent: "qa"
   to_agent: "sm"
   consumed: false

@@ -148,11 +148,13 @@ export default function CalendarPanel({
   }, [events, quickFilter]);
 
   const monthlyEventCount = useMemo(() => {
-    return days.reduce((count, day) => {
-      const key = format(day, 'yyyy-MM-dd');
-      return count + (eventsByDay.get(key)?.length || 0);
-    }, 0);
-  }, [days, eventsByDay]);
+    return days
+      .filter((day) => isSameMonth(day, visibleMonth))
+      .reduce((count, day) => {
+        const key = format(day, 'yyyy-MM-dd');
+        return count + (eventsByDay.get(key)?.length || 0);
+      }, 0);
+  }, [days, eventsByDay, visibleMonth]);
 
   const onOpenCreate = () => {
     setActiveEvent(null);

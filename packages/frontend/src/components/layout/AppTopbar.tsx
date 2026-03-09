@@ -90,6 +90,7 @@ export default function AppTopbar({
               <Search
                 size={16}
                 className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
+                aria-hidden="true"
               />
               <Input
                 type="text"
@@ -97,6 +98,7 @@ export default function AppTopbar({
                 onChange={(event) => onSearchChange(event.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="Filtrar por palavra"
+                aria-label="Filtrar por palavra"
                 className="h-11 bg-white pl-10"
               />
             </label>
@@ -105,10 +107,12 @@ export default function AppTopbar({
               <Filter
                 size={15}
                 className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
+                aria-hidden="true"
               />
               <select
                 value={priorityValue}
                 onChange={(event) => onPriorityChange(event.target.value)}
+                aria-label="Filtrar por prioridade"
                 className="app-control h-11 w-full appearance-none bg-white pl-10 pr-8 text-sm font-medium text-neutral-700"
               >
                 <option value="all">Todas prioridades</option>
