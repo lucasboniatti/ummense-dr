@@ -17,6 +17,23 @@ const evidenceDir = process.env.PARITY_EVIDENCE_DIR || 'docs/qa/evidence/epic-6'
 
 mkdirSync(evidenceDir, { recursive: true });
 
+function buildSmokeToken(): string {
+  const header = Buffer.from(
+    JSON.stringify({ alg: 'none', typ: 'JWT' })
+  ).toString('base64url');
+  const payload = Buffer.from(
+    JSON.stringify({
+      id: 'parity-smoke-user',
+      email: 'parity-smoke@example.com',
+      name: 'Parity Smoke',
+    })
+  ).toString('base64url');
+
+  return `${header}.${payload}.`;
+}
+
+const sessionToken = parityDevToken || buildSmokeToken();
+
 function hasAuthenticatedFixture(): boolean {
   return Boolean(parityDevToken && parityCardId > 0 && parityTaskId > 0);
 }
@@ -26,7 +43,7 @@ function hasFlowsFixture(): boolean {
 }
 
 function withToken(pathname: string): string {
-  const token = encodeURIComponent(parityDevToken);
+  const token = encodeURIComponent(sessionToken);
   return `${pathname}${pathname.includes('?') ? '&' : '?'}devToken=${token}`;
 }
 
@@ -50,12 +67,12 @@ async function captureEvidence(page: Page, filename: string) {
 }
 
 async function prepareAuthenticatedPage(page: Page) {
-  const payload = parseJwtPayload(parityDevToken);
+  const payload = parseJwtPayload(sessionToken);
 
   await page.addInitScript((token) => {
     window.localStorage.setItem('synkra_dev_token', token);
     window.localStorage.setItem('token', token);
-  }, parityDevToken);
+  }, sessionToken);
 
   await page.route('**/api/auth/me', async (route) => {
     await route.fulfill({

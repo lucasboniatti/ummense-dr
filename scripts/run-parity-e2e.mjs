@@ -5,6 +5,8 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 const rootDir = process.cwd();
+const REQUIRED_FIXTURE_ENVS = ['SUPABASE_URL', 'JWT_SECRET'];
+const REQUIRED_FIXTURE_SECRETS = ['SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SECRET'];
 
 function loadEnvFile(filename) {
   const filePath = resolve(rootDir, filename);
@@ -57,9 +59,37 @@ function parseShellExports(stdout) {
   return env;
 }
 
+function shouldSkipEnvFiles() {
+  return process.env.PARITY_SKIP_ENV_FILES === '1';
+}
+
+function hasRequiredFixtureEnv() {
+  const hasBase = REQUIRED_FIXTURE_ENVS.every((key) => Boolean(process.env[key]));
+  const hasSecret = REQUIRED_FIXTURE_SECRETS.some((key) => Boolean(process.env[key]));
+  return hasBase && hasSecret;
+}
+
+function isMissingFixtureEnvError(error) {
+  const message =
+    error instanceof Error
+      ? `${error.message}\n${'stdout' in error ? error.stdout || '' : ''}\n${'stderr' in error ? error.stderr || '' : ''}`
+      : String(error);
+
+  return message.includes('[fixture] Missing env:');
+}
+
 async function buildFixtureEnv() {
-  loadEnvFile('.env.local');
-  loadEnvFile('.env');
+  if (!shouldSkipEnvFiles()) {
+    loadEnvFile('.env.local');
+    loadEnvFile('.env');
+  }
+
+  if (!hasRequiredFixtureEnv()) {
+    console.warn(
+      '[parity] Fixture env ausente. Executando smoke-only parity sem fixture autenticada.'
+    );
+    return {};
+  }
 
   const { stdout } = await execFileAsync(
     process.execPath,
@@ -75,7 +105,19 @@ async function buildFixtureEnv() {
 }
 
 async function main() {
-  const fixtureEnv = await buildFixtureEnv();
+  let fixtureEnv = {};
+  try {
+    fixtureEnv = await buildFixtureEnv();
+  } catch (error) {
+    if (!isMissingFixtureEnvError(error)) {
+      throw error;
+    }
+
+    console.warn(
+      '[parity] Fixture cloud indisponível no ambiente atual. Continuando com smoke-only parity.'
+    );
+    fixtureEnv = {};
+  }
   const playwrightBin = resolve(
     rootDir,
     process.platform === 'win32' ? 'node_modules/.bin/playwright.cmd' : 'node_modules/.bin/playwright'
