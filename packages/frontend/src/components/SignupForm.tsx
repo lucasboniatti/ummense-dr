@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
 
@@ -53,18 +54,26 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-6">
-      <h2 className="text-2xl font-bold">Sign Up</h2>
+      <h2 className="text-2xl font-bold">Criar Conta</h2>
 
-      <FormInput label="Name" type="text" name="name" value={formData.name} onChange={handleChange} required />
-      <FormInput label="Email" type="email" name="email" value={formData.email} onChange={handleChange} required />
-      <FormInput label="Password" type="password" name="password" value={formData.password} onChange={handleChange} required />
-      <FormInput label="Confirm Password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
+      <FormInput label="Nome" type="text" name="name" value={formData.name} onChange={handleChange} required />
+      <FormInput label="E-mail" type="email" name="email" value={formData.email} onChange={handleChange} required />
+      <FormInput label="Senha" type="password" name="password" value={formData.password} onChange={handleChange} required />
+      <FormInput label="Confirmar Senha" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
 
       {error && <div className="p-3 bg-error-100 border border-error-400 text-error-700 rounded-md text-sm">{error}</div>}
 
       <Button type="submit" disabled={loading} className="w-full" variant="primary">
-        {loading ? 'Creating Account...' : 'Sign Up'}
+        {loading ? 'Criando Conta...' : 'Criar Conta'}
       </Button>
+
+      <div className="text-center mt-4">
+        <Link href="/auth/login">
+          <a className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+            Já tem uma conta? Entrar
+          </a>
+        </Link>
+      </div>
     </form>
   );
 }

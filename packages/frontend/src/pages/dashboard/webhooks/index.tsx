@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { webhookService } from '../../../services/webhook.service';
 import { analyticsService } from '../../../services/analytics.service';
 import { DeliveryStatusBadge } from '../../../components/DeliveryStatusBadge';
+import { WebhookForm } from '../../../components/WebhookForm';
+import { PageLoader, EmptyState } from '../../../components/ui';
+import { Webhook } from 'lucide-react';
 
 interface Webhook {
   id: string;
@@ -45,7 +48,7 @@ export default function WebhooksPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this webhook? This action cannot be undone.')) return;
+    if (!confirm('Excluir este webhook? Esta ação não pode ser desfeita.')) return;
     try {
       await webhookService.deleteWebhook(id);
       analyticsService.trackWebhookDeleted(id);
@@ -70,15 +73,15 @@ export default function WebhooksPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Webhooks</h1>
-          <p className="text-neutral-600 mt-1">Manage your webhook endpoints and delivery history</p>
+          <h1 className="text-3xl font-bold text-neutral-900">Webhooks</h1>
+          <p className="text-neutral-600 mt-1">Gerencie seus endpoints de webhook e histórico de entregas</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-700"
+          className="bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-700 font-semibold"
         >
           <Plus size={20} />
-          New Webhook
+          Novo Webhook
         </button>
       </div>
 
@@ -92,22 +95,24 @@ export default function WebhooksPage() {
       {/* Webhooks Table */}
       <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
         {loading ? (
-          <div className="text-center py-8">
-            <p>Loading webhooks...</p>
-          </div>
+          <PageLoader message="Carregando webhooks..." />
         ) : webhooks.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-neutral-600">No webhooks yet. Create one to get started.</p>
-          </div>
+          <EmptyState
+            icon={<Webhook size={48} />}
+            title="Nenhum webhook encontrado"
+            description="Você ainda não possui nenhum webhook configurado."
+            actionLabel="Criar Webhook"
+            onAction={() => setShowCreateModal(true)}
+          />
         ) : (
           <table className="w-full">
             <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">URL</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Success Rate</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Last Triggered</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Actions</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Taxa de Sucesso</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Último Disparo</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -119,12 +124,11 @@ export default function WebhooksPage() {
                     </Link>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      webhook.enabled
-                        ? 'bg-success-100 text-success-700'
-                        : 'bg-neutral-100 text-neutral-700'
-                    }`}>
-                      {webhook.enabled ? 'Enabled' : 'Disabled'}
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${webhook.enabled
+                      ? 'bg-success-100 text-success-700'
+                      : 'bg-neutral-100 text-neutral-700'
+                      }`}>
+                      {webhook.enabled ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -139,7 +143,7 @@ export default function WebhooksPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-neutral-600">
-                    {webhook.lastTriggeredAt ? formatDate(webhook.lastTriggeredAt) : 'Never'}
+                    {webhook.lastTriggeredAt ? formatDate(webhook.lastTriggeredAt) : 'Nunca'}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -163,18 +167,19 @@ export default function WebhooksPage() {
         )}
       </div>
 
-      {/* Create Modal - Placeholder */}
+      {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Create Webhook</h2>
-            <p className="text-neutral-600 text-center py-8">Webhook creation form will be implemented in WebhookForm component</p>
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="mt-4 w-full bg-neutral-200 text-neutral-800 px-4 py-2 rounded-lg hover:bg-neutral-300"
-            >
-              Close
-            </button>
+        <div className="fixed inset-0 bg-neutral-950/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl border border-neutral-200">
+            <h2 className="text-xl font-bold mb-4 text-neutral-900">Novo Webhook</h2>
+            <WebhookForm
+              onSubmit={async (data) => {
+                await webhookService.createWebhook(data);
+                setShowCreateModal(false);
+                loadWebhooks();
+              }}
+              onCancel={() => setShowCreateModal(false)}
+            />
           </div>
         </div>
       )}

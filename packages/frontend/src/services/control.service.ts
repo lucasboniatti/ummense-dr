@@ -22,45 +22,37 @@ export interface RateLimitStatus {
     concurrent: number;
 }
 
+import { apiClient } from './api.client';
+
 class ControlService {
     async fetchQueueStatus(): Promise<QueueMetrics> {
-        const res = await fetch('/api/status/queue');
-        if (!res.ok) throw new Error('Failed to fetch queue status');
-        return res.json();
+        const { data } = await apiClient.get<QueueMetrics>('/status/queue');
+        return data;
     }
 
     async pauseQueue(): Promise<{ success: boolean; message: string }> {
-        const res = await fetch('/api/automations/queue/pause', { method: 'POST' });
-        if (!res.ok) throw new Error('Failed to pause queue');
-        return res.json();
+        const { data } = await apiClient.post<{ success: boolean; message: string }>('/automations/queue/pause');
+        return data;
     }
 
     async resumeQueue(): Promise<{ success: boolean; message: string }> {
-        const res = await fetch('/api/automations/queue/resume', { method: 'POST' });
-        if (!res.ok) throw new Error('Failed to resume queue');
-        return res.json();
+        const { data } = await apiClient.post<{ success: boolean; message: string }>('/automations/queue/resume');
+        return data;
     }
 
     async clearQueue(): Promise<{ success: boolean; message: string }> {
-        const res = await fetch('/api/automations/queue/clear', { method: 'POST' });
-        if (!res.ok) throw new Error('Failed to clear queue');
-        return res.json();
+        const { data } = await apiClient.post<{ success: boolean; message: string }>('/automations/queue/clear');
+        return data;
     }
 
     async fetchCircuitBreaker(connectorId: string): Promise<CircuitBreakerState> {
-        const res = await fetch(`/api/automations/circuit-breaker/${connectorId}`);
-        if (!res.ok) throw new Error('Failed to fetch circuit breaker status');
-        return res.json();
+        const { data } = await apiClient.get<CircuitBreakerState>(`/automations/circuit-breaker/${connectorId}`);
+        return data;
     }
 
     async resetCircuitBreaker(connectorId: string): Promise<{ success: boolean; message: string }> {
-        const res = await fetch('/api/automations/circuit-breaker/reset', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ connectorId })
-        });
-        if (!res.ok) throw new Error('Failed to reset circuit breaker');
-        return res.json();
+        const { data } = await apiClient.post<{ success: boolean; message: string }>('/automations/circuit-breaker/reset', { connectorId });
+        return data;
     }
 }
 

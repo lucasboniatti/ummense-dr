@@ -3,6 +3,8 @@
  * Story 3.2: Webhook Reliability & Retry Logic
  */
 
+import { apiClient } from './api.client';
+
 export interface DLQItem {
   id: string;
   automationId: string;
@@ -51,7 +53,7 @@ export interface DLQFilters {
 export class DLQService {
   private baseUrl: string;
 
-  constructor(baseUrl: string = '/api') {
+  constructor(baseUrl: string = '') {
     this.baseUrl = baseUrl;
   }
 
@@ -66,31 +68,24 @@ export class DLQService {
     if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
 
     const url = `${this.baseUrl}/automations/${automationId}/webhooks/dlq?${params.toString()}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Failed to list DLQ items: ${response.statusText}`);
-    }
-
-    return response.json();
+    const { data } = await apiClient.get<DLQQueryResult>(url);
+    return data;
   }
 
   /**
    * Get a single DLQ item
    */
   async getDLQItem(automationId: string, dlqItemId: string): Promise<DLQItem | null> {
-    const url = `${this.baseUrl}/automations/${automationId}/webhooks/dlq/${dlqItemId}`;
-    const response = await fetch(url);
-
-    if (response.status === 404) {
-      return null;
+    try {
+      const url = `${this.baseUrl}/automations/${automationId}/webhooks/dlq/${dlqItemId}`;
+      const { data } = await apiClient.get<DLQItem>(url);
+      return data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
     }
-
-    if (!response.ok) {
-      throw new Error(`Failed to get DLQ item: ${response.statusText}`);
-    }
-
-    return response.json();
   }
 
   /**
@@ -98,17 +93,8 @@ export class DLQService {
    */
   async retryDLQItem(automationId: string, dlqItemId: string): Promise<{ message: string }> {
     const url = `${this.baseUrl}/automations/${automationId}/webhooks/dlq/${dlqItemId}/retry`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || `Failed to retry DLQ item: ${response.statusText}`);
-    }
-
-    return response.json();
+    const { data } = await apiClient.post<{ message: string }>(url);
+    return data;
   }
 
   /**
@@ -116,17 +102,8 @@ export class DLQService {
    */
   async clearDLQItem(automationId: string, dlqItemId: string): Promise<{ message: string }> {
     const url = `${this.baseUrl}/automations/${automationId}/webhooks/dlq/${dlqItemId}`;
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || `Failed to clear DLQ item: ${response.statusText}`);
-    }
-
-    return response.json();
+    const { data } = await apiClient.delete<{ message: string }>(url);
+    return data;
   }
 
   /**
@@ -148,17 +125,8 @@ export class DLQService {
       options
     };
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to query DLQ: ${response.statusText}`);
-    }
-
-    return response.json();
+    const { data } = await apiClient.post<DLQQueryResult>(url, body);
+    return data;
   }
 
   /**
@@ -166,13 +134,8 @@ export class DLQService {
    */
   async getDLQStats(automationId: string): Promise<DLQStats> {
     const url = `${this.baseUrl}/automations/${automationId}/webhooks/dlq-stats`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Failed to get DLQ stats: ${response.statusText}`);
-    }
-
-    return response.json();
+    const { data } = await apiClient.get<DLQStats>(url);
+    return data;
   }
 
   /**
@@ -186,18 +149,8 @@ export class DLQService {
     results: Array<{ dlqItemId: string; success: boolean; error?: string }>;
   }> {
     const url = `${this.baseUrl}/automations/${automationId}/webhooks/dlq/batch-retry`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dlqItemIds })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || `Failed to batch retry: ${response.statusText}`);
-    }
-
-    return response.json();
+    const { data } = await apiClient.post(url, { dlqItemIds });
+    return data;
   }
 
   /**
@@ -211,18 +164,8 @@ export class DLQService {
     results: Array<{ dlqItemId: string; success: boolean; error?: string }>;
   }> {
     const url = `${this.baseUrl}/automations/${automationId}/webhooks/dlq/batch-clear`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dlqItemIds })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || `Failed to batch clear: ${response.statusText}`);
-    }
-
-    return response.json();
+    const { data } = await apiClient.post(url, { dlqItemIds });
+    return data;
   }
 }
 

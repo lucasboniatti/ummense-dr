@@ -1,24 +1,23 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001';
+import { apiClient } from './api.client';
 
-interface CreateWebhookPayload {
+export interface CreateWebhookPayload {
   url: string;
   description?: string;
   enabled?: boolean;
 }
 
-interface UpdateWebhookPayload {
+export interface UpdateWebhookPayload {
   url?: string;
   description?: string;
   enabled?: boolean;
 }
 
-interface TestWebhookPayload {
+export interface TestWebhookPayload {
   event_type?: string;
   payload?: any;
 }
 
-interface DeliveryHistoryFilters {
+export interface DeliveryHistoryFilters {
   status?: string;
   startDate?: string;
   endDate?: string;
@@ -27,88 +26,53 @@ interface DeliveryHistoryFilters {
   offset?: number;
 }
 
-async function request(
-  endpoint: string,
-  options: RequestInit = {}
-) {
-  const token =
-    typeof window === 'undefined'
-      ? ''
-      : window.localStorage.getItem('synkra_dev_token') ||
-        window.localStorage.getItem('token') ||
-        '';
-
-  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
-
-  const response = await fetch(`${API_URL}/api${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader,
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || `HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-
 export const webhookService = {
   /**
    * List all webhooks
    */
   async listWebhooks() {
-    return request('/webhooks');
+    const { data } = await apiClient.get('/webhooks');
+    return data;
   },
 
   /**
    * Get webhook detail
    */
   async getWebhookDetail(webhookId: string) {
-    return request(`/webhooks/${webhookId}`);
+    const { data } = await apiClient.get(`/webhooks/${webhookId}`);
+    return data;
   },
 
   /**
    * Create webhook
    */
   async createWebhook(payload: CreateWebhookPayload) {
-    return request('/webhooks', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    const { data } = await apiClient.post('/webhooks', payload);
+    return data;
   },
 
   /**
    * Update webhook
    */
   async updateWebhook(webhookId: string, payload: UpdateWebhookPayload) {
-    return request(`/webhooks/${webhookId}`, {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    });
+    const { data } = await apiClient.put(`/webhooks/${webhookId}`, payload);
+    return data;
   },
 
   /**
    * Delete webhook
    */
   async deleteWebhook(webhookId: string) {
-    return request(`/webhooks/${webhookId}`, {
-      method: 'DELETE',
-    });
+    const { data } = await apiClient.delete(`/webhooks/${webhookId}`);
+    return data;
   },
 
   /**
    * Test webhook (immediate send)
    */
   async testWebhook(webhookId: string, payload?: TestWebhookPayload) {
-    return request(`/webhooks/${webhookId}/test`, {
-      method: 'POST',
-      body: JSON.stringify(payload || {}),
-    });
+    const { data } = await apiClient.post(`/webhooks/${webhookId}/test`, payload || {});
+    return data;
   },
 
   /**
@@ -128,13 +92,15 @@ export const webhookService = {
 
     const query = params.toString();
     const endpoint = `/webhooks/${webhookId}/deliveries${query ? `?${query}` : ''}`;
-    return request(endpoint);
+    const { data } = await apiClient.get(endpoint);
+    return data;
   },
 
   /**
    * Get delivery metrics
    */
   async getDeliveryMetrics(webhookId: string) {
-    return request(`/webhooks/${webhookId}/metrics`);
+    const { data } = await apiClient.get(`/webhooks/${webhookId}/metrics`);
+    return data;
   },
 };

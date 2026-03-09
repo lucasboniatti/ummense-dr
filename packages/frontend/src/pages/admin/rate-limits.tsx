@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { RateLimitStatus } from '../../services/control.service';
+import { apiClient } from '../../services/api.client';
+import { PageLoader } from '../../components/ui/PageLoader';
+import { useToast } from '../../contexts/ToastContext';
 
 const INITIAL_CONNECTORS = ['slack', 'email', 'custom_webhook'];
 
 const RateLimitsPanel: React.FC = () => {
     const [connectors, setConnectors] = useState<Record<string, RateLimitStatus>>({});
     const [loading, setLoading] = useState(true);
+    const toast = useToast();
 
     // Quick refresh
     const loadRates = async () => {
@@ -14,10 +18,8 @@ const RateLimitsPanel: React.FC = () => {
             const data: Record<string, RateLimitStatus> = {};
             for (const connectorId of INITIAL_CONNECTORS) {
                 try {
-                    const res = await fetch(`/api/automations/rate-limit/${connectorId}`);
-                    if (res.ok) {
-                        data[connectorId] = await res.json();
-                    }
+                    const res = await apiClient.get(`/automations/rate-limit/${connectorId}`);
+                    data[connectorId] = res.data;
                 } catch (e) { /* ignore */ }
             }
             setConnectors(data);
@@ -30,28 +32,19 @@ const RateLimitsPanel: React.FC = () => {
 
     const handleUpdate = async (connectorId: string, rps: number, concurrent: number) => {
         try {
-            const res = await fetch('/api/automations/rate-limit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ connectorId, rps, concurrent })
-            });
-            if (res.ok) {
-                alert('Updated successfully');
-                loadRates();
-            } else {
-                const d = await res.json();
-                alert(`Failed: ${d.error}`);
-            }
+            await apiClient.post('/automations/rate-limit', { connectorId, rps, concurrent });
+            toast.success('Rate limit atualizado', 'As configurações foram salvas com sucesso.');
+            loadRates();
         } catch (err: any) {
-            alert(`Error: ${err.message}`);
+            toast.error('Falha ao atualizar', err.message);
         }
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <PageLoader message="Carregando configurações de rate limit..." />;
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md border border-neutral-200 mt-6 max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold mb-6 text-neutral-800 border-b pb-2">Rate Limit Configurations</h2>
+            <h2 className="text-xl font-bold mb-6 text-neutral-800 border-b pb-2">Configurações de Rate Limit</h2>
 
             <div className="space-y-6">
                 {Object.entries(connectors).map(([connectorId, status]) => (
@@ -72,7 +65,7 @@ const RateLimitsPanel: React.FC = () => {
                             }}
                         >
                             <div>
-                                <label className="block text-xs font-semibold text-neutral-600 uppercase mb-1">RPS Limit</label>
+                                <label className="block text-xs font-semibold text-neutral-600 uppercase mb-1">Limite RPS</label>
                                 <input
                                     type="number"
                                     name="rps"
@@ -83,7 +76,7 @@ const RateLimitsPanel: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-neutral-600 uppercase mb-1">Concurrent</label>
+                                <label className="block text-xs font-semibold text-neutral-600 uppercase mb-1">Concorrentes</label>
                                 <input
                                     type="number"
                                     name="concurrent"
@@ -97,7 +90,7 @@ const RateLimitsPanel: React.FC = () => {
                                 type="submit"
                                 className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded h-10 font-medium transition-colors"
                             >
-                                Save
+                                Salvar
                             </button>
                         </form>
                     </div>

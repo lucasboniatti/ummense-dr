@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { ExecutionHistoryTable } from '@/components/ExecutionHistoryTable';
+import { PageLoader } from '@/components/ui';
 import {
   historyService,
   SavedFilterDefinition,
@@ -108,9 +109,9 @@ export default function ExecutionHistoryPage() {
           typeof update === 'function'
             ? update(current)
             : {
-                ...current,
-                ...update,
-              };
+              ...current,
+              ...update,
+            };
 
         return {
           ...next,
@@ -235,10 +236,7 @@ export default function ExecutionHistoryPage() {
         )}
 
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <p className="text-neutral-600 mt-4">Carregando historico...</p>
-          </div>
+          <PageLoader message="Carregando historico..." />
         ) : (
           <ExecutionHistoryTable
             executions={executions}

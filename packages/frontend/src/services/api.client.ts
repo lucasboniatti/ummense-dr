@@ -43,6 +43,14 @@ apiClient.interceptors.response.use(
       error?.message ||
       'Request failed';
 
+    if (status === 401) {
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('synkra_dev_token');
+        window.localStorage.removeItem('token');
+        window.location.href = '/auth/login';
+      }
+    }
+
     return Promise.reject(new Error(`API ${status ?? 'ERR'}: ${message}`));
   }
 );

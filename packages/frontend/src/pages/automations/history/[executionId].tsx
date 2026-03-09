@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { apiClient } from '../../../services/api.client';
+import { PageLoader } from '../../../components/ui/PageLoader';
 
 interface ExecutionStep {
   id: string;
@@ -45,12 +47,7 @@ export default function ExecutionDetailPage() {
 
     const fetchDetail = async () => {
       try {
-        const response = await fetch(`/api/automations/history/${executionId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch execution detail');
-        }
-
-        const data = await response.json();
+        const { data } = await apiClient.get(`/automations/history/${executionId}`);
         setExecution(data.execution);
         setSteps(data.steps);
       } catch (err) {
@@ -64,14 +61,7 @@ export default function ExecutionDetailPage() {
   }, [executionId]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          <p className="text-neutral-600 mt-4">Carregando detalhes...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Carregando detalhes da execução..." />;
   }
 
   if (error || !execution) {
@@ -137,11 +127,10 @@ export default function ExecutionDetailPage() {
                 <p className="text-neutral-600 text-sm font-mono mt-1">{execution.id}</p>
               </div>
               <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  execution.status === 'success'
+                className={`px-3 py-1 rounded-full text-sm font-medium ${execution.status === 'success'
                     ? 'bg-success-200 text-success-800'
                     : 'bg-error-200 text-error-800'
-                }`}
+                  }`}
               >
                 {execution.status === 'success' ? '✓ Sucesso' : '✗ Falha'}
               </span>
@@ -221,13 +210,12 @@ export default function ExecutionDetailPage() {
                   >
                     <div className="flex items-center gap-4 flex-1">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                          step.status === 'success'
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step.status === 'success'
                             ? 'bg-success-100 text-success-700'
                             : step.status === 'failed'
-                            ? 'bg-error-100 text-error-700'
-                            : 'bg-neutral-100 text-neutral-700'
-                        }`}
+                              ? 'bg-error-100 text-error-700'
+                              : 'bg-neutral-100 text-neutral-700'
+                          }`}
                       >
                         {getStepStatusIcon(step.status)}
                       </div>

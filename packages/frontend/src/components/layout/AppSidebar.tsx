@@ -7,7 +7,9 @@ import {
   FolderOpen,
   Grid2x2,
   X,
+  LogOut,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AppSidebarProps {
   isMobileOpen: boolean;
@@ -59,6 +61,7 @@ const navItems: NavItem[] = [
 
 export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarProps) {
   const router = useRouter();
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -120,8 +123,26 @@ export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarPr
           </nav>
 
           <footer className="border-t border-neutral-200 px-4 py-4">
-            <p className="text-xs text-neutral-500">Operação local sincronizada</p>
-            <p className="mt-1 text-sm font-semibold text-neutral-800">Wave 6 - Product Parity</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100">
+                <span className="text-sm font-bold text-primary-700">
+                  {user?.email?.[0]?.toUpperCase() || '?'}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-neutral-800">
+                  {user?.name || user?.email || 'Usuário'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={logout}
+                title="Sair"
+                className="rounded-md p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-error-600"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           </footer>
         </div>
       </aside>

@@ -70,11 +70,11 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <p className="text-xs uppercase font-semibold text-neutral-700">Duration</p>
+              <p className="text-xs uppercase font-semibold text-neutral-700">Duração</p>
               <p className="font-semibold">{execution.execution_time_ms}ms</p>
             </div>
             <div>
-              <p className="text-xs uppercase font-semibold text-neutral-700">Triggered</p>
+              <p className="text-xs uppercase font-semibold text-neutral-700">Disparo em</p>
               <p className="text-xs">{new Date(execution.triggered_at).toLocaleString()}</p>
             </div>
             <div className="col-span-2">
@@ -93,7 +93,7 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
           >
             <span>{expandedSections.has('config') ? '▼' : '▶'}</span>
-            <span>Rule Configuration</span>
+            <span>Configuração da Regra</span>
           </button>
           {expandedSections.has('config') && (
             <div className="p-4 bg-neutral-50">
@@ -113,7 +113,7 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
           >
             <span>{expandedSections.has('conditions') ? '▼' : '▶'}</span>
-            <span>Conditions Evaluated</span>
+            <span>Condições Avaliadas</span>
           </button>
           {expandedSections.has('conditions') && (
             <div className="p-4 bg-neutral-50">
@@ -133,7 +133,7 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
           >
             <span>{expandedSections.has('actions') ? '▼' : '▶'}</span>
-            <span>Actions Executed</span>
+            <span>Ações Executadas</span>
           </button>
           {expandedSections.has('actions') && (
             <div className="p-4 bg-neutral-50">
@@ -153,7 +153,7 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             className="w-full px-4 py-2 bg-error-100 text-left font-semibold text-error-900 hover:bg-error-200 flex items-center gap-2"
           >
             <span>{expandedSections.has('error') ? '▼' : '▶'}</span>
-            <span>Error Details</span>
+            <span>Detalhes do Erro</span>
           </button>
           {expandedSections.has('error') && (
             <div className="p-4">
@@ -173,14 +173,14 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
           >
             <span>{expandedSections.has('retry') ? '▼' : '▶'}</span>
-            <span>Retry History ({execution.retry_history.length})</span>
+            <span>Histórico de Tentativas ({execution.retry_history.length})</span>
           </button>
           {expandedSections.has('retry') && (
             <div className="p-4 space-y-3">
               {execution.retry_history.map((attempt, idx) => (
                 <div key={idx} className="border border-neutral-200 rounded p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm">Attempt {attempt.attempt}</span>
+                    <span className="font-semibold text-sm">Tentativa {attempt.attempt}</span>
                     <Badge variant={attempt.status === 'success' ? 'success' : 'destructive'}>
                       {attempt.status.toUpperCase()}
                     </Badge>
@@ -202,7 +202,7 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{execution.rule_name} - Execution Details</DialogTitle>
+            <DialogTitle>{execution.rule_name} - Detalhes da Execução</DialogTitle>
           </DialogHeader>
           <DialogBody>
             {content}

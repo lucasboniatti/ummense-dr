@@ -4,6 +4,8 @@ import { ptBR } from 'date-fns/locale';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './composite/Table';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
+import { EmptyState } from './ui/EmptyState';
+import { FileSearch } from 'lucide-react';
 import SavePresetDialog from './SavePresetDialog';
 import type { SavedFilterDefinition, SavedFilterPreset } from '@/services/history.service';
 
@@ -357,8 +359,13 @@ export function ExecutionHistoryTable({
           <TableBody>
             {executions.length === 0 && (
               <TableRow>
-                <TableCell className="py-8 text-center text-neutral-500" colSpan={6}>
-                  Nenhuma execucao encontrada para os filtros atuais.
+                <TableCell className="py-12" colSpan={6}>
+                  <EmptyState
+                    icon={<FileSearch size={48} />}
+                    title="Nenhuma execução encontrada"
+                    description="O histórico está vazio ou os filtros atuais não encontraram resultados."
+                    variant="compact"
+                  />
                 </TableCell>
               </TableRow>
             )}

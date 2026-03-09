@@ -36,14 +36,14 @@ export function TestWebhookModal({
     try {
       const response = webhookId
         ? await fetch(`/api/webhooks/${webhookId}/test`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
         : await fetch('/api/webhooks/test', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: webhookUrl }),
-          });
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: webhookUrl }),
+        });
       setResult(await response.json());
       onSuccess?.();
       onTest?.();
@@ -56,7 +56,7 @@ export function TestWebhookModal({
     <Dialog open={resolvedOpen} onOpenChange={(next) => (next ? onOpenChange?.(next) : close())}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Test Webhook</DialogTitle>
+          <DialogTitle>Testar Webhook</DialogTitle>
         </DialogHeader>
 
         <DialogBody className="space-y-4">
@@ -67,7 +67,7 @@ export function TestWebhookModal({
               </>
             ) : (
               <>
-                Webhook ID: <span className="font-mono text-xs">{webhookId}</span>
+                ID do Webhook: <span className="font-mono text-xs">{webhookId}</span>
               </>
             )}
           </p>
@@ -81,10 +81,10 @@ export function TestWebhookModal({
 
         <DialogFooter>
           <Button variant="ghost" onClick={close}>
-            Close
+            Fechar
           </Button>
           <Button variant="primary" onClick={handleTest} disabled={loading}>
-            {loading ? 'Testing...' : 'Send Test'}
+            {loading ? 'Testando...' : 'Enviar Teste'}
           </Button>
         </DialogFooter>
       </DialogContent>

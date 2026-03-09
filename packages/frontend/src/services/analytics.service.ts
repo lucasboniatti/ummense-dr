@@ -12,8 +12,10 @@ export interface AnalyticsEvent {
   metadata?: Record<string, any>;
 }
 
+import { apiClient } from './api.client';
+
 class AnalyticsService {
-  private endpoint = '/api/analytics/events';
+  private endpoint = '/analytics/events';
 
   /**
    * Track webhook creation
@@ -155,13 +157,7 @@ class AnalyticsService {
    */
   private async sendEventToBackend(event: AnalyticsEvent) {
     try {
-      await fetch(this.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(event),
-      });
+      await apiClient.post(this.endpoint, event);
     } catch (error) {
       // Network errors are expected in offline scenarios
       // Don't throw - allow app to continue

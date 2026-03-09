@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { apiClient } from '../../services/api.client';
+import { PageLoader } from '../../components/ui';
+import { useToast } from '../../contexts/ToastContext';
 
 interface RetentionPolicy {
   id: string;
@@ -12,9 +15,8 @@ interface RetentionPolicy {
 export default function AutomationSettingsPage() {
   const [policy, setPolicy] = useState<RetentionPolicy | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const toast = useToast();
 
   const [formData, setFormData] = useState({
     retentionDays: 90,
@@ -25,12 +27,7 @@ export default function AutomationSettingsPage() {
   useEffect(() => {
     const fetchPolicy = async () => {
       try {
-        const response = await fetch('/api/automations/retention-policy');
-        if (!response.ok) {
-          throw new Error('Failed to fetch retention policy');
-        }
-
-        const data = await response.json();
+        const { data } = await apiClient.get<RetentionPolicy>('/automations/retention-policy');
         setPolicy(data);
         setFormData({
           retentionDays: data.retention_days,
@@ -38,7 +35,7 @@ export default function AutomationSettingsPage() {
           archiveBucket: data.archive_bucket || '',
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        toast.error('Erro ao carregar', err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -49,44 +46,25 @@ export default function AutomationSettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    setError(null);
-    setSuccess(null);
 
     try {
-      const response = await fetch('/api/automations/retention-policy', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          retentionDays: formData.retentionDays,
-          archiveEnabled: formData.archiveEnabled,
-          archiveBucket: formData.archiveBucket,
-        }),
+      const { data: updatedPolicy } = await apiClient.put<RetentionPolicy>('/automations/retention-policy', {
+        retentionDays: formData.retentionDays,
+        archiveEnabled: formData.archiveEnabled,
+        archiveBucket: formData.archiveBucket,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update retention policy');
-      }
-
-      const updatedPolicy = await response.json();
       setPolicy(updatedPolicy);
-      setSuccess('Política de retenção atualizada com sucesso');
+      toast.success('Política atualizada', 'Política de retenção atualizada com sucesso');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      toast.error('Erro ao salvar', err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          <p className="text-neutral-600 mt-4">Carregando configurações...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Carregando configurações de automação..." />;
   }
 
   return (
@@ -97,20 +75,6 @@ export default function AutomationSettingsPage() {
           <h1 className="text-3xl font-bold text-neutral-900">Configurações de Automação</h1>
           <p className="text-neutral-600 mt-2">Gerencie as políticas de retenção do histórico</p>
         </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-error-50 border border-error-200 rounded-lg p-4 mb-6">
-            <p className="text-error-800">{error}</p>
-          </div>
-        )}
-
-        {/* Success Alert */}
-        {success && (
-          <div className="bg-success-50 border border-success-200 rounded-lg p-4 mb-6">
-            <p className="text-success-800">{success}</p>
-          </div>
-        )}
 
         {/* Retention Policy Card */}
         <div className="bg-white rounded-lg shadow p-6">

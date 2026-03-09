@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { controlService, CircuitBreakerState } from '../../services/control.service';
+import { PageLoader } from '../../components/ui/PageLoader';
+import { useToast } from '../../contexts/ToastContext';
 
 const INITIAL_CONNECTORS = ['slack', 'email', 'custom_webhook'];
 
 const CircuitBreakerPanel: React.FC = () => {
     const [connectors, setConnectors] = useState<Record<string, CircuitBreakerState>>({});
     const [loading, setLoading] = useState(true);
+    const toast = useToast();
 
     // Quick refresh
     const loadStats = async () => {
@@ -29,14 +32,14 @@ const CircuitBreakerPanel: React.FC = () => {
     const handleReset = async (connectorId: string) => {
         try {
             await controlService.resetCircuitBreaker(connectorId);
-            alert(`Circuit breaker manually reset for ${connectorId}`);
+            toast.success('Circuit breaker resetado', `Estado reiniciado para o conector ${connectorId}.`);
             loadStats();
         } catch (err: any) {
-            alert(`Error: ${err.message}`);
+            toast.error('Erro ao resetar', err.message);
         }
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <PageLoader message="Carregando estados do circuito..." />;
 
     const getStatusColor = (state: string) => {
         if (state === 'healthy') return 'bg-success-100 text-success-800 border-success-200';
@@ -46,7 +49,7 @@ const CircuitBreakerPanel: React.FC = () => {
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md border border-neutral-200 mt-6 max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold mb-6 text-neutral-800 border-b pb-2">Circuit Breaker States</h2>
+            <h2 className="text-xl font-bold mb-6 text-neutral-800 border-b pb-2">Estados do Circuit Breaker</h2>
 
             <div className="space-y-6">
                 {Object.entries(connectors).map(([connectorId, state]) => (
@@ -59,9 +62,9 @@ const CircuitBreakerPanel: React.FC = () => {
                                 </span>
                             </h4>
                             <div className="text-sm text-neutral-500 mt-2 space-y-1">
-                                <p><span className="font-semibold text-neutral-600">Failures:</span> {state.failureCount}</p>
-                                {state.lastFailureAt && <p><span className="font-semibold text-neutral-600">Last Failure:</span> {new Date(state.lastFailureAt).toLocaleString()}</p>}
-                                {state.nextRetryAt && state.state === 'offline' && <p><span className="font-semibold text-neutral-600">Retry After:</span> {new Date(state.nextRetryAt).toLocaleString()}</p>}
+                                <p><span className="font-semibold text-neutral-600">Falhas:</span> {state.failureCount}</p>
+                                {state.lastFailureAt && <p><span className="font-semibold text-neutral-600">Última Falha:</span> {new Date(state.lastFailureAt).toLocaleString()}</p>}
+                                {state.nextRetryAt && state.state === 'offline' && <p><span className="font-semibold text-neutral-600">Tentar Novamente:</span> {new Date(state.nextRetryAt).toLocaleString()}</p>}
                             </div>
                         </div>
 
@@ -71,7 +74,7 @@ const CircuitBreakerPanel: React.FC = () => {
                                 disabled={state.state === 'healthy'}
                                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-medium transition-colors disabled:opacity-50"
                             >
-                                Force Reset
+                                Forçar Reset
                             </button>
                         </div>
                     </div>

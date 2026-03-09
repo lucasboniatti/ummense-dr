@@ -3,6 +3,8 @@ import { IntegrationCard } from '../../../components/IntegrationCard';
 import { SlackConnectModal } from '../../../components/SlackConnectModal';
 import { DiscordConnectModal } from '../../../components/DiscordConnectModal';
 import { integrationService, SlackIntegration, DiscordIntegration } from '../../../services/integration.service';
+import { PageLoader, EmptyState } from '../../../components/ui';
+import { MessageSquare, Gamepad2 } from 'lucide-react';
 
 export default function IntegrationsPage() {
   const [slackIntegrations, setSlackIntegrations] = useState<SlackIntegration[]>([]);
@@ -46,14 +48,7 @@ export default function IntegrationsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-neutral-600">Carregando integrações...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Carregando integrações..." />;
   }
 
   return (
@@ -110,15 +105,14 @@ export default function IntegrationsPage() {
             ))}
           </div>
         ) : (
-          <div className="p-8 bg-neutral-50 rounded-lg border border-neutral-200 text-center mb-6">
-            <p className="text-neutral-600 mb-4">Nenhuma integração Slack conectada</p>
-            <button
-              onClick={() => setShowSlackModal(true)}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-            >
-              Conectar Slack
-            </button>
-          </div>
+          <EmptyState
+            icon={<MessageSquare size={48} />}
+            title="Nenhuma integração Slack"
+            description="Conecte sua conta do Slack para receber notificações e executar ações nos seus canais."
+            actionLabel="Conectar Slack"
+            onAction={() => setShowSlackModal(true)}
+            variant="compact"
+          />
         )}
       </div>
 
@@ -153,15 +147,14 @@ export default function IntegrationsPage() {
             ))}
           </div>
         ) : (
-          <div className="p-8 bg-neutral-50 rounded-lg border border-neutral-200 text-center">
-            <p className="text-neutral-600 mb-4">Nenhuma integração Discord conectada</p>
-            <button
-              onClick={() => setShowDiscordModal(true)}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-            >
-              Conectar Discord
-            </button>
-          </div>
+          <EmptyState
+            icon={<Gamepad2 size={48} />}
+            title="Nenhuma integração Discord"
+            description="Conecte seu servidor do Discord para interagir através de bots e canais."
+            actionLabel="Conectar Discord"
+            onAction={() => setShowDiscordModal(true)}
+            variant="compact"
+          />
         )}
       </div>
 

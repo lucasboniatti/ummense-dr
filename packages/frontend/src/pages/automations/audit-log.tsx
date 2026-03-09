@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { apiClient } from '../../services/api.client';
+import { PageLoader, EmptyState } from '../../components/ui';
+import { ShieldAlert } from 'lucide-react';
 
 interface AuditLog {
   id: string;
@@ -35,13 +38,7 @@ export default function AuditLogPage() {
           offset: String(offset),
         });
 
-        const response = await fetch(`/api/automations/audit-log?${params}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch audit logs');
-        }
-
-        const data = await response.json();
+        const { data } = await apiClient.get(`/automations/audit-log?${params}`);
         setLogs(data.logs);
         setTotal(data.total);
       } catch (err) {
@@ -95,12 +92,7 @@ export default function AuditLogPage() {
         )}
 
         {/* Loading State */}
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <p className="text-neutral-600 mt-4">Carregando logs...</p>
-          </div>
-        )}
+        {loading && <PageLoader message="Carregando logs de auditoria..." />}
 
         {/* Logs List */}
         {!loading && logs.length > 0 && (
@@ -166,9 +158,13 @@ export default function AuditLogPage() {
 
         {/* Empty State */}
         {!loading && logs.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg">
-            <p className="text-neutral-500">Nenhum log de auditoria encontrado</p>
-          </div>
+          <EmptyState
+            icon={<ShieldAlert size={48} />}
+            title="Nenhum log de auditoria encontrado"
+            description="Ainda não existem registros de auditoria no sistema para o período selecionado."
+            actionLabel="Recarregar"
+            onAction={() => setOffset(0)}
+          />
         )}
 
         {/* Pagination */}

@@ -5,7 +5,6 @@ interface AppTopbarProps {
   pageTitle: string;
   searchValue: string;
   priorityValue: string;
-  notificationsCount: number;
   onOpenMobileMenu: () => void;
   onSearchChange: (value: string) => void;
   onPriorityChange: (value: string) => void;
@@ -18,7 +17,6 @@ export default function AppTopbar({
   pageTitle,
   searchValue,
   priorityValue,
-  notificationsCount,
   onOpenMobileMenu,
   onSearchChange,
   onPriorityChange,
@@ -145,11 +143,6 @@ export default function AppTopbar({
             aria-label="Notificações"
           >
             <Bell size={18} />
-            {notificationsCount > 0 && (
-              <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-error-600 px-1 text-[11px] font-bold text-white">
-                {notificationsCount > 9 ? '9+' : notificationsCount}
-              </span>
-            )}
           </button>
         </div>
       </div>

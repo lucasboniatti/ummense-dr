@@ -94,7 +94,6 @@ export default function AppShell({ children }: AppShellProps) {
           pageTitle={pageTitle}
           searchValue={searchValue}
           priorityValue={priorityValue}
-          notificationsCount={3}
           onOpenMobileMenu={() => setIsMobileOpen(true)}
           onSearchChange={setSearchValue}
           onPriorityChange={setPriorityValue}

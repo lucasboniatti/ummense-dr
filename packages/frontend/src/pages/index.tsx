@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import CalendarPanel, { CalendarEvent } from '../components/panel/CalendarPanel';
 import TasksPanel, { PanelTask, TaskTag } from '../components/panel/TasksPanel';
 import { eventsService } from '../services/events.service';
+import { apiClient } from '../services/api.client';
 
 interface ApiTaskItem {
   id: number;
@@ -167,16 +168,6 @@ function getLocalDevToken(): string {
   return token;
 }
 
-async function safeJson<T>(response: Response): Promise<T | null> {
-  try {
-    const body = await response.text();
-    if (!body) return null;
-    return JSON.parse(body) as T;
-  } catch {
-    return null;
-  }
-}
-
 export default function HomePage() {
   const router = useRouter();
 
@@ -228,29 +219,22 @@ export default function HomePage() {
 
     try {
       const [tasksResult, eventsResult, panelResult] = await Promise.allSettled([
-        fetch('/api/tasks?limit=12&offset=0', { headers }),
-        fetch('/api/events?limit=8&offset=0', { headers }),
-        fetch('/api/panel/overview?limit=6', { headers }),
+        apiClient.get<ApiTasksResponse>('/tasks?limit=12&offset=0'),
+        apiClient.get<ApiEventsResponse>('/events?limit=8&offset=0'),
+        apiClient.get<ApiPanelResponse>('/panel/overview?limit=6'),
       ]);
 
       if (panelResult.status === 'fulfilled') {
-        const response = panelResult.value;
-        if (response.ok) {
-          const payload = await safeJson<ApiPanelResponse>(response);
-          const summaryPayload = payload?.summary;
+        const payload = panelResult.value.data;
+        const summaryPayload = payload?.summary;
 
-          if (summaryPayload) {
-            setSummary({
-              flowsCount: summaryPayload.flowsCount || 0,
-              cardsCount: summaryPayload.cardsCount || 0,
-              openTasksCount: summaryPayload.openTasksCount || 0,
-              dueTodayTasksCount: summaryPayload.dueTodayTasksCount || 0,
-            });
-          } else {
-            setSummary(fallbackSummary);
-          }
-        } else if (response.status === 401 && !devToken) {
-          setSummary(fallbackSummary);
+        if (summaryPayload) {
+          setSummary({
+            flowsCount: summaryPayload.flowsCount || 0,
+            cardsCount: summaryPayload.cardsCount || 0,
+            openTasksCount: summaryPayload.openTasksCount || 0,
+            dueTodayTasksCount: summaryPayload.dueTodayTasksCount || 0,
+          });
         } else {
           setSummary(fallbackSummary);
         }
@@ -259,116 +243,91 @@ export default function HomePage() {
       }
 
       if (tasksResult.status === 'fulfilled') {
-        const response = tasksResult.value;
+        const payload = tasksResult.value.data;
+        const rawTasks = Array.isArray(payload?.items) ? payload.items : [];
 
-        if (response.ok) {
-          const payload = await safeJson<ApiTasksResponse>(response);
-          const rawTasks = Array.isArray(payload?.items) ? payload.items : [];
+        const cardIds = [...new Set(rawTasks.map((task) => task.card_id).filter(Boolean))];
 
-          const cardIds = [...new Set(rawTasks.map((task) => task.card_id).filter(Boolean))];
+        const cardData = new Map<number, { title: string; progress: number; tags: TaskTag[] }>();
 
-          const cardData = new Map<number, { title: string; progress: number; tags: TaskTag[] }>();
-
-          const cardDetails = await Promise.allSettled(
-            cardIds.map(async (cardId) => {
-              const cardResponse = await fetch(`/api/cards/${cardId}`, { headers });
-              if (!cardResponse.ok) return null;
-
-              const cardPayload = await safeJson<ApiCardDetail>(cardResponse);
-              if (!cardPayload) return null;
-
-              return { cardId, cardPayload };
-            })
-          );
-
-          cardDetails.forEach((result) => {
-            if (result.status !== 'fulfilled' || result.value === null) {
-              return;
+        const cardDetails = await Promise.allSettled(
+          cardIds.map(async (cardId) => {
+            try {
+              const cardResponse = await apiClient.get<ApiCardDetail>(`/cards/${cardId}`);
+              return { cardId, cardPayload: cardResponse.data };
+            } catch {
+              return null;
             }
+          })
+        );
 
-            const { cardId, cardPayload } = result.value;
+        cardDetails.forEach((result) => {
+          if (result.status !== 'fulfilled' || result.value === null) {
+            return;
+          }
 
-            cardData.set(cardId, {
-              title: cardPayload.title || `Card #${cardId}`,
-              progress: cardPayload.progress?.percent || 0,
-              tags: Array.isArray(cardPayload.tags)
-                ? cardPayload.tags.map((tag) => ({
-                    id: tag.id,
-                    name: tag.name,
-                    color: tag.color,
-                  }))
-                : [],
-            });
+          const { cardId, cardPayload } = result.value;
+
+          cardData.set(cardId, {
+            title: cardPayload.title || `Card #${cardId}`,
+            progress: cardPayload.progress?.percent || 0,
+            tags: Array.isArray(cardPayload.tags)
+              ? cardPayload.tags.map((tag) => ({
+                id: tag.id,
+                name: tag.name,
+                color: tag.color,
+              }))
+              : [],
           });
+        });
 
-          const mappedTasks: PanelTask[] = rawTasks.map((task) => {
-            const card = cardData.get(task.card_id);
+        const mappedTasks: PanelTask[] = rawTasks.map((task) => {
+          const card = cardData.get(task.card_id);
 
-            return {
-              id: task.id,
-              title: task.title,
-              priority: task.priority || 'P3',
-              status: task.status || 'open',
-              dueDate: task.due_date,
-              assignedTo: task.assigned_to,
-              cardId: task.card_id,
-              cardName: card?.title || `Card #${task.card_id}`,
-              progress: card?.progress || inferProgress(task.status || 'open'),
-              tags: card?.tags || [],
-            };
-          });
+          return {
+            id: task.id,
+            title: task.title,
+            priority: task.priority || 'P3',
+            status: task.status || 'open',
+            dueDate: task.due_date,
+            assignedTo: task.assigned_to,
+            cardId: task.card_id,
+            cardName: card?.title || `Card #${task.card_id}`,
+            progress: card?.progress || inferProgress(task.status || 'open'),
+            tags: card?.tags || [],
+          };
+        });
 
-          setTasks(mappedTasks);
-          setTasksHint(
-            mappedTasks.length === 0
-              ? 'Sem tarefas cadastradas para este usuário.'
-              : null
-          );
-        } else if (response.status === 401 && !devToken) {
-          setTasks(fallbackTasks);
-          setTasksHint(
-            'Sem token JWT de teste. Exibindo dados locais de fallback no painel.'
-          );
-        } else {
-          const payload = await safeJson<{ error?: string }>(response);
-          setTasks([]);
-          setTasksError(payload?.error || `Falha HTTP ${response.status} ao carregar tarefas.`);
-        }
+        setTasks(mappedTasks);
+        setTasksHint(
+          mappedTasks.length === 0
+            ? 'Sem tarefas cadastradas para este usuário.'
+            : null
+        );
       } else {
         setTasks([]);
         setTasksError('Falha de rede ao carregar tarefas.');
       }
 
       if (eventsResult.status === 'fulfilled') {
-        const response = eventsResult.value;
+        const payload = eventsResult.value.data;
+        const rawEvents = Array.isArray(payload?.items) ? payload.items : [];
 
-        if (response.ok) {
-          const payload = await safeJson<ApiEventsResponse>(response);
-          const rawEvents = Array.isArray(payload?.items) ? payload.items : [];
+        const mappedEvents: CalendarEvent[] = rawEvents.map((event) => ({
+          id: event.id,
+          title: event.title,
+          startsAt: event.starts_at,
+          endsAt: event.ends_at,
+          cardId: event.card_id,
+          taskId: event.task_id,
+        }));
 
-          const mappedEvents: CalendarEvent[] = rawEvents.map((event) => ({
-            id: event.id,
-            title: event.title,
-            startsAt: event.starts_at,
-            endsAt: event.ends_at,
-            cardId: event.card_id,
-            taskId: event.task_id,
-          }));
-
-          setEvents(mappedEvents);
-          setEventsHint(
-            mappedEvents.length === 0
-              ? 'Nenhum evento programado para o período atual.'
-              : null
-          );
-        } else if (response.status === 401 && !devToken) {
-          setEvents(fallbackEvents);
-          setEventsHint('Sem autenticação ativa. Exibindo agenda local de fallback.');
-        } else {
-          const payload = await safeJson<{ error?: string }>(response);
-          setEvents([]);
-          setEventsError(payload?.error || `Falha HTTP ${response.status} ao carregar eventos.`);
-        }
+        setEvents(mappedEvents);
+        setEventsHint(
+          mappedEvents.length === 0
+            ? 'Nenhum evento programado para o período atual.'
+            : null
+        );
       } else {
         setEvents([]);
         setEventsError('Falha de rede ao carregar calendário.');

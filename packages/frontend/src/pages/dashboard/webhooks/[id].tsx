@@ -44,19 +44,19 @@ export default function WebhookDetailPage() {
   };
 
   if (loading) {
-    return <div className="p-6">Loading webhook...</div>;
+    return <div className="p-6 text-neutral-500">Carregando webhook...</div>;
   }
 
   if (error || !webhook) {
     return (
       <div className="p-6">
         <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
-          {error || 'Webhook not found'}
+          {error || 'Webhook não encontrado'}
         </div>
         <Link href="/dashboard/webhooks">
-          <a className="text-primary-600 hover:underline mt-4 inline-flex items-center gap-2">
+          <a className="text-primary-600 hover:underline mt-4 inline-flex items-center gap-2 font-medium">
             <ArrowLeft size={18} />
-            Back to Webhooks
+            Voltar para Webhooks
           </a>
         </Link>
       </div>
@@ -74,7 +74,7 @@ export default function WebhookDetailPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold">{webhook.url}</h1>
-          <p className="text-neutral-600 mt-1">{webhook.description || 'No description'}</p>
+          <p className="text-neutral-600 mt-1">{webhook.description || 'Sem descrição'}</p>
         </div>
       </div>
 
@@ -86,23 +86,22 @@ export default function WebhookDetailPage() {
             <p className="mt-1 text-neutral-900">{webhook.url}</p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-neutral-700">API Key (Last 4 chars)</label>
+            <label className="text-sm font-semibold text-neutral-700">API Key (Últimos 4 caracteres)</label>
             <p className="mt-1 text-neutral-900 font-mono">{webhook.apiKeyPreview}</p>
           </div>
           <div>
             <label className="text-sm font-semibold text-neutral-700">Status</label>
             <p className="mt-1">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                webhook.enabled
+              <span className={`px-3 py-1 rounded-full text-sm font-bold ${webhook.enabled
                   ? 'bg-success-100 text-success-700'
                   : 'bg-neutral-100 text-neutral-700'
-              }`}>
-                {webhook.enabled ? 'Enabled' : 'Disabled'}
+                }`}>
+                {webhook.enabled ? 'Ativo' : 'Inativo'}
               </span>
             </p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-neutral-700">Created</label>
+            <label className="text-sm font-semibold text-neutral-700">Criado em</label>
             <p className="mt-1 text-neutral-900">
               {new Date(webhook.createdAt).toLocaleDateString('en-US', {
                 month: 'short',
@@ -113,19 +112,18 @@ export default function WebhookDetailPage() {
           </div>
         </div>
 
-        {/* Test Button */}
         <button
           onClick={() => setShowTestModal(true)}
-          className="mt-6 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center gap-2"
+          className="mt-6 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center gap-2 font-semibold"
         >
           <RefreshCw size={18} />
-          Test Webhook
+          Testar Webhook
         </button>
       </div>
 
       {/* Delivery History */}
       <div>
-        <h2 className="text-2xl font-bold mb-4">Delivery History</h2>
+        <h2 className="text-2xl font-bold mb-4">Histórico de Entregas</h2>
         <DeliveryHistory webhookId={webhook.id} />
       </div>
 

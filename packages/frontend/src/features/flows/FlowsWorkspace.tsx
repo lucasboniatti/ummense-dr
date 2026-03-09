@@ -14,6 +14,8 @@ import {
   FlowListItem,
   flowsService,
 } from '../../services/flows.service';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { LayoutGrid } from 'lucide-react';
 
 type ViewMode = 'board' | 'table' | 'indicators';
 type FilterStatus = 'all' | 'active' | 'completed' | 'blocked';
@@ -28,7 +30,7 @@ interface FlatCardRow extends FlowCardItem {
   effectiveStatus: FlowCardStatus;
 }
 
-interface FlowOption extends Pick<FlowListItem, 'id' | 'name'> {}
+interface FlowOption extends Pick<FlowListItem, 'id' | 'name'> { }
 
 const FALLBACK_FLOW_ID = 1;
 
@@ -521,33 +523,30 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
           <button
             type="button"
             onClick={() => setViewMode('board')}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold ${
-              viewMode === 'board'
-                ? 'bg-primary-600 text-white'
-                : 'border border-neutral-300 bg-white text-neutral-700'
-            }`}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold ${viewMode === 'board'
+              ? 'bg-primary-600 text-white'
+              : 'border border-neutral-300 bg-white text-neutral-700'
+              }`}
           >
             Quadro
           </button>
           <button
             type="button"
             onClick={() => setViewMode('table')}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold ${
-              viewMode === 'table'
-                ? 'bg-primary-600 text-white'
-                : 'border border-neutral-300 bg-white text-neutral-700'
-            }`}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold ${viewMode === 'table'
+              ? 'bg-primary-600 text-white'
+              : 'border border-neutral-300 bg-white text-neutral-700'
+              }`}
           >
             Tabela
           </button>
           <button
             type="button"
             onClick={() => setViewMode('indicators')}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold ${
-              viewMode === 'indicators'
-                ? 'bg-primary-600 text-white'
-                : 'border border-neutral-300 bg-white text-neutral-700'
-            }`}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold ${viewMode === 'indicators'
+              ? 'bg-primary-600 text-white'
+              : 'border border-neutral-300 bg-white text-neutral-700'
+              }`}
           >
             Indicadores
           </button>
@@ -693,8 +692,13 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
             <tbody className="divide-y divide-neutral-200">
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-sm text-neutral-600">
-                    Nenhum card encontrado para os filtros atuais.
+                  <td colSpan={7} className="px-5 py-8">
+                    <EmptyState
+                      icon={<LayoutGrid size={48} />}
+                      title="Nenhum card encontrado"
+                      description="Ajuste os filtros ou crie um novo card para visualizar os dados."
+                      variant="compact"
+                    />
                   </td>
                 </tr>
               )}

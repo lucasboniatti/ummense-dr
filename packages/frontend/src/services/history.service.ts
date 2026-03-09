@@ -45,17 +45,14 @@ export interface SavedFilterPreset {
   deleted_at?: string | null;
 }
 
+import { apiClient } from './api.client';
+
 class HistoryService {
   /**
    * Fetch autocomplete suggestions for history search
    */
   async getSearchSuggestions(limit: number = 10): Promise<string[]> {
-    const response = await fetch(`/api/automations/history/suggestions?limit=${limit}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch search suggestions');
-    }
-
-    const data = await response.json();
+    const { data } = await apiClient.get(`/automations/history/suggestions?limit=${limit}`);
     return Array.isArray(data.suggestions) ? data.suggestions : [];
   }
 
@@ -84,24 +81,16 @@ class HistoryService {
       }
     });
 
-    const response = await fetch(`/api/automations/history?${query}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch execution history');
-    }
-
-    return response.json();
+    const { data } = await apiClient.get<ExecutionHistoryResponse>(`/automations/history?${query}`);
+    return data;
   }
 
   /**
    * Fetch single execution detail
    */
   async getExecutionDetail(executionId: string) {
-    const response = await fetch(`/api/automations/history/${executionId}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch execution detail');
-    }
-
-    return response.json();
+    const { data } = await apiClient.get(`/automations/history/${executionId}`);
+    return data;
   }
 
   /**
@@ -110,12 +99,11 @@ class HistoryService {
   async exportAsCSV(params?: any) {
     const query = buildQueryParams(params);
 
-    const response = await fetch(`/api/automations/history/export/csv?${query}`);
-    if (!response.ok) {
-      throw new Error('Failed to export CSV');
-    }
+    const response = await apiClient.get(`/automations/history/export/csv?${query}`, {
+      responseType: 'blob',
+    });
 
-    const blob = await response.blob();
+    const blob = new Blob([response.data]);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -130,12 +118,11 @@ class HistoryService {
   async exportAsJSON(params?: any) {
     const query = buildQueryParams(params);
 
-    const response = await fetch(`/api/automations/history/export/json?${query}`);
-    if (!response.ok) {
-      throw new Error('Failed to export JSON');
-    }
+    const response = await apiClient.get(`/automations/history/export/json?${query}`, {
+      responseType: 'blob',
+    });
 
-    const blob = await response.blob();
+    const blob = new Blob([response.data]);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -159,24 +146,16 @@ class HistoryService {
       }
     });
 
-    const response = await fetch(`/api/automations/audit-log?${query}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch audit logs');
-    }
-
-    return response.json();
+    const { data } = await apiClient.get<AuditLogResponse>(`/automations/audit-log?${query}`);
+    return data;
   }
 
   /**
    * Fetch user retention policy
    */
   async getRetentionPolicy(): Promise<RetentionPolicy> {
-    const response = await fetch('/api/automations/retention-policy');
-    if (!response.ok) {
-      throw new Error('Failed to fetch retention policy');
-    }
-
-    return response.json();
+    const { data } = await apiClient.get<RetentionPolicy>('/automations/retention-policy');
+    return data;
   }
 
   /**
@@ -187,29 +166,12 @@ class HistoryService {
     archiveEnabled?: boolean;
     archiveBucket?: string;
   }): Promise<RetentionPolicy> {
-    const response = await fetch('/api/automations/retention-policy', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to update retention policy');
-    }
-
-    return response.json();
+    const { data } = await apiClient.put<RetentionPolicy>('/automations/retention-policy', params);
+    return data;
   }
 
   async listSavedFilters(): Promise<SavedFilterPreset[]> {
-    const response = await fetch('/api/users/saved-filters');
-    if (!response.ok) {
-      throw new Error('Failed to fetch saved filters');
-    }
-
-    const data = await response.json();
+    const { data } = await apiClient.get('/users/saved-filters');
     return Array.isArray(data) ? data : [];
   }
 
@@ -218,31 +180,12 @@ class HistoryService {
     description?: string;
     filter_json: SavedFilterDefinition;
   }): Promise<SavedFilterPreset> {
-    const response = await fetch('/api/users/saved-filters', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Failed to create saved filter' }));
-      throw new Error(error.error || 'Failed to create saved filter');
-    }
-
-    return response.json();
+    const { data } = await apiClient.post<SavedFilterPreset>('/users/saved-filters', params);
+    return data;
   }
 
   async deleteSavedFilter(id: string): Promise<void> {
-    const response = await fetch(`/api/users/saved-filters/${id}`, {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Failed to delete saved filter' }));
-      throw new Error(error.error || 'Failed to delete saved filter');
-    }
+    await apiClient.delete(`/users/saved-filters/${id}`);
   }
 }
 

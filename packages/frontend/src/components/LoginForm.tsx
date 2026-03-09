@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
 
@@ -47,23 +48,23 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-6">
-      <h2 className="text-2xl font-bold">Log In</h2>
+      <h2 className="text-2xl font-bold">Entrar</h2>
 
       <FormInput
         type="email"
-        label="Email"
+        label="E-mail"
         value={email}
         onChange={e => setEmail(e.target.value)}
-        placeholder="your@email.com"
+        placeholder="seu@email.com"
         required
       />
 
       <FormInput
         type="password"
-        label="Password"
+        label="Senha"
         value={password}
         onChange={e => setPassword(e.target.value)}
-        placeholder="Your password"
+        placeholder="Sua senha"
         required
       />
 
@@ -79,8 +80,16 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
         className="w-full"
         variant="primary"
       >
-        {loading ? 'Loading...' : 'Log In'}
+        {loading ? 'Entrando...' : 'Entrar'}
       </Button>
+
+      <div className="text-center mt-4">
+        <Link href="/auth/signup">
+          <a className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+            Não tem uma conta? Criar conta
+          </a>
+        </Link>
+      </div>
     </form>
   );
 }

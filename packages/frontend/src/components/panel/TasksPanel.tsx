@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { EmptyState } from '../ui/EmptyState';
+import { CheckSquare } from 'lucide-react';
 
 export interface TaskTag {
   id: number;
@@ -123,9 +125,12 @@ export default function TasksPanel({
       )}
 
       {!loading && !error && tasks.length === 0 && (
-        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5 text-sm text-neutral-600">
-          Nenhuma tarefa encontrada para os filtros atuais.
-        </div>
+        <EmptyState
+          icon={<CheckSquare size={48} />}
+          title="Nenhuma tarefa encontrada"
+          description="Você não possui tarefas pendentes para os filtros atuais."
+          variant="compact"
+        />
       )}
 
       {!loading && !error && tasks.length > 0 && (

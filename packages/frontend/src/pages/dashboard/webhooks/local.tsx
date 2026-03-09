@@ -242,7 +242,7 @@ export default function LocalWebhooksPage({
                       <td className="px-4 py-3 text-sm text-neutral-700">{hook.url}</td>
                       <td className="px-4 py-3 text-sm">
                         <span className={hook.enabled ? 'text-success-700 font-semibold' : 'text-neutral-600'}>
-                          {hook.enabled ? '✓ enabled' : 'disabled'}
+                          {hook.enabled ? '✓ ativo' : 'inativo'}
                         </span>
                       </td>
                     </tr>

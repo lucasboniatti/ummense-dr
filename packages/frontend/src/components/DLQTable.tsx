@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './composite/Table';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
+import { PageLoader, EmptyState } from './ui';
+import { MailX } from 'lucide-react';
 import { DLQService, DLQItem, DLQQueryResult } from '../services/dlq.service';
 
 interface DLQTableProps {
@@ -65,7 +67,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       setTotal(result.total);
       setHasMore(result.hasMore);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load DLQ items';
+      const message = err instanceof Error ? err.message : 'Falha ao carregar itens da DLQ';
       setError(message);
     } finally {
       setLoading(false);
@@ -79,7 +81,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       onRetry?.(dlqItemId);
       await fetchItems();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to retry';
+      const message = err instanceof Error ? err.message : 'Falha ao tentar novamente';
       setError(message);
     } finally {
       setLoading(false);
@@ -93,7 +95,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       onClear?.(dlqItemId);
       await fetchItems();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to clear';
+      const message = err instanceof Error ? err.message : 'Falha ao limpar';
       setError(message);
     } finally {
       setLoading(false);
@@ -112,7 +114,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       setSelectedItems(new Set());
       await fetchItems();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Batch retry failed';
+      const message = err instanceof Error ? err.message : 'Falha no retry em lote';
       setError(message);
     } finally {
       setLoading(false);
@@ -131,7 +133,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       setSelectedItems(new Set());
       await fetchItems();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Batch clear failed';
+      const message = err instanceof Error ? err.message : 'Falha na limpeza em lote';
       setError(message);
     } finally {
       setLoading(false);
@@ -192,7 +194,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
           <input
             id="filter-url"
             type="text"
-            placeholder="Filter by URL..."
+            placeholder="Filtrar por URL..."
             value={filterUrl}
             onChange={(e) => {
               setFilterUrl(e.target.value);
@@ -203,11 +205,11 @@ export const DLQTable: React.FC<DLQTableProps> = ({
         </div>
 
         <div>
-          <label htmlFor="filter-error" className="block text-sm font-semibold text-neutral-700 mb-1">Error Message</label>
+          <label htmlFor="filter-error" className="block text-sm font-semibold text-neutral-700 mb-1">Mensagem de Erro</label>
           <input
             id="filter-error"
             type="text"
-            placeholder="Filter by error..."
+            placeholder="Filtrar por erro..."
             value={filterError}
             onChange={(e) => {
               setFilterError(e.target.value);
@@ -218,7 +220,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
         </div>
 
         <div>
-          <label htmlFor="sort-by" className="block text-sm font-semibold text-neutral-700 mb-1">Sort By</label>
+          <label htmlFor="sort-by" className="block text-sm font-semibold text-neutral-700 mb-1">Ordenar Por</label>
           <select
             id="sort-by"
             value={sortBy}
@@ -228,13 +230,13 @@ export const DLQTable: React.FC<DLQTableProps> = ({
             }}
             className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="createdAt">Created Date</option>
-            <option value="lastErrorAt">Last Error Date</option>
+            <option value="createdAt">Data de Criação</option>
+            <option value="lastErrorAt">Último Erro</option>
           </select>
         </div>
 
         <div>
-          <label htmlFor="sort-order" className="block text-sm font-semibold text-neutral-700 mb-1">Order</label>
+          <label htmlFor="sort-order" className="block text-sm font-semibold text-neutral-700 mb-1">Ordem</label>
           <select
             id="sort-order"
             value={sortOrder}
@@ -244,8 +246,8 @@ export const DLQTable: React.FC<DLQTableProps> = ({
             }}
             className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="desc">Newest First</option>
-            <option value="asc">Oldest First</option>
+            <option value="desc">Mais Recentes</option>
+            <option value="asc">Mais Antigos</option>
           </select>
         </div>
       </div>
@@ -253,14 +255,14 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       {/* Batch Actions */}
       {selectedItems.size > 0 && (
         <div className="flex items-center gap-3 p-3 bg-primary-50 border border-primary-200 rounded-lg">
-          <span className="font-semibold text-primary-900 flex-1">{selectedItems.size} items selected</span>
+          <span className="font-semibold text-primary-900 flex-1">{selectedItems.size} itens selecionados</span>
           <Button
             size="sm"
             onClick={handleBatchRetry}
             disabled={loading}
             variant="primary"
           >
-            Retry Selected ({selectedItems.size})
+            Tentar Novamente ({selectedItems.size})
           </Button>
           <Button
             size="sm"
@@ -268,21 +270,21 @@ export const DLQTable: React.FC<DLQTableProps> = ({
             disabled={loading}
             variant="secondary"
           >
-            Clear Selected ({selectedItems.size})
+            Limpar ({selectedItems.size})
           </Button>
         </div>
       )}
 
       {/* Table */}
       {loading && items.length === 0 ? (
-        <div className="py-12 text-center text-neutral-600">
-          <p className="font-semibold">Loading DLQ items...</p>
-        </div>
+        <PageLoader message="Carregando itens da DLQ..." />
       ) : items.length === 0 ? (
-        <div className="py-12 text-center text-neutral-600">
-          <p className="font-semibold">No DLQ items found</p>
-          {total === 0 && <p className="text-sm text-neutral-500">All webhooks delivered successfully!</p>}
-        </div>
+        <EmptyState
+          icon={<MailX size={48} />}
+          title="Nenhum item na DLQ"
+          description={total === 0 ? "Todos os webhooks foram entregues com sucesso!" : "Nenhum resultado encontrado para os filtros atuais."}
+          variant="default"
+        />
       ) : (
         <div className="border border-neutral-200 rounded-lg overflow-hidden">
           <Table>
@@ -297,12 +299,12 @@ export const DLQTable: React.FC<DLQTableProps> = ({
                     className="cursor-pointer"
                   />
                 </TableHead>
-                <TableHead>Webhook URL</TableHead>
-                <TableHead>Error</TableHead>
-                <TableHead className="text-center">Attempts</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Last Error</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>URL Webhook</TableHead>
+                <TableHead>Erro</TableHead>
+                <TableHead className="text-center">Tentativas</TableHead>
+                <TableHead>Criado em</TableHead>
+                <TableHead>Último Erro</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -335,26 +337,26 @@ export const DLQTable: React.FC<DLQTableProps> = ({
                       size="sm"
                       onClick={() => handleRetry(item.id)}
                       disabled={loading}
-                      title="Retry webhook delivery"
+                      title="Tentar entregar webhook novamente"
                     >
-                      Retry
+                      Tentar Novamente
                     </Button>
                     <Button
                       size="sm"
                       variant="secondary"
                       onClick={() => handleClear(item.id)}
                       disabled={loading}
-                      title="Clear from DLQ"
+                      title="Limpar da DLQ"
                     >
-                      Clear
+                      Limpar
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => onSelectItem?.(item)}
-                      title="View details"
+                      title="Ver detalhes"
                     >
-                      Details
+                      Detalhes
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -373,10 +375,10 @@ export const DLQTable: React.FC<DLQTableProps> = ({
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1 || loading}
           >
-            Previous
+            Anterior
           </Button>
           <span className="text-sm text-neutral-600 min-w-48 text-center">
-            Page {page} of {Math.ceil(total / PAGE_SIZE)} ({total} total)
+            Página {page} de {Math.ceil(total / PAGE_SIZE)} ({total} total)
           </span>
           <Button
             size="sm"
@@ -384,7 +386,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
             onClick={() => setPage(page + 1)}
             disabled={!hasMore || loading}
           >
-            Next
+            Próxima
           </Button>
         </div>
       )}
