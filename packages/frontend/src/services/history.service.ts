@@ -25,6 +25,26 @@ export interface RetentionPolicy {
   updated_at: string;
 }
 
+export interface SavedFilterDefinition {
+  automationId?: string;
+  status?: 'success' | 'failed' | 'skipped';
+  dateRange?: '24h' | '7d' | '30d';
+  searchTerm?: string;
+  sortBy?: 'timestamp' | 'status' | 'duration';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface SavedFilterPreset {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string | null;
+  filter_json: SavedFilterDefinition;
+  is_default: boolean;
+  created_at: string;
+  deleted_at?: string | null;
+}
+
 class HistoryService {
   /**
    * Fetch autocomplete suggestions for history search
@@ -88,14 +108,7 @@ class HistoryService {
    * Export execution history as CSV
    */
   async exportAsCSV(params?: any) {
-    const query = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          query.append(key, String(value));
-        }
-      });
-    }
+    const query = buildQueryParams(params);
 
     const response = await fetch(`/api/automations/history/export/csv?${query}`);
     if (!response.ok) {
@@ -115,14 +128,7 @@ class HistoryService {
    * Export execution history as JSON
    */
   async exportAsJSON(params?: any) {
-    const query = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          query.append(key, String(value));
-        }
-      });
-    }
+    const query = buildQueryParams(params);
 
     const response = await fetch(`/api/automations/history/export/json?${query}`);
     if (!response.ok) {
@@ -196,6 +202,71 @@ class HistoryService {
 
     return response.json();
   }
+
+  async listSavedFilters(): Promise<SavedFilterPreset[]> {
+    const response = await fetch('/api/users/saved-filters');
+    if (!response.ok) {
+      throw new Error('Failed to fetch saved filters');
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  }
+
+  async createSavedFilter(params: {
+    name: string;
+    description?: string;
+    filter_json: SavedFilterDefinition;
+  }): Promise<SavedFilterPreset> {
+    const response = await fetch('/api/users/saved-filters', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Failed to create saved filter' }));
+      throw new Error(error.error || 'Failed to create saved filter');
+    }
+
+    return response.json();
+  }
+
+  async deleteSavedFilter(id: string): Promise<void> {
+    const response = await fetch(`/api/users/saved-filters/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Failed to delete saved filter' }));
+      throw new Error(error.error || 'Failed to delete saved filter');
+    }
+  }
 }
 
 export const historyService = new HistoryService();
+
+function buildQueryParams(params?: Record<string, unknown>): URLSearchParams {
+  const query = new URLSearchParams();
+
+  if (!params) {
+    return query;
+  }
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    if (value instanceof Date) {
+      query.append(key, value.toISOString());
+      return;
+    }
+
+    query.append(key, String(value));
+  });
+
+  return query;
+}

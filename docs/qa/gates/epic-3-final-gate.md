@@ -4,7 +4,7 @@
 **Status:** ✅ **APPROVED**
 **Date:** 2026-03-03
 
-> Revalidation note (2026-03-08): this gate is stale and should be treated as historical only. Story `3.6.1` was revalidated and closed after a sustained 1-hour benchmark; stories `3.6.3` and `3.6.4` still have open implementation gaps. The claim that all Wave 3 stories are done is not the current source of truth.
+> Revalidation note (2026-03-08): this gate is stale and should be treated as historical only. Stories `3.6.1` and `3.6.3` were revalidated and closed after technical follow-ups, while story `3.6.4` still has an open implementation gap. The claim that all Wave 3 stories are done is not the current source of truth.
 
 ---
 

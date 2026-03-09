@@ -9,6 +9,7 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"api/**/*.ts\"",
     "typecheck": "tsc --project tsconfig.quality.json --noEmit",
     "test": "tsx --test src/__tests__/auth.service.security.test.ts",
+    "test:saved-filters": "vitest run src/__tests__/saved-filters.test.ts",
     "test:websocket": "vitest run src/__tests__/websocket-unit.test.ts",
     "benchmark:websocket": "tsx src/scripts/websocket-load-benchmark.ts",
     "benchmark:websocket:smoke": "WS_BENCHMARK_DURATION_SECONDS=30 WS_BENCHMARK_WARMUP_SECONDS=2 WS_BENCHMARK_CLIENTS=20 WS_BENCHMARK_SAMPLE_INTERVAL_MS=1000 tsx src/scripts/websocket-load-benchmark.ts",

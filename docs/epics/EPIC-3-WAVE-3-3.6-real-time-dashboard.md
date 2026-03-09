@@ -2,7 +2,7 @@
 
 **Epic ID:** EPIC-3.6
 **Wave:** Wave 3 (Advanced Automation, Reliability & Scaling)
-**Status:** In Progress (2/4 sub-stories closed)
+**Status:** In Progress (3/4 sub-stories closed)
 **Created:** 2026-03-03
 **Priority:** HIGH (P1)
 
@@ -59,10 +59,10 @@ Enable platform operators to monitor automation execution history in real-time w
 - Export functionality maintains data sanitization (no PII leakage)
 
 **Revalidation Note (2026-03-08):**
-- Stories `3.6.1` and `3.6.2` are `Done`
-- Stories `3.6.3` and `3.6.4` remain `Ready for Review` after PO/QA revalidation
+- Stories `3.6.1`, `3.6.2`, and `3.6.3` are `Done`
+- Story `3.6.3` was closed after wiring the real `/api/users/saved-filters` backend flow into `/automations/history`, with seeded defaults, soft-delete, and executable route tests
+- Story `3.6.4` remains the only open implementation gap in Epic 3.6
 - `3.6.1` was promoted after a sustained 1-hour benchmark with `100/100` successful connections, `p95=1ms`, `memoryDelta=13.08MB`, and `cpuAvg=0.43%`
-- The remaining gaps are not scope invention; they are mismatches between story claims and the code currently wired in the product
 
 ---
 

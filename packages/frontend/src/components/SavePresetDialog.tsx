@@ -9,23 +9,6 @@ interface SavePresetDialogProps {
   isOpen: boolean;
 }
 
-/**
- * Save Preset Dialog Component - Story 3.6.3
- *
- * Modal dialog for saving current filter state as a reusable preset.
- * Validates:
- * - Preset name (required, max 100 chars)
- * - Description (optional, max 500 chars)
- * - Max 20 presets per user (enforced in API)
- *
- * Usage:
- * <SavePresetDialog
- *   currentFilters={filters}
- *   onSave={handleSave}
- *   onCancel={handleCancel}
- *   isOpen={showDialog}
- * />
- */
 const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
   currentFilters,
   onSave,
@@ -40,17 +23,17 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
   const handleSave = useCallback(async () => {
     // Validation
     if (!name.trim()) {
-      setError('Preset name is required');
+      setError('O nome do preset e obrigatorio.');
       return;
     }
 
     if (name.length > 100) {
-      setError('Preset name must be 100 characters or less');
+      setError('O nome do preset deve ter no maximo 100 caracteres.');
       return;
     }
 
     if (description.length > 500) {
-      setError('Description must be 500 characters or less');
+      setError('A descricao deve ter no maximo 500 caracteres.');
       return;
     }
 
@@ -59,12 +42,12 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
 
     try {
       await onSave(name.trim(), description.trim(), currentFilters);
-      // Reset form on success
       setName('');
       setDescription('');
+      onCancel();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to save preset. Please try again.'
+        err instanceof Error ? err.message : 'Nao foi possivel salvar o preset. Tente novamente.'
       );
     } finally {
       setIsSaving(false);
@@ -77,6 +60,18 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
     setError(null);
     onCancel();
   }, [onCancel]);
+
+  const visibleFilters = Object.entries(currentFilters).filter(([, value]) => {
+    if (value === '' || value === null || value === undefined) {
+      return false;
+    }
+
+    if (typeof value === 'object') {
+      return Object.keys(value as Record<string, unknown>).length > 0;
+    }
+
+    return true;
+  });
 
   if (!isOpen) return null;
 
@@ -92,10 +87,10 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
-            Save Filter Preset
+            Salvar preset
           </h2>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-            Save current filters to quickly reuse them later
+            Salve o estado atual dos filtros para reutilizar depois
           </p>
         </div>
 
@@ -107,7 +102,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
               htmlFor="preset-name"
               className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
-              Preset Name <span className="text-error-600">*</span>
+              Nome do preset <span className="text-error-600">*</span>
             </label>
             <input
               id="preset-name"
@@ -117,14 +112,14 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
                 setName(e.target.value);
                 setError(null);
               }}
-              placeholder="e.g., 'Failed Last 24h'"
+              placeholder="Ex.: Falhas nas ultimas 24h"
               maxLength={100}
               className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               disabled={isSaving}
               data-testid="preset-name-input"
             />
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-              {name.length}/100 characters
+              {name.length}/100 caracteres
             </p>
           </div>
 
@@ -134,7 +129,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
               htmlFor="preset-description"
               className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
-              Description <span className="text-neutral-400">(Optional)</span>
+              Descricao <span className="text-neutral-400">(opcional)</span>
             </label>
             <textarea
               id="preset-description"
@@ -143,7 +138,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
                 setDescription(e.target.value);
                 setError(null);
               }}
-              placeholder="e.g., 'All failed automations in the last 24 hours'"
+              placeholder="Ex.: Todas as automacoes com falha nas ultimas 24 horas"
               maxLength={500}
               rows={3}
               className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
@@ -151,18 +146,18 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
               data-testid="preset-description-input"
             />
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-              {description.length}/500 characters
+              {description.length}/500 caracteres
             </p>
           </div>
 
           {/* Filter Summary */}
           <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-3 border border-neutral-200 dark:border-neutral-600">
             <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-2">
-              Filters to Save:
+              Filtros que serao salvos:
             </p>
             <ul className="text-xs text-neutral-700 dark:text-neutral-400 space-y-1">
-              {Object.entries(currentFilters).length > 0 ? (
-                Object.entries(currentFilters).map(([key, value]) => (
+              {visibleFilters.length > 0 ? (
+                visibleFilters.map(([key, value]) => (
                   <li key={key}>
                     <span className="font-mono">{key}</span>:{' '}
                     {typeof value === 'object'
@@ -171,7 +166,9 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
                   </li>
                 ))
               ) : (
-                <li className="text-neutral-500 dark:text-neutral-500">No filters selected</li>
+                <li className="text-neutral-500 dark:text-neutral-500">
+                  Nenhum filtro ativo. O preset salvara a visualizacao padrao.
+                </li>
               )}
             </ul>
           </div>
@@ -196,7 +193,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
             className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="save-preset-cancel-btn"
           >
-            Cancel
+            Cancelar
           </button>
           <button
             onClick={handleSave}
@@ -204,7 +201,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
             className="px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="save-preset-save-btn"
           >
-            {isSaving ? 'Saving...' : 'Save Preset'}
+            {isSaving ? 'Salvando...' : 'Salvar preset'}
           </button>
         </div>
       </div>

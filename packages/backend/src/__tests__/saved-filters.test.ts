@@ -1,370 +1,456 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import express from 'express';
+import { AddressInfo } from 'node:net';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createSavedFiltersRoutes } from '../automations/history/saved-filters.routes';
+import { SavedFiltersService } from '../automations/history/saved-filters.service';
 
-/**
- * Saved Filters Unit Tests - Story 3.6.3
- *
- * Tests cover:
- * - Save preset: Valid name, description, filter_json
- * - Load preset: Verify filters applied correctly
- * - Delete preset: Soft-delete works, is_default presets can't be deleted
- * - Max 20 presets: Enforce limit in API
- * - Default presets: Always present, can't be deleted
- *
- * Note: These are unit tests for business logic.
- * API integration tests would test with actual database.
- */
+describe('Saved filters routes', () => {
+  let db: FakeSupabaseClient;
+  let service: SavedFiltersService;
+  let app: express.Express;
 
-describe('Saved Filters - Unit Tests', () => {
-  describe('Preset Validation', () => {
-    it('should validate preset name (required, max 100 chars)', () => {
-      const validNames = ['Failed Executions', 'Timeout (24h)', 'Test-123'];
-      const invalidNames = ['', 'a'.repeat(101), null];
-
-      validNames.forEach((name) => {
-        expect(name && name.length <= 100).toBe(true);
-      });
-
-      invalidNames.forEach((name) => {
-        expect(!name || name.length > 100).toBe(true);
-      });
+  beforeEach(() => {
+    db = new FakeSupabaseClient();
+    service = new SavedFiltersService(db as any);
+    app = express();
+    app.use(express.json());
+    app.use((req, _res, next) => {
+      (req as express.Request & { user?: { id: string } }).user = { id: 'user-1' };
+      next();
     });
-
-    it('should validate description (optional, max 500 chars)', () => {
-      const validDescriptions = [
-        '',
-        'This is a description',
-        'a'.repeat(500),
-      ];
-      const invalidDescriptions = ['a'.repeat(501)];
-
-      validDescriptions.forEach((desc) => {
-        expect(desc.length <= 500).toBe(true);
-      });
-
-      invalidDescriptions.forEach((desc) => {
-        expect(desc.length > 500).toBe(true);
-      });
-    });
-
-    it('should validate filter_json structure', () => {
-      const validFilters = [
-        { searchTerm: 'timeout', status: 'failed' },
-        { status: 'running', dateRange: { from: 0, to: Date.now() } },
-        { automationId: 'auto-123' },
-        {},
-      ];
-
-      validFilters.forEach((filter) => {
-        expect(typeof filter).toBe('object');
-        expect(filter !== null).toBe(true);
-      });
-    });
+    app.use('/api/users', createSavedFiltersRoutes(service));
   });
 
-  describe('Save Preset', () => {
-    it('should create preset with name and filters', () => {
-      const preset = {
-        id: 'preset-1',
-        userId: 'user-1',
-        name: 'Failed Executions',
-        description: 'All failed automations',
-        filterJson: { status: 'failed' },
-        isDefault: false,
-        createdAt: new Date(),
-        deletedAt: null,
-      };
+  it('GET /api/users/saved-filters seeds and returns default presets', async () => {
+    const response = await makeRequest(app, '/api/users/saved-filters');
 
-      expect(preset.id).toBeTruthy();
-      expect(preset.userId).toBe('user-1');
-      expect(preset.name).toBe('Failed Executions');
-      expect(preset.filterJson.status).toBe('failed');
-      expect(preset.isDefault).toBe(false);
-      expect(preset.deletedAt).toBe(null);
-    });
-
-    it('should enforce unique preset names per user', () => {
-      const userPresets = [
-        { name: 'Failed Executions', userId: 'user-1' },
-        { name: 'Failed Executions', userId: 'user-1' }, // Duplicate for same user - should fail
-        { name: 'Failed Executions', userId: 'user-2' }, // Same name, different user - OK
-      ];
-
-      // First two have same user + name (violates UNIQUE constraint)
-      expect(userPresets[0].userId === userPresets[1].userId &&
-             userPresets[0].name === userPresets[1].name).toBe(true);
-
-      // First and third have different users (OK)
-      expect(userPresets[0].userId !== userPresets[2].userId).toBe(true);
-    });
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(3);
+    expect(response.body.map((preset: any) => preset.name)).toEqual([
+      'Failed Executions (24h)',
+      'Timeout Errors',
+      'Recent Executions',
+    ]);
+    expect(response.body.every((preset: any) => preset.is_default)).toBe(true);
   });
 
-  describe('Load Preset', () => {
-    it('should apply preset filters to current filter state', () => {
-      const preset = {
-        filterJson: {
+  it('POST creates a custom preset and GET lists it alongside defaults', async () => {
+    const createResponse = await makeRequest(app, '/api/users/saved-filters', {
+      method: 'POST',
+      body: {
+        name: 'Falhas com timeout',
+        description: 'Busca por timeout nas falhas mais recentes',
+        filter_json: {
           status: 'failed',
-          dateRange: { from: Date.now() - 86400000, to: Date.now() },
+          searchTerm: 'timeout',
+          dateRange: '24h',
         },
-      };
-
-      const currentFilters = {};
-
-      // Apply preset
-      const newFilters = { ...currentFilters, ...preset.filterJson };
-
-      expect(newFilters.status).toBe('failed');
-      expect(newFilters.dateRange).toBeTruthy();
-      expect(newFilters.dateRange.from).toBeLessThan(newFilters.dateRange.to);
+      },
     });
 
-    it('should re-run search with applied preset filters', () => {
-      const mockApiCall = vi.fn().mockResolvedValue({
-        executions: [
-          { id: 'exec-1', status: 'failed' },
-          { id: 'exec-2', status: 'failed' },
-        ],
-      });
+    expect(createResponse.status).toBe(201);
+    expect(createResponse.body.name).toBe('Falhas com timeout');
+    expect(createResponse.body.is_default).toBe(false);
 
-      const preset = { filterJson: { status: 'failed' } };
+    const listResponse = await makeRequest(app, '/api/users/saved-filters');
 
-      // Simulate applying preset and re-running search
-      const applyPresetAndSearch = async (filters: any) => {
-        return await mockApiCall(filters);
-      };
-
-      applyPresetAndSearch(preset.filterJson).then((result) => {
-        expect(mockApiCall).toHaveBeenCalledWith(preset.filterJson);
-        expect(result.executions.length).toBe(2);
-        expect(result.executions[0].status).toBe('failed');
-      });
-    });
-
-    it('should complete in <500ms', async () => {
-      const start = Date.now();
-
-      // Simulate preset loading
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const elapsed = Date.now() - start;
-      expect(elapsed).toBeLessThan(500);
-    });
+    expect(listResponse.status).toBe(200);
+    expect(listResponse.body).toHaveLength(4);
+    expect(listResponse.body.some((preset: any) => preset.name === 'Falhas com timeout')).toBe(
+      true
+    );
   });
 
-  describe('Delete Preset (Soft-Delete)', () => {
-    it('should soft-delete preset by setting deleted_at timestamp', () => {
-      const preset = {
-        id: 'preset-1',
-        name: 'Failed Executions',
-        deletedAt: null,
-      };
-
-      // Soft delete
-      preset.deletedAt = new Date();
-
-      expect(preset.deletedAt).toBeTruthy();
-      expect(typeof preset.deletedAt.getTime()).toBe('number');
-    });
-
-    it('should preserve deleted preset in database (audit trail)', () => {
-      const deletedPreset = {
-        id: 'preset-1',
-        name: 'Failed Executions',
-        deletedAt: new Date(),
-      };
-
-      // Deleted preset should still exist in DB
-      expect(deletedPreset.id).toBeTruthy();
-      expect(deletedPreset.name).toBeTruthy();
-      expect(deletedPreset.deletedAt).toBeTruthy();
-    });
-
-    it('should prevent deletion of default presets', () => {
-      const defaultPreset = { isDefault: true };
-
-      // Attempting to delete default preset should fail
-      expect(defaultPreset.isDefault).toBe(true);
-      // In API: if (isDefault) { throw new Error('Cannot delete default preset'); }
-    });
-
-    it('should filter out deleted presets from user list (deleted_at IS NOT NULL)', () => {
-      const allPresets = [
-        { id: 'preset-1', name: 'Active Preset', deletedAt: null },
-        { id: 'preset-2', name: 'Deleted Preset', deletedAt: new Date() },
-        { id: 'preset-3', name: 'Another Active', deletedAt: null },
-      ];
-
-      // Filter only active presets
-      const activePresets = allPresets.filter((p) => p.deletedAt === null);
-
-      expect(activePresets.length).toBe(2);
-      expect(activePresets[0].name).toBe('Active Preset');
-      expect(activePresets[1].name).toBe('Another Active');
-    });
-  });
-
-  describe('Preset Limit Enforcement', () => {
-    it('should enforce max 20 presets per user', () => {
-      const MAX_PRESETS_PER_USER = 20;
-      const userPresets = Array.from({ length: 21 }, (_, i) => ({
-        id: `preset-${i}`,
-        userId: 'user-1',
-      }));
-
-      const activePresets = userPresets.filter((p) => p.userId === 'user-1');
-
-      // Attempting to save 21st preset should fail
-      expect(activePresets.length).toBe(21);
-      expect(activePresets.length > MAX_PRESETS_PER_USER).toBe(true);
-
-      // In API: if (userPresets.length >= MAX_PRESETS_PER_USER) { throw error; }
-    });
-
-    it('should count only active presets towards limit', () => {
-      const presets = [
-        { id: 'preset-1', userId: 'user-1', deletedAt: null },
-        { id: 'preset-2', userId: 'user-1', deletedAt: new Date() }, // Deleted
-        { id: 'preset-3', userId: 'user-1', deletedAt: null },
-      ];
-
-      const activePresentCount = presets.filter(
-        (p) => p.userId === 'user-1' && p.deletedAt === null
-      ).length;
-
-      expect(activePresentCount).toBe(2); // Only active presets count
-    });
-  });
-
-  describe('Default Presets', () => {
-    it('should always include 3 default presets', () => {
-      const defaultPresets = [
-        {
-          id: 'default-1',
-          name: 'Failed Executions (24h)',
-          isDefault: true,
-          filterJson: { status: 'failed', dateRange: { hours: 24 } },
+  it('DELETE performs soft-delete and removes preset from active list', async () => {
+    const createResponse = await makeRequest(app, '/api/users/saved-filters', {
+      method: 'POST',
+      body: {
+        name: 'Minha busca favorita',
+        filter_json: {
+          status: 'failed',
+          dateRange: '7d',
         },
-        {
-          id: 'default-2',
-          name: 'Timeout Errors',
-          isDefault: true,
-          filterJson: { searchTerm: 'timeout', status: 'failed' },
-        },
-        {
-          id: 'default-3',
-          name: 'Recent Executions',
-          isDefault: true,
-          filterJson: { dateRange: { days: 7 }, sort: 'newest' },
-        },
-      ];
-
-      expect(defaultPresets.length).toBe(3);
-      expect(defaultPresets.every((p) => p.isDefault)).toBe(true);
+      },
     });
 
-    it('should prevent deletion of default presets', () => {
-      const defaultPreset = { isDefault: true, name: 'Failed Executions (24h)' };
+    const deleteResponse = await makeRequest(
+      app,
+      `/api/users/saved-filters/${createResponse.body.id}`,
+      { method: 'DELETE' }
+    );
 
-      // Cannot delete if isDefault = true
-      expect(defaultPreset.isDefault).toBe(true);
-      // In API: if (preset.isDefault) throw new Error('Cannot delete default preset');
-    });
+    expect(deleteResponse.status).toBe(200);
+    expect(deleteResponse.body).toEqual({ success: true });
 
-    it('should prevent modification of default presets', () => {
-      const defaultPreset = {
-        isDefault: true,
-        name: 'Failed Executions (24h)',
-        filterJson: { status: 'failed' },
-      };
+    const listResponse = await makeRequest(app, '/api/users/saved-filters');
+    expect(listResponse.body.some((preset: any) => preset.id === createResponse.body.id)).toBe(
+      false
+    );
 
-      // Cannot update if isDefault = true
-      expect(defaultPreset.isDefault).toBe(true);
-      // In API: if (preset.isDefault) throw new Error('Cannot modify default preset');
-    });
-
-    it('should pre-populate default presets on user signup', () => {
-      const newUserPresets = [
-        { name: 'Failed Executions (24h)', isDefault: true },
-        { name: 'Timeout Errors', isDefault: true },
-        { name: 'Recent Executions', isDefault: true },
-      ];
-
-      expect(newUserPresets.length).toBe(3);
-      expect(newUserPresets.every((p) => p.isDefault)).toBe(true);
-    });
+    const deletedRecord = db.tables.user_saved_filters.find(
+      (preset) => preset.id === createResponse.body.id
+    );
+    expect(deletedRecord?.deleted_at).toBeTruthy();
   });
 
-  describe('RLS (Row Level Security)', () => {
-    it('should enforce user_id in SELECT query', () => {
-      // SELECT * FROM user_saved_filters WHERE auth.uid() = user_id
-      const userId = 'user-123';
-      const authUid = 'user-123';
+  it('DELETE rejects default presets', async () => {
+    const listResponse = await makeRequest(app, '/api/users/saved-filters');
+    const defaultPreset = listResponse.body[0];
 
-      expect(authUid === userId).toBe(true); // RLS allows access
-    });
+    const deleteResponse = await makeRequest(
+      app,
+      `/api/users/saved-filters/${defaultPreset.id}`,
+      { method: 'DELETE' }
+    );
 
-    it('should prevent cross-user access', () => {
-      const userId = 'user-123';
-      const authUid = 'user-456';
-
-      expect(authUid !== userId).toBe(true); // RLS blocks access
-    });
-
-    it('should enforce user_id in INSERT', () => {
-      const newPreset = { userId: 'user-123', name: 'My Preset' };
-      const authUid = 'user-123';
-
-      expect(newPreset.userId === authUid).toBe(true); // RLS allows
-    });
-
-    it('should prevent INSERT if user_id != auth.uid()', () => {
-      const newPreset = { userId: 'user-456', name: 'My Preset' };
-      const authUid = 'user-123';
-
-      expect(newPreset.userId !== authUid).toBe(true); // RLS blocks
-    });
+    expect(deleteResponse.status).toBe(400);
+    expect(deleteResponse.body.error).toContain('padrao');
   });
 
-  describe('API Tests', () => {
-    it('POST /api/users/saved-filters should create preset', () => {
-      const mockPost = vi.fn().mockResolvedValue({
-        id: 'preset-1',
-        name: 'Test Preset',
-        createdAt: new Date(),
+  it('POST enforces the maximum of 20 custom presets per user', async () => {
+    for (let index = 0; index < 20; index += 1) {
+      const response = await makeRequest(app, '/api/users/saved-filters', {
+        method: 'POST',
+        body: {
+          name: `Preset ${index + 1}`,
+          filter_json: {
+            status: 'failed',
+          },
+        },
       });
 
-      const payload = {
-        name: 'Test Preset',
-        description: 'Test description',
-        filterJson: { status: 'failed' },
-      };
+      expect(response.status).toBe(201);
+    }
 
-      mockPost(payload).then((result) => {
-        expect(mockPost).toHaveBeenCalledWith(payload);
-        expect(result.id).toBeTruthy();
-      });
+    const overflowResponse = await makeRequest(app, '/api/users/saved-filters', {
+      method: 'POST',
+      body: {
+        name: 'Preset 21',
+        filter_json: {
+          status: 'failed',
+        },
+      },
     });
 
-    it('GET /api/users/saved-filters should list only active presets', () => {
-      const mockGet = vi.fn().mockResolvedValue([
-        { id: 'preset-1', name: 'Active 1', deletedAt: null },
-        { id: 'preset-3', name: 'Active 2', deletedAt: null },
-        // preset-2 (deleted) not included
-      ]);
+    expect(overflowResponse.status).toBe(409);
+    expect(overflowResponse.body.error).toContain('Maximo');
+  });
 
-      mockGet().then((result) => {
-        expect(mockGet).toHaveBeenCalled();
-        expect(result.length).toBe(2);
-        expect(result.every((p) => p.deletedAt === null)).toBe(true);
-      });
+  it('allows reusing the same preset name after soft-delete', async () => {
+    const createResponse = await makeRequest(app, '/api/users/saved-filters', {
+      method: 'POST',
+      body: {
+        name: 'Reutilizavel',
+        filter_json: {
+          searchTerm: 'timeout',
+        },
+      },
     });
 
-    it('DELETE /api/users/saved-filters/:id should soft-delete', () => {
-      const mockDelete = vi.fn().mockResolvedValue({ success: true });
+    expect(createResponse.status).toBe(201);
 
-      mockDelete('preset-1').then((result) => {
-        expect(mockDelete).toHaveBeenCalledWith('preset-1');
-        expect(result.success).toBe(true);
-      });
+    const deleteResponse = await makeRequest(
+      app,
+      `/api/users/saved-filters/${createResponse.body.id}`,
+      { method: 'DELETE' }
+    );
+    expect(deleteResponse.status).toBe(200);
+
+    const recreateResponse = await makeRequest(app, '/api/users/saved-filters', {
+      method: 'POST',
+      body: {
+        name: 'Reutilizavel',
+        filter_json: {
+          searchTerm: 'timeout',
+          status: 'failed',
+        },
+      },
     });
+
+    expect(recreateResponse.status).toBe(201);
+  });
+
+  it('returns 401 when the request has no authenticated user', async () => {
+    const anonymousApp = express();
+    anonymousApp.use(express.json());
+    anonymousApp.use('/api/users', createSavedFiltersRoutes(service));
+
+    const response = await makeRequest(anonymousApp, '/api/users/saved-filters');
+
+    expect(response.status).toBe(401);
   });
 });
+
+type SavedFilterRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  filter_json: Record<string, unknown>;
+  is_default: boolean;
+  created_at: string;
+  deleted_at: string | null;
+};
+
+class FakeSupabaseClient {
+  private idCounter = 0;
+
+  public tables: {
+    user_saved_filters: SavedFilterRow[];
+  } = {
+    user_saved_filters: [],
+  };
+
+  from(tableName: 'user_saved_filters') {
+    return new FakeQueryBuilder(this, tableName);
+  }
+
+  nextId() {
+    this.idCounter += 1;
+    return `preset-${this.idCounter}`;
+  }
+}
+
+class FakeQueryBuilder {
+  private action: 'select' | 'insert' | 'update' = 'select';
+  private payload: Record<string, unknown> | Record<string, unknown>[] | null = null;
+  private filters: Array<(row: SavedFilterRow) => boolean> = [];
+  private orders: Array<{ column: keyof SavedFilterRow; ascending: boolean }> = [];
+  private selectOptions: { count?: 'exact'; head?: boolean } | undefined;
+  private expectSingle: 'none' | 'single' | 'maybeSingle' = 'none';
+
+  constructor(
+    private readonly client: FakeSupabaseClient,
+    private readonly tableName: 'user_saved_filters'
+  ) {}
+
+  select(_columns: string = '*', options?: { count?: 'exact'; head?: boolean }) {
+    this.selectOptions = options;
+    return this;
+  }
+
+  insert(payload: Record<string, unknown> | Record<string, unknown>[]) {
+    this.action = 'insert';
+    this.payload = payload;
+    return this;
+  }
+
+  update(payload: Record<string, unknown>) {
+    this.action = 'update';
+    this.payload = payload;
+    return this;
+  }
+
+  eq(column: keyof SavedFilterRow, value: unknown) {
+    this.filters.push((row) => row[column] === value);
+    return this;
+  }
+
+  is(column: keyof SavedFilterRow, value: unknown) {
+    this.filters.push((row) => row[column] === value);
+    return this;
+  }
+
+  ilike(column: keyof SavedFilterRow, value: string) {
+    const normalized = value.toLowerCase();
+    this.filters.push((row) => String(row[column]).toLowerCase() === normalized);
+    return this;
+  }
+
+  order(column: keyof SavedFilterRow, options?: { ascending?: boolean }) {
+    this.orders.push({
+      column,
+      ascending: options?.ascending !== false,
+    });
+    return this;
+  }
+
+  single() {
+    this.expectSingle = 'single';
+    return this;
+  }
+
+  maybeSingle() {
+    this.expectSingle = 'maybeSingle';
+    return this;
+  }
+
+  then<TResult1 = any, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: any; error: any; count?: number | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
+  ) {
+    return Promise.resolve(this.execute()).then(onfulfilled, onrejected);
+  }
+
+  private execute() {
+    const rows = this.client.tables[this.tableName];
+
+    if (this.action === 'insert') {
+      const insertedRows = toArray(this.payload).map((rawRow) => {
+        const row = rawRow as Partial<SavedFilterRow>;
+        const duplicate = rows.find(
+          (current) =>
+            current.user_id === row.user_id &&
+            current.deleted_at === null &&
+            current.name.toLowerCase() === String(row.name || '').toLowerCase()
+        );
+
+        if (duplicate) {
+          return { error: { code: '23505', message: 'duplicate key value' } };
+        }
+
+        const createdRow: SavedFilterRow = {
+          id: this.client.nextId(),
+          user_id: String(row.user_id),
+          name: String(row.name),
+          description: row.description ? String(row.description) : null,
+          filter_json: (row.filter_json || {}) as Record<string, unknown>,
+          is_default: Boolean(row.is_default),
+          created_at: new Date().toISOString(),
+          deleted_at: row.deleted_at ? String(row.deleted_at) : null,
+        };
+
+        rows.push(createdRow);
+        return { data: createdRow };
+      });
+
+      const failedInsert = insertedRows.find((entry) => 'error' in entry);
+      if (failedInsert && 'error' in failedInsert) {
+        return { data: null, error: failedInsert.error };
+      }
+
+      const created = insertedRows
+        .filter((entry): entry is { data: SavedFilterRow } => 'data' in entry)
+        .map((entry) => entry.data);
+
+      return this.finish(created);
+    }
+
+    const filteredRows = this.applyFilters(rows);
+
+    if (this.action === 'update') {
+      const updates = (this.payload || {}) as Partial<SavedFilterRow>;
+      filteredRows.forEach((row) => {
+        Object.assign(row, updates);
+      });
+
+      return { data: filteredRows.map(cloneRow), error: null, count: filteredRows.length };
+    }
+
+    return this.finish(filteredRows.map(cloneRow));
+  }
+
+  private finish(rows: SavedFilterRow[]) {
+    const orderedRows = [...rows];
+
+    for (const order of this.orders) {
+      orderedRows.sort((left, right) => {
+        const leftValue = left[order.column];
+        const rightValue = right[order.column];
+
+        if (leftValue === rightValue) {
+          return 0;
+        }
+
+        if (leftValue === null) {
+          return order.ascending ? -1 : 1;
+        }
+
+        if (rightValue === null) {
+          return order.ascending ? 1 : -1;
+        }
+
+        if (leftValue < rightValue) {
+          return order.ascending ? -1 : 1;
+        }
+
+        return order.ascending ? 1 : -1;
+      });
+    }
+
+    if (this.expectSingle === 'single') {
+      if (orderedRows.length !== 1) {
+        return { data: null, error: { code: 'PGRST116', message: 'Row not found' } };
+      }
+
+      return { data: orderedRows[0], error: null };
+    }
+
+    if (this.expectSingle === 'maybeSingle') {
+      return { data: orderedRows[0] || null, error: null };
+    }
+
+    if (this.selectOptions?.head) {
+      return {
+        data: null,
+        error: null,
+        count: this.selectOptions.count === 'exact' ? orderedRows.length : null,
+      };
+    }
+
+    return {
+      data: orderedRows,
+      error: null,
+      count: this.selectOptions?.count === 'exact' ? orderedRows.length : null,
+    };
+  }
+
+  private applyFilters(rows: SavedFilterRow[]) {
+    return rows.filter((row) => this.filters.every((predicate) => predicate(row)));
+  }
+}
+
+function toArray<T>(value: T | T[] | null): T[] {
+  if (!value) {
+    return [];
+  }
+
+  return Array.isArray(value) ? value : [value];
+}
+
+function cloneRow(row: SavedFilterRow): SavedFilterRow {
+  return JSON.parse(JSON.stringify(row)) as SavedFilterRow;
+}
+
+async function makeRequest(
+  app: express.Express,
+  path: string,
+  options?: {
+    method?: 'GET' | 'POST' | 'DELETE';
+    body?: Record<string, unknown>;
+  }
+) {
+  const server = await new Promise<ReturnType<express.Express['listen']>>((resolve) => {
+    const startedServer = app.listen(0, () => resolve(startedServer));
+  });
+
+  const address = server.address() as AddressInfo;
+  const response = await fetch(`http://127.0.0.1:${address.port}${path}`, {
+    method: options?.method || 'GET',
+    headers: options?.body
+      ? {
+          'Content-Type': 'application/json',
+        }
+      : undefined,
+    body: options?.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  const body = await response.json().catch(() => null);
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+
+  return {
+    status: response.status,
+    body,
+  };
+}

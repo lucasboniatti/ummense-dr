@@ -19,12 +19,16 @@ import { statusRoutes } from './api/status/status.routes';
 import webhookDeliveryRoutes from './api/webhooks/webhook-delivery.routes';
 import { createHistoryRoutes } from './automations/history/history.routes';
 import { ExecutionHistoryService } from './automations/history/history.service';
+import { SavedFiltersService } from './automations/history/saved-filters.service';
+import { createSavedFiltersRoutes } from './automations/history/saved-filters.routes';
 import { supabase } from './lib/supabase';
 import { AppError } from './utils/errors';
 
 const app: Express = express();
 const historyService = new ExecutionHistoryService(supabase as any);
 const historyRoutes = createHistoryRoutes(historyService);
+const savedFiltersService = new SavedFiltersService(supabase as any);
+const savedFiltersRoutes = createSavedFiltersRoutes(savedFiltersService);
 
 const localCorsDefaults = [
   'http://localhost:3000',
@@ -102,6 +106,7 @@ app.use('/api/integrations', authMiddleware, integrationsRoutes);
 app.use('/api/automations', authMiddleware, controlRoutes);
 app.use('/api/automations', authMiddleware, automationRoutes);
 app.use('/api/automations', authMiddleware, historyRoutes);
+app.use('/api/users', authMiddleware, savedFiltersRoutes);
 
 // DLQ endpoints under /api/automations/:automationId/webhooks/*
 app.use('/api', authMiddleware, webhookDeliveryRoutes);

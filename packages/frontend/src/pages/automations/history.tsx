@@ -1,180 +1,226 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { format, subDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { ExecutionHistoryTable } from '@/components/ExecutionHistoryTable';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import { historyService } from '@/services/history.service';
+import {
+  historyService,
+  SavedFilterDefinition,
+  SavedFilterPreset,
+} from '@/services/history.service';
+
+type HistoryFilters = {
+  automationId: string;
+  status: '' | 'success' | 'failed' | 'skipped';
+  dateRange: '24h' | '7d' | '30d';
+  searchTerm: string;
+  sortBy: 'timestamp' | 'status' | 'duration';
+  sortOrder: 'asc' | 'desc';
+  offset: number;
+  limit: number;
+};
+
+const DEFAULT_HISTORY_FILTERS: HistoryFilters = {
+  automationId: '',
+  status: '',
+  dateRange: '7d',
+  searchTerm: '',
+  sortBy: 'timestamp',
+  sortOrder: 'desc',
+  offset: 0,
+  limit: 50,
+};
 
 export default function ExecutionHistoryPage() {
   const router = useRouter();
-  const supabase = useSupabaseClient();
 
-  const [executions, setExecutions] = useState([]);
+  const [executions, setExecutions] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [savedFilters, setSavedFilters] = useState<SavedFilterPreset[]>([]);
+  const [savedFiltersLoading, setSavedFiltersLoading] = useState(true);
+  const [savedFiltersError, setSavedFiltersError] = useState<string | null>(null);
+  const [presetActionPending, setPresetActionPending] = useState(false);
+  const [selectedPresetId, setSelectedPresetId] = useState('');
+  const [filters, setFilters] = useState<HistoryFilters>(DEFAULT_HISTORY_FILTERS);
 
-  // Filter state
-  const [filters, setFilters] = useState({
-    automationId: '',
-    status: '',
-    dateRange: '7d',
-    searchTerm: '',
-    sortBy: 'timestamp',
-    sortOrder: 'desc',
-    offset: 0,
-    limit: 50,
-  });
-
-  // Fetch executions
-  const fetchExecutions = async () => {
+  const fetchExecutions = useCallback(async (activeFilters: HistoryFilters) => {
     setLoading(true);
     setError(null);
 
     try {
-      const startDate = new Date();
-      switch (filters.dateRange) {
-        case '24h':
-          startDate.setDate(startDate.getDate() - 1);
-          break;
-        case '7d':
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case '30d':
-          startDate.setDate(startDate.getDate() - 30);
-          break;
-      }
+      const response = await historyService.queryExecutionHistory(
+        buildExecutionQuery(activeFilters)
+      );
 
-      const params = new URLSearchParams({
-        limit: String(filters.limit),
-        offset: String(filters.offset),
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-        startDate: startDate.toISOString(),
-        endDate: new Date().toISOString(),
-      });
-
-      if (filters.automationId) params.append('automationId', filters.automationId);
-      if (filters.status) params.append('status', filters.status);
-      if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
-
-      const response = await fetch(`/api/automations/history?${params}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch execution history');
-      }
-
-      const data = await response.json();
-      setExecutions(data.executions);
-      setTotal(data.total);
+      setExecutions(response.executions);
+      setTotal(response.total);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : 'Erro ao carregar historico');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const loadSavedFilters = useCallback(async (preferredSelectedId?: string) => {
+    setSavedFiltersLoading(true);
+
+    try {
+      const presets = await historyService.listSavedFilters();
+      setSavedFilters(presets);
+      setSavedFiltersError(null);
+      setSelectedPresetId((currentSelectedId) => {
+        const candidate = preferredSelectedId ?? currentSelectedId;
+        if (!candidate) {
+          return '';
+        }
+
+        return presets.some((preset) => preset.id === candidate) ? candidate : '';
+      });
+    } catch (err) {
+      setSavedFiltersError(
+        err instanceof Error ? err.message : 'Erro ao carregar presets salvos'
+      );
+    } finally {
+      setSavedFiltersLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchExecutions();
-  }, [filters]);
+    void fetchExecutions(filters);
+  }, [filters, fetchExecutions]);
+
+  useEffect(() => {
+    void loadSavedFilters();
+  }, [loadSavedFilters]);
+
+  const updateFilters = useCallback(
+    (
+      update:
+        | Partial<HistoryFilters>
+        | ((current: HistoryFilters) => HistoryFilters),
+      options?: { resetPage?: boolean; preservePreset?: boolean }
+    ) => {
+      const resetPage = options?.resetPage !== false;
+      const preservePreset = options?.preservePreset === true;
+
+      setFilters((current) => {
+        const next =
+          typeof update === 'function'
+            ? update(current)
+            : {
+                ...current,
+                ...update,
+              };
+
+        return {
+          ...next,
+          offset: resetPage ? 0 : next.offset,
+        };
+      });
+
+      if (!preservePreset) {
+        setSelectedPresetId('');
+      }
+    },
+    []
+  );
+
+  const handleApplyPreset = useCallback(
+    (presetId: string) => {
+      if (!presetId) {
+        setSelectedPresetId('');
+        return;
+      }
+
+      const preset = savedFilters.find((entry) => entry.id === presetId);
+      if (!preset) {
+        return;
+      }
+
+      setSelectedPresetId(presetId);
+      setSavedFiltersError(null);
+      setFilters((current) => ({
+        ...DEFAULT_HISTORY_FILTERS,
+        limit: current.limit,
+        ...applyPresetDefinition(preset.filter_json),
+        offset: 0,
+      }));
+    },
+    [savedFilters]
+  );
+
+  const handleSavePreset = useCallback(
+    async (name: string, description: string, currentFilters: SavedFilterDefinition) => {
+      setPresetActionPending(true);
+
+      try {
+        const createdPreset = await historyService.createSavedFilter({
+          name,
+          description,
+          filter_json: currentFilters,
+        });
+
+        await loadSavedFilters(createdPreset.id);
+        setSelectedPresetId(createdPreset.id);
+        setSavedFiltersError(null);
+      } catch (err) {
+        throw err instanceof Error ? err : new Error('Erro ao salvar preset');
+      } finally {
+        setPresetActionPending(false);
+      }
+    },
+    [loadSavedFilters]
+  );
+
+  const handleDeletePreset = useCallback(
+    async (presetId: string) => {
+      setPresetActionPending(true);
+
+      try {
+        await historyService.deleteSavedFilter(presetId);
+        setSelectedPresetId('');
+        await loadSavedFilters('');
+        setSavedFiltersError(null);
+      } catch (err) {
+        setSavedFiltersError(
+          err instanceof Error ? err.message : 'Erro ao excluir preset'
+        );
+        throw err instanceof Error ? err : new Error('Erro ao excluir preset');
+      } finally {
+        setPresetActionPending(false);
+      }
+    },
+    [loadSavedFilters]
+  );
 
   const handleExportCSV = async () => {
-    const response = await fetch('/api/automations/history/export/csv');
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'execution-history.csv';
-    a.click();
+    await historyService.exportAsCSV(buildExecutionQuery(filters));
   };
 
   const handleExportJSON = async () => {
-    const response = await fetch('/api/automations/history/export/json');
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'execution-history.json';
-    a.click();
+    await historyService.exportAsJSON(buildExecutionQuery(filters));
   };
 
   return (
     <div className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-900">Histórico de Execuções</h1>
-          <p className="text-neutral-600 mt-2">Veja o histórico de todas as suas automações</p>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            {/* Date Range Filter */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Período
-              </label>
-              <select
-                value={filters.dateRange}
-                onChange={(e) =>
-                  setFilters({ ...filters, dateRange: e.target.value, offset: 0 })
-                }
-                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
-              >
-                <option value="24h">Últimas 24h</option>
-                <option value="7d">Últimos 7 dias</option>
-                <option value="30d">Últimos 30 dias</option>
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Status
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) =>
-                  setFilters({ ...filters, status: e.target.value, offset: 0 })
-                }
-                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
-              >
-                <option value="">Todos</option>
-                <option value="success">Sucesso</option>
-                <option value="failed">Falha</option>
-                <option value="skipped">Ignorado</option>
-              </select>
-            </div>
-
-            {/* Search */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Buscar
-              </label>
-              <input
-                type="text"
-                placeholder="ID de execução ou nome da automação..."
-                value={filters.searchTerm}
-                onChange={(e) =>
-                  setFilters({ ...filters, searchTerm: e.target.value, offset: 0 })
-                }
-                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
-              />
-            </div>
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-neutral-900">Historico de Execucoes</h1>
+            <p className="text-neutral-600 mt-2">
+              Consulte, filtre e reutilize buscas do historico das automacoes.
+            </p>
           </div>
 
-          {/* Export Buttons */}
           <div className="flex gap-2">
             <button
-              onClick={handleExportCSV}
+              onClick={() => void handleExportCSV()}
               className="px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700"
             >
               Exportar CSV
             </button>
             <button
-              onClick={handleExportJSON}
+              onClick={() => void handleExportJSON()}
               className="px-4 py-2 bg-success-600 text-white text-sm rounded-md hover:bg-success-700"
             >
               Exportar JSON
@@ -182,56 +228,135 @@ export default function ExecutionHistoryPage() {
           </div>
         </div>
 
-        {/* Error State */}
         {error && (
           <div className="bg-error-50 border border-error-200 rounded-lg p-4 mb-6">
             <p className="text-error-800">{error}</p>
           </div>
         )}
 
-        {/* Loading State */}
-        {loading && (
+        {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <p className="text-neutral-600 mt-4">Carregando histórico...</p>
+            <p className="text-neutral-600 mt-4">Carregando historico...</p>
           </div>
-        )}
-
-        {/* Table */}
-        {!loading && executions.length > 0 && (
+        ) : (
           <ExecutionHistoryTable
             executions={executions}
             total={total}
             limit={filters.limit}
             offset={filters.offset}
-            sortBy={filters.sortBy as any}
+            sortBy={filters.sortBy}
+            currentFilters={buildSavedFilterDefinition(filters)}
+            savedFilters={savedFilters}
+            selectedPresetId={selectedPresetId}
+            savedFiltersLoading={savedFiltersLoading}
+            savedFiltersError={savedFiltersError}
+            presetActionPending={presetActionPending}
             onSort={(sortBy) =>
-              setFilters((prev) => ({ ...prev, sortBy, offset: 0 }))
+              updateFilters({
+                sortBy: sortBy as HistoryFilters['sortBy'],
+                sortOrder: 'desc',
+              })
             }
-            onPageChange={(offset) => setFilters((prev) => ({ ...prev, offset }))}
+            onPageChange={(offset) =>
+              updateFilters(
+                (current) => ({
+                  ...current,
+                  offset,
+                }),
+                { resetPage: false, preservePreset: true }
+              )
+            }
             onSearch={(searchTerm) =>
-              setFilters((prev) => ({ ...prev, searchTerm, offset: 0 }))
+              updateFilters({
+                searchTerm,
+              })
             }
             onSearchSuggestions={async (searchTerm) => {
               const suggestions = await historyService.getSearchSuggestions(15);
-              return suggestions.filter((s) =>
-                s.toLowerCase().includes(searchTerm.toLowerCase())
+              return suggestions.filter((suggestion) =>
+                suggestion.toLowerCase().includes(searchTerm.toLowerCase())
               );
             }}
-            searchTerm={filters.searchTerm}
-            onRowClick={(executionId) =>
-              router.push(`/automations/history/${executionId}`)
+            onFilterChange={(partialFilters) =>
+              updateFilters({
+                ...partialFilters,
+                status: partialFilters.status ?? '',
+                dateRange: partialFilters.dateRange ?? filters.dateRange,
+              } as Partial<HistoryFilters>)
             }
+            onApplyPreset={handleApplyPreset}
+            onSavePreset={handleSavePreset}
+            onDeletePreset={handleDeletePreset}
+            searchTerm={filters.searchTerm}
+            onRowClick={(executionId) => router.push(`/automations/history/${executionId}`)}
           />
-        )}
-
-        {/* Empty State */}
-        {!loading && executions.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg">
-            <p className="text-neutral-500">Nenhuma execução encontrada</p>
-          </div>
         )}
       </div>
     </div>
   );
+}
+
+function buildExecutionQuery(filters: HistoryFilters) {
+  const { startDate, endDate } = resolveDateRange(filters.dateRange);
+
+  return {
+    automationId: filters.automationId || undefined,
+    status: filters.status || undefined,
+    searchTerm: filters.searchTerm || undefined,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
+    limit: filters.limit,
+    offset: filters.offset,
+    startDate,
+    endDate,
+  };
+}
+
+function resolveDateRange(dateRange: HistoryFilters['dateRange']) {
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+
+  if (dateRange === '24h') {
+    startDate.setDate(startDate.getDate() - 1);
+  } else if (dateRange === '30d') {
+    startDate.setDate(startDate.getDate() - 30);
+  } else {
+    startDate.setDate(startDate.getDate() - 7);
+  }
+
+  return { startDate, endDate };
+}
+
+function buildSavedFilterDefinition(filters: HistoryFilters): SavedFilterDefinition {
+  const definition: SavedFilterDefinition = {
+    dateRange: filters.dateRange,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
+  };
+
+  if (filters.automationId) {
+    definition.automationId = filters.automationId;
+  }
+
+  if (filters.status) {
+    definition.status = filters.status;
+  }
+
+  if (filters.searchTerm) {
+    definition.searchTerm = filters.searchTerm;
+  }
+
+  return definition;
+}
+
+function applyPresetDefinition(preset: SavedFilterDefinition): Partial<HistoryFilters> {
+  return {
+    automationId: preset.automationId || '',
+    status: preset.status || '',
+    dateRange: preset.dateRange || DEFAULT_HISTORY_FILTERS.dateRange,
+    searchTerm: preset.searchTerm || '',
+    sortBy: preset.sortBy || DEFAULT_HISTORY_FILTERS.sortBy,
+    sortOrder: preset.sortOrder || DEFAULT_HISTORY_FILTERS.sortOrder,
+  };
 }
