@@ -19,24 +19,24 @@ export function EmptyState({
     variant = 'default',
 }: EmptyStateProps) {
     const containerClasses = variant === 'compact'
-        ? 'py-8 px-4 border border-dashed border-neutral-300 rounded-lg'
-        : 'py-16 px-6 min-h-[400px] flex-col justify-center';
+        ? 'rounded-[22px] border border-dashed border-[color:var(--border-strong)] bg-white/72 px-5 py-9'
+        : 'app-surface min-h-[320px] justify-center px-6 py-16';
 
     return (
         <div className={`flex flex-col items-center text-center max-w-md mx-auto ${containerClasses}`}>
             {icon && (
-                <div className="text-neutral-300 mb-4 bg-neutral-50 p-4 rounded-full">
+                <div className="mb-4 rounded-full bg-[var(--accent-soft)] p-4 text-primary-600">
                     {icon}
                 </div>
             )}
-            <h3 className="text-neutral-700 font-semibold text-lg">{title}</h3>
+            <h3 className="text-lg font-semibold text-neutral-800">{title}</h3>
             {description && (
-                <p className="text-neutral-500 text-sm mt-2 font-medium leading-relaxed">
+                <p className="mt-2 text-sm font-medium leading-relaxed text-neutral-500">
                     {description}
                 </p>
             )}
             {actionLabel && onAction && (
-                <Button variant="primary" onClick={onAction} className="mt-6 shadow-sm">
+                <Button variant="primary" onClick={onAction} className="mt-6">
                     {actionLabel}
                 </Button>
             )}

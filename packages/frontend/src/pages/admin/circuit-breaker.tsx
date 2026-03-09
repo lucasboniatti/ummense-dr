@@ -48,12 +48,21 @@ const CircuitBreakerPanel: React.FC = () => {
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-md border border-neutral-200 mt-6 max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold mb-6 text-neutral-800 border-b pb-2">Estados do Circuit Breaker</h2>
+        <div className="app-page">
+            <section className="app-page-hero animate-fade-up">
+                <div className="app-page-heading">
+                    <p className="app-kicker">Admin</p>
+                    <h1 className="app-page-title">Circuit breaker</h1>
+                    <p className="app-page-copy">Monitore saude dos conectores e execute resets com menos ruido visual e mais contexto.</p>
+                </div>
+            </section>
+
+            <div className="app-surface mx-auto max-w-4xl p-6">
+            <h2 className="mb-6 border-b border-[color:var(--border-subtle)] pb-3 text-xl font-bold text-neutral-800">Estados do Circuit Breaker</h2>
 
             <div className="space-y-6">
                 {Object.entries(connectors).map(([connectorId, state]) => (
-                    <div key={connectorId} className="flex flex-col md:flex-row md:items-center justify-between bg-neutral-50 p-4 rounded border">
+                    <div key={connectorId} className="app-surface-muted flex flex-col justify-between rounded-[20px] p-4 md:flex-row md:items-center">
                         <div>
                             <h4 className="font-semibold text-lg text-neutral-800 capitalize flex items-center gap-2">
                                 {connectorId.replace('_', ' ')}
@@ -72,13 +81,14 @@ const CircuitBreakerPanel: React.FC = () => {
                             <button
                                 onClick={() => handleReset(connectorId)}
                                 disabled={state.state === 'healthy'}
-                                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-medium transition-colors disabled:opacity-50"
+                                className="app-control rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
                             >
                                 Forçar Reset
                             </button>
                         </div>
                     </div>
                 ))}
+            </div>
             </div>
         </div>
     );

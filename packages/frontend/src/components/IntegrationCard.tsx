@@ -40,7 +40,7 @@ export function IntegrationCard({
 
   const resolvedDescription =
     description ||
-    (integration?.enabled ? 'Connected and active' : 'Not connected');
+    (integration?.enabled ? 'Integracao conectada e ativa' : 'Integracao ainda nao conectada');
 
   const resolvedIcon = icon || (type === 'discord' ? '🎮' : '💬');
   const resolvedStatus =
@@ -68,8 +68,13 @@ export function IntegrationCard({
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-lg">{resolvedName}</CardTitle>
-        <div className="text-2xl">{resolvedIcon}</div>
+        <div className="space-y-2">
+          <p className="app-kicker">{type === 'discord' ? 'Discord' : 'Slack'}</p>
+          <CardTitle className="text-lg">{resolvedName}</CardTitle>
+        </div>
+        <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-primary-50 text-2xl">
+          {resolvedIcon}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-neutral-600">{resolvedDescription}</p>
@@ -82,16 +87,16 @@ export function IntegrationCard({
                 : 'bg-neutral-100 text-neutral-700'
             }`}
           >
-            {resolvedStatus === 'connected' ? '✓ Connected' : 'Not Connected'}
+            {resolvedStatus === 'connected' ? 'Conectada' : 'Nao conectada'}
           </span>
 
           {resolvedStatus === 'connected' ? (
             <Button variant="outline" size="sm" onClick={handleDisconnect} disabled={loading}>
-              {loading ? 'Disconnecting...' : 'Disconnect'}
+              {loading ? 'Desconectando...' : 'Desconectar'}
             </Button>
           ) : (
             <Button variant="primary" size="sm" onClick={onConnect}>
-              Connect
+              Conectar
             </Button>
           )}
         </div>
