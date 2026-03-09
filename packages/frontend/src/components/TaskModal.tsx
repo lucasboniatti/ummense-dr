@@ -4,6 +4,7 @@ import { FlowTag } from '../services/flows.service';
 import { TaskHistoryItem, TaskItem, TaskTag, tasksService } from '../services/tasks.service';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { useToast } from '@/contexts/ToastContext';
 
 interface TaskModalProps {
   open: boolean;
@@ -105,6 +106,7 @@ export default function TaskModal({
   const [error, setError] = useState<string | null>(null);
   const [taskTags, setTaskTags] = useState<TaskTag[]>([]);
   const [selectedTagId, setSelectedTagId] = useState('');
+  const { success, error: toastError } = useToast();
 
   const isEditMode = Boolean(task?.id);
   const modalTitle = isEditMode ? 'Editar tarefa' : 'Nova tarefa';
@@ -218,6 +220,10 @@ export default function TaskModal({
       }
 
       await onSaved();
+      success(
+        isEditMode ? 'Tarefa atualizada' : 'Tarefa criada',
+        `A tarefa "${form.title.trim()}" foi ${isEditMode ? 'atualizada' : 'criada'} com sucesso.`
+      );
       onClose();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Falha ao salvar tarefa.');
@@ -237,6 +243,7 @@ export default function TaskModal({
     try {
       await tasksService.remove(task.id, token);
       await onSaved();
+      success('Tarefa excluída', 'A tarefa foi removida com sucesso.');
       onClose();
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : 'Falha ao remover tarefa.');
