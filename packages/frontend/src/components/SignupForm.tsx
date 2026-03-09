@@ -23,7 +23,7 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
     setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('As senhas nao conferem.');
       setLoading(false);
       return;
     }
@@ -38,13 +38,13 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Signup failed');
+        throw new Error(data.error || 'Falha ao criar conta');
       }
 
       const data = await response.json();
       onSuccess?.(data.token);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : 'Erro inesperado ao criar conta';
       setError(message);
       onError?.(message);
     } finally {
@@ -54,17 +54,27 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-6">
-      <h2 className="text-2xl font-bold">Criar Conta</h2>
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">Criar conta</h2>
+        <p className="text-sm leading-6 text-neutral-500">
+          Configure seus dados iniciais para entrar no workspace.
+        </p>
+      </div>
 
       <FormInput label="Nome" type="text" name="name" value={formData.name} onChange={handleChange} required />
       <FormInput label="E-mail" type="email" name="email" value={formData.email} onChange={handleChange} required />
       <FormInput label="Senha" type="password" name="password" value={formData.password} onChange={handleChange} required />
       <FormInput label="Confirmar Senha" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
 
-      {error && <div className="p-3 bg-error-100 border border-error-400 text-error-700 rounded-md text-sm">{error}</div>}
+      {error && (
+        <div className="app-inline-banner app-inline-banner-error">
+          <strong>Cadastro</strong>
+          {error}
+        </div>
+      )}
 
       <Button type="submit" disabled={loading} className="w-full" variant="primary">
-        {loading ? 'Criando Conta...' : 'Criar Conta'}
+        {loading ? 'Criando conta...' : 'Criar conta'}
       </Button>
 
       <div className="mt-4 text-center">

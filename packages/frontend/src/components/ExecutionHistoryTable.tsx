@@ -5,6 +5,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 import { EmptyState } from './ui/EmptyState';
+import { ConfirmDialog } from './ui/ConfirmDialog';
 import { FileSearch } from 'lucide-react';
 import SavePresetDialog from './SavePresetDialog';
 import type { SavedFilterDefinition, SavedFilterPreset } from '@/services/history.service';
@@ -82,6 +83,11 @@ export function ExecutionHistoryTable({
   const [isDeletingPreset, setIsDeletingPreset] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string; name: string }>({
+    open: false,
+    id: '',
+    name: '',
+  });
 
   const selectedPreset = useMemo(
     () => savedFilters.find((preset) => preset.id === selectedPresetId) || null,
@@ -161,15 +167,15 @@ export function ExecutionHistoryTable({
       return;
     }
 
-    const confirmed = window.confirm(`Remover o preset "${selectedPreset.name}"?`);
-    if (!confirmed) {
-      return;
-    }
+    setDeleteConfirm({ open: true, id: selectedPresetId, name: selectedPreset.name });
+  };
 
+  const confirmDeletePreset = async () => {
     setIsDeletingPreset(true);
 
     try {
-      await onDeletePreset(selectedPresetId);
+      await onDeletePreset(deleteConfirm.id);
+      setDeleteConfirm({ open: false, id: '', name: '' });
     } finally {
       setIsDeletingPreset(false);
     }
@@ -177,7 +183,7 @@ export function ExecutionHistoryTable({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-3">
+      <div className="app-toolbar space-y-3 p-3">
         <div className="relative">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex-1 relative">
@@ -190,7 +196,7 @@ export function ExecutionHistoryTable({
                 }}
                 onFocus={() => searchTerm && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full px-4 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="app-control h-11 w-full rounded-[var(--radius-control)] px-4 text-sm"
               />
               {searchTime !== undefined && (
                 <span className="absolute right-3 top-2.5 text-xs text-neutral-500">
@@ -199,7 +205,7 @@ export function ExecutionHistoryTable({
               )}
 
               {showSuggestions && searchSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-md shadow-lg z-10">
+                <div className="app-surface absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-[18px]">
                   {searchSuggestions.map((suggestion, idx) => (
                     <div
                       key={`${suggestion}-${idx}`}
@@ -207,7 +213,7 @@ export function ExecutionHistoryTable({
                         void handleSearch(suggestion);
                         setShowSuggestions(false);
                       }}
-                      className="px-4 py-2 hover:bg-neutral-50 cursor-pointer text-sm text-neutral-700"
+                      className="cursor-pointer px-4 py-2 text-sm text-neutral-700 transition hover:bg-neutral-50"
                     >
                       {suggestion}
                     </div>
@@ -221,7 +227,7 @@ export function ExecutionHistoryTable({
                 value={selectedPresetId}
                 onChange={(e) => onApplyPreset?.(e.target.value)}
                 disabled={savedFiltersLoading || presetActionPending}
-                className="min-w-56 px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="app-control min-w-56 rounded-[var(--radius-control)] px-3 text-sm"
               >
                 <option value="">
                   {savedFiltersLoading ? 'Carregando presets...' : 'Carregar preset...'}
@@ -268,7 +274,7 @@ export function ExecutionHistoryTable({
                 onClick={() => setShowAdvancedFilters((current) => !current)}
                 title="Filtros avancados"
               >
-                ⚙ Filtros
+                Filtros
               </Button>
             </div>
           </div>
@@ -287,13 +293,13 @@ export function ExecutionHistoryTable({
         )}
 
         {showAdvancedFilters && (
-          <div className="grid grid-cols-1 gap-3 p-4 bg-neutral-100 border border-neutral-200 rounded-lg md:grid-cols-3">
+          <div className="app-surface-muted grid grid-cols-1 gap-3 rounded-[20px] p-4 md:grid-cols-3">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1">Status</label>
               <select
                 value={currentFilters?.status || ''}
                 onChange={(e) => onFilterChange?.({ status: normalizeStatus(e.target.value) })}
-                className="w-full px-2 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-sm"
               >
                 <option value="">Todos</option>
                 <option value="success">✓ Sucesso</option>
@@ -311,7 +317,7 @@ export function ExecutionHistoryTable({
                     dateRange: normalizeDateRange(e.target.value),
                   })
                 }
-                className="w-full px-2 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-sm"
               >
                 <option value="24h">Ultimas 24h</option>
                 <option value="7d">Ultimos 7 dias</option>
@@ -329,7 +335,7 @@ export function ExecutionHistoryTable({
         )}
       </div>
 
-      <div className="border border-neutral-200 rounded-lg overflow-hidden">
+      <div className="app-table-shell">
         <Table>
           <TableHeader>
             <TableRow>
@@ -397,7 +403,7 @@ export function ExecutionHistoryTable({
         </Table>
       </div>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="app-toolbar flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
         <div className="text-sm text-neutral-600">
           {total === 0
             ? 'Nenhuma execucao para exibir'
@@ -437,6 +443,18 @@ export function ExecutionHistoryTable({
 
           await onSavePreset(name, description, filters as SavedFilterDefinition);
         }}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
+        title="Remover preset"
+        description={`Tem certeza que deseja remover o preset "${deleteConfirm.name}"?`}
+        confirmLabel="Remover"
+        cancelLabel="Cancelar"
+        variant="warning"
+        loading={isDeletingPreset}
+        onConfirm={confirmDeletePreset}
       />
     </div>
   );

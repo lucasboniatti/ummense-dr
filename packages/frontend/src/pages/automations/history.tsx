@@ -203,37 +203,42 @@ export default function ExecutionHistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-neutral-900">Historico de Execucoes</h1>
-            <p className="text-neutral-600 mt-2">
+    <div className="app-page">
+      <section className="app-page-hero animate-fade-up">
+        <div className="app-page-hero-grid">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="app-page-heading">
+              <p className="app-kicker">Historico</p>
+              <h1 className="app-page-title">Historico de execucoes</h1>
+              <p className="app-page-copy">
               Consulte, filtre e reutilize buscas do historico das automacoes.
             </p>
-          </div>
+            </div>
 
-          <div className="flex gap-2">
+            <div className="app-toolbar-cluster">
             <button
               onClick={() => void handleExportCSV()}
-              className="px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700"
+              className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
             >
               Exportar CSV
             </button>
             <button
               onClick={() => void handleExportJSON()}
-              className="px-4 py-2 bg-success-600 text-white text-sm rounded-md hover:bg-success-700"
+              className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-success-600 px-4 text-sm font-semibold text-white hover:bg-success-700"
             >
               Exportar JSON
             </button>
+            </div>
           </div>
-        </div>
 
-        {error && (
-          <div className="bg-error-50 border border-error-200 rounded-lg p-4 mb-6">
-            <p className="text-error-800">{error}</p>
-          </div>
-        )}
+          {error && (
+            <div className="app-inline-banner app-inline-banner-error">
+              <strong>Historico</strong>
+              {error}
+            </div>
+          )}
+        </div>
+      </section>
 
         {loading ? (
           <PageLoader message="Carregando historico..." />
@@ -290,7 +295,6 @@ export default function ExecutionHistoryPage() {
             onRowClick={(executionId) => router.push(`/automations/history/${executionId}`)}
           />
         )}
-      </div>
     </div>
   );
 }

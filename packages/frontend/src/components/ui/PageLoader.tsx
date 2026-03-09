@@ -7,9 +7,12 @@ export interface PageLoaderProps {
 
 export function PageLoader({ message = 'Carregando...' }: PageLoaderProps) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] p-8">
-            <Spinner size="lg" className="mb-4" />
-            <p className="text-neutral-500 font-medium">{message}</p>
+        <div className="app-surface-muted flex min-h-[240px] flex-col items-center justify-center gap-4 rounded-[22px] p-8 text-center">
+            <Spinner size="lg" />
+            <div className="space-y-1">
+                <p className="app-kicker">Sincronizando</p>
+                <p className="text-sm font-medium text-neutral-600">{message}</p>
+            </div>
         </div>
     );
 }

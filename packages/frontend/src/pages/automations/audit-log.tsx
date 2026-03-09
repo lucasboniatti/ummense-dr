@@ -76,32 +76,31 @@ export default function AuditLogPage() {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-900">Log de Auditoria</h1>
-          <p className="text-neutral-600 mt-2">Histórico de todas as ações de usuário</p>
+    <div className="app-page">
+      <section className="app-page-hero animate-fade-up">
+        <div className="app-page-heading">
+          <p className="app-kicker">Compliance</p>
+          <h1 className="app-page-title">Log de auditoria</h1>
+          <p className="app-page-copy">Historico consolidado das acoes executadas pelos usuarios no sistema.</p>
         </div>
 
-        {/* Error State */}
         {error && (
-          <div className="bg-error-50 border border-error-200 rounded-lg p-4 mb-6">
-            <p className="text-error-800">{error}</p>
+          <div className="app-inline-banner app-inline-banner-error">
+            <strong>Auditoria</strong>
+            {error}
           </div>
         )}
+      </section>
 
-        {/* Loading State */}
-        {loading && <PageLoader message="Carregando logs de auditoria..." />}
+      {loading && <PageLoader message="Carregando logs de auditoria..." />}
 
-        {/* Logs List */}
-        {!loading && logs.length > 0 && (
+      {!loading && logs.length > 0 && (
           <div className="space-y-3">
             {logs.map((log) => (
-              <div key={log.id} className="bg-white border rounded-lg overflow-hidden">
+              <div key={log.id} className="app-table-shell">
                 <button
                   onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-neutral-50 transition"
+                  className="flex w-full items-center justify-between px-6 py-4 transition hover:bg-neutral-50"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <span
@@ -126,11 +125,11 @@ export default function AuditLogPage() {
                 </button>
 
                 {expandedLog === log.id && (
-                  <div className="border-t px-6 py-4 bg-neutral-50 space-y-4">
+                  <div className="space-y-4 border-t border-[color:var(--border-subtle)] bg-neutral-50/85 px-6 py-4">
                     {log.old_values && (
                       <div>
                         <p className="text-sm font-medium text-neutral-700 mb-2">Valores Anteriores</p>
-                        <pre className="bg-white border rounded p-3 text-xs text-neutral-800 overflow-auto max-h-32">
+                        <pre className="app-code-block max-h-32">
                           {JSON.stringify(log.old_values, null, 2)}
                         </pre>
                       </div>
@@ -138,7 +137,7 @@ export default function AuditLogPage() {
                     {log.new_values && (
                       <div>
                         <p className="text-sm font-medium text-neutral-700 mb-2">Novos Valores</p>
-                        <pre className="bg-white border rounded p-3 text-xs text-neutral-800 overflow-auto max-h-32">
+                        <pre className="app-code-block max-h-32">
                           {JSON.stringify(log.new_values, null, 2)}
                         </pre>
                       </div>
@@ -154,10 +153,9 @@ export default function AuditLogPage() {
               </div>
             ))}
           </div>
-        )}
+      )}
 
-        {/* Empty State */}
-        {!loading && logs.length === 0 && (
+      {!loading && logs.length === 0 && (
           <EmptyState
             icon={<ShieldAlert size={48} />}
             title="Nenhum log de auditoria encontrado"
@@ -165,11 +163,10 @@ export default function AuditLogPage() {
             actionLabel="Recarregar"
             onAction={() => setOffset(0)}
           />
-        )}
+      )}
 
-        {/* Pagination */}
-        {!loading && logs.length > 0 && (
-          <div className="flex items-center justify-between mt-6">
+      {!loading && logs.length > 0 && (
+          <div className="app-toolbar mt-2 flex items-center justify-between p-3">
             <div className="text-sm text-neutral-600">
               Mostrando {offset + 1} a {Math.min(offset + limit, total)} de {total} registros
             </div>
@@ -177,7 +174,7 @@ export default function AuditLogPage() {
               <button
                 onClick={() => setOffset(Math.max(0, offset - limit))}
                 disabled={offset === 0}
-                className="px-4 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
+                className="app-control h-10 rounded-[var(--radius-control)] px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 ← Anterior
               </button>
@@ -187,14 +184,13 @@ export default function AuditLogPage() {
               <button
                 onClick={() => setOffset(Math.min(offset + limit, (totalPages - 1) * limit))}
                 disabled={currentPage >= totalPages}
-                className="px-4 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
+                className="app-control h-10 rounded-[var(--radius-control)] px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Próxima →
               </button>
             </div>
           </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

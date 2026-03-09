@@ -68,17 +68,17 @@ export default function AutomationSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-900">Configurações de Automação</h1>
-          <p className="text-neutral-600 mt-2">Gerencie as políticas de retenção do histórico</p>
+    <div className="app-page">
+      <section className="app-page-hero animate-fade-up">
+        <div className="app-page-heading">
+          <p className="app-kicker">Automacoes</p>
+          <h1 className="app-page-title">Configuracoes de automacao</h1>
+          <p className="app-page-copy">Gerencie a politica de retencao do historico e o comportamento do arquivamento.</p>
         </div>
+      </section>
 
-        {/* Retention Policy Card */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-neutral-900 mb-6">
+      <div className="app-surface p-6">
+          <h2 className="text-xl font-semibold text-neutral-900 mb-6 tracking-[-0.02em]">
             Política de Retenção de Histórico
           </h2>
 
@@ -99,7 +99,7 @@ export default function AutomationSettingsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, retentionDays: parseInt(e.target.value) })
                   }
-                  className="flex-1"
+                  className="flex-1 accent-primary-600"
                 />
                 <div className="text-2xl font-semibold text-primary-600 w-20 text-right">
                   {formData.retentionDays}
@@ -111,7 +111,7 @@ export default function AutomationSettingsPage() {
             </div>
 
             {/* Archive Option */}
-            <div className="border-t pt-6">
+            <div className="border-t border-[color:var(--border-subtle)] pt-6">
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -119,7 +119,7 @@ export default function AutomationSettingsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, archiveEnabled: e.target.checked })
                   }
-                  className="w-4 h-4 rounded border-neutral-300"
+                  className="h-4 w-4 rounded border-neutral-300 accent-primary-600"
                 />
                 <span className="font-medium text-neutral-700">
                   Arquivar dados antigos em S3 antes de deletar
@@ -147,13 +147,12 @@ export default function AutomationSettingsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, archiveBucket: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
+                  className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-sm"
                 />
               </div>
             )}
 
-            {/* Summary */}
-            <div className="border-t pt-6 bg-primary-50 rounded-lg p-4">
+            <div className="app-surface-muted border-t border-transparent rounded-[20px] p-4">
               <p className="text-sm text-primary-900">
                 <strong>Resumo:</strong> Os registros de execução com mais de{' '}
                 <strong>{formData.retentionDays} dias</strong> serão deletados automaticamente
@@ -163,20 +162,19 @@ export default function AutomationSettingsPage() {
             </div>
 
             {/* Save Button */}
-            <div className="flex gap-3 pt-6 border-t">
+            <div className="flex gap-3 pt-6 border-t border-[color:var(--border-subtle)]">
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-6 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? 'Salvando...' : 'Salvar Configurações'}
               </button>
             </div>
           </div>
-        </div>
+      </div>
 
-        {/* Info Box */}
-        <div className="mt-8 bg-primary-50 border border-primary-200 rounded-lg p-4">
+      <div className="app-inline-banner app-inline-banner-success">
           <h3 className="font-semibold text-primary-900 mb-2">ℹ️ Sobre Política de Retenção</h3>
           <ul className="text-sm text-primary-800 space-y-1 list-disc list-inside">
             <li>Os logs de auditoria NÃO são deletados (imutáveis para compliance)</li>
@@ -184,7 +182,6 @@ export default function AutomationSettingsPage() {
             <li>A limpeza automática ocorre diariamente às 2 AM UTC</li>
             <li>Você pode exportar dados antes que sejam deletados</li>
           </ul>
-        </div>
       </div>
     </div>
   );

@@ -176,17 +176,20 @@ export default function LocalWebhooksPage({
   };
 
   return (
-    <main className="p-6 font-sans space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Webhooks - Fluxo Crítico Local</h1>
-        <p className="text-neutral-700">
+    <main className="app-page">
+      <section className="app-page-hero animate-fade-up">
+        <div className="app-page-heading">
+          <p className="app-kicker">Webhooks</p>
+          <h1 className="app-page-title">Fluxo critico local</h1>
+          <p className="app-page-copy">
           Esta página valida boot local do dashboard e renderização do fluxo de
           Webhooks com dados locais.
         </p>
-      </div>
+        </div>
+      </section>
 
-      <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Backend Health</h2>
+      <section className="app-section-card space-y-2">
+        <h2 className="app-section-title">Saude do backend</h2>
         {health === 'ok' && <p className="text-success-700 font-semibold">✓ OK</p>}
         {health === 'error' && (
           <p className="text-error-700 font-semibold">
@@ -195,9 +198,9 @@ export default function LocalWebhooksPage({
         )}
       </section>
 
-      <section className="space-y-3">
+      <section className="app-surface space-y-4 p-5">
         <div>
-          <h2 className="text-xl font-semibold mb-1">Token de Teste (Opcional)</h2>
+          <h2 className="app-section-title">Token de teste</h2>
           <p className="text-neutral-700 text-sm">
             Cole um JWT local para listar webhooks reais do usuário. Sem token,
             a página usa fallback local.
@@ -210,23 +213,23 @@ export default function LocalWebhooksPage({
             value={tokenInput}
             onChange={(event) => setTokenInput(event.target.value)}
             placeholder="Cole aqui o token JWT de teste"
-            className="flex-1 min-w-[300px] px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="app-control h-11 min-w-[300px] flex-1 rounded-[var(--radius-control)] px-3 text-sm"
           />
-          <button type="button" onClick={applyToken} className="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-semibold hover:bg-primary-700">
+          <button type="button" onClick={applyToken} className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700">
             Aplicar token
           </button>
-          <button type="button" onClick={clearToken} className="px-4 py-2 bg-neutral-200 text-neutral-900 rounded-md text-sm font-semibold hover:bg-neutral-300">
+          <button type="button" onClick={clearToken} className="app-control h-11 rounded-[var(--radius-control)] px-4 text-sm font-semibold text-neutral-900">
             Limpar token
           </button>
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-2 mt-4">Lista de Webhooks</h2>
-          {flowError && <p className="text-warning-700 text-sm font-semibold mb-3">⚠ {flowError}</p>}
+          <h2 className="app-section-title mb-3 mt-4">Lista de webhooks</h2>
+          {flowError && <p className="mb-3 text-sm font-semibold text-warning-700">⚠ {flowError}</p>}
           {webhooks.length === 0 ? (
             <p className="text-neutral-600">Nenhum webhook disponível.</p>
           ) : (
-            <div className="border border-neutral-200 rounded-lg overflow-hidden">
+            <div className="app-table-shell">
               <table className="w-full">
                 <thead className="bg-neutral-100 border-b border-neutral-200">
                   <tr>

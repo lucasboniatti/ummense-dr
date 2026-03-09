@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
+import { loginSchema, type LoginFormData } from '@/schemas';
 
 interface LoginFormProps {
   onSuccess?: (token: string) => void;
@@ -9,78 +12,87 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess, onError }: LoginFormProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError: setFormError,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
+  const onSubmit = async (data: LoginFormData) => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        const errorMessage = data.error || 'Login failed';
-        setError(errorMessage);
+        const responseData = await response.json();
+        const errorMessage = responseData.error || 'Falha ao entrar';
+        setFormError('root', { message: errorMessage });
         onError?.(errorMessage);
         return;
       }
 
-      const data = await response.json();
-      onSuccess?.(data.token);
+      const responseData = await response.json();
+      onSuccess?.(responseData.token);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      setError(message);
+      const message = error instanceof Error ? error.message : 'Erro inesperado ao autenticar';
+      setFormError('root', { message });
       onError?.(message);
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-6">
-      <h2 className="text-2xl font-bold">Entrar</h2>
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md mx-auto space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">Entrar</h2>
+        <p className="text-sm leading-6 text-neutral-500">
+          Use seu e-mail e senha para abrir o painel central da operacao.
+        </p>
+      </div>
 
       <FormInput
         type="email"
         label="E-mail"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
         placeholder="seu@email.com"
         required
+        error={errors.email?.message}
+        {...register('email')}
       />
 
       <FormInput
         type="password"
         label="Senha"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
         placeholder="Sua senha"
         required
+        error={errors.password?.message}
+        {...register('password')}
       />
 
-      {error && (
-        <div className="p-3 bg-error-100 border border-error-400 text-error-700 rounded-md text-sm">
-          {error}
+      {errors.root && (
+        <div className="app-inline-banner app-inline-banner-error" role="alert">
+          <strong>Acesso</strong>
+          {errors.root.message}
         </div>
       )}
 
       <Button
         type="submit"
-        disabled={loading}
+        disabled={isSubmitting}
         className="w-full"
         variant="primary"
       >
-        {loading ? 'Entrando...' : 'Entrar'}
+        {isSubmitting ? 'Entrando...' : 'Entrar'}
       </Button>
 
       <div className="mt-4 text-center">

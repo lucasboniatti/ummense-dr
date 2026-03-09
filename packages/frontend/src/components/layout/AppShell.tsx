@@ -87,6 +87,17 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[var(--app-canvas)] text-neutral-900">
+      {/* Skip to content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:inline-flex focus:items-center focus:gap-2 focus:rounded-lg focus:bg-primary-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2"
+      >
+        Pular para o conteúdo principal
+      </a>
+
+      {/* Live region for dynamic announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" id="app-announcer" />
+
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-64 opacity-80"
@@ -111,7 +122,7 @@ export default function AppShell({ children }: AppShellProps) {
           onQuickAction={handleQuickAction}
         />
 
-        <main className="mx-auto max-w-[1600px] px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-7">
+        <main id="main-content" className="mx-auto max-w-[1600px] px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-7">
           {children}
         </main>
       </div>

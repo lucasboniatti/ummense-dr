@@ -52,33 +52,34 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Integrações</h1>
-        <p className="text-neutral-600">
+    <div className="app-page">
+      <section className="app-page-hero animate-fade-up">
+        <div className="app-page-heading">
+          <p className="app-kicker">Integracoes</p>
+          <h1 className="app-page-title">Integracoes</h1>
+          <p className="app-page-copy">
           Conecte sua conta a Slack e Discord para enviar mensagens automatizadas.
-        </p>
-      </div>
+          </p>
+        </div>
+      </section>
 
-      {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-error-100 border border-error-300 rounded-lg text-error-800">
+        <div className="app-inline-banner app-inline-banner-error">
+          <strong>Integracoes</strong>
           {error}
           <button
             onClick={loadIntegrations}
-            className="ml-4 underline hover:font-semibold"
+            className="text-sm font-semibold underline"
           >
             Tentar novamente
           </button>
         </div>
       )}
 
-      {/* Slack Section */}
-      <div className="mb-12">
+      <section className="app-section-grid">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-semibold flex items-center gap-2">
+            <h2 className="text-2xl font-semibold flex items-center gap-2 tracking-[-0.03em]">
               <span>🎯</span> Slack
             </h2>
             <p className="text-neutral-600 mt-1">Conecte sua workspace do Slack</p>
@@ -86,7 +87,7 @@ export default function IntegrationsPage() {
           {slackIntegrations.length === 0 && (
             <button
               onClick={() => setShowSlackModal(true)}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+              className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
             >
               Conectar Slack
             </button>
@@ -114,13 +115,12 @@ export default function IntegrationsPage() {
             variant="compact"
           />
         )}
-      </div>
+      </section>
 
-      {/* Discord Section */}
-      <div>
+      <section className="app-section-grid">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-semibold flex items-center gap-2">
+            <h2 className="text-2xl font-semibold flex items-center gap-2 tracking-[-0.03em]">
               <span>🎮</span> Discord
             </h2>
             <p className="text-neutral-600 mt-1">Conecte seu servidor Discord</p>
@@ -128,7 +128,7 @@ export default function IntegrationsPage() {
           {discordIntegrations.length === 0 && (
             <button
               onClick={() => setShowDiscordModal(true)}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+              className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
             >
               Conectar Discord
             </button>
@@ -156,7 +156,7 @@ export default function IntegrationsPage() {
             variant="compact"
           />
         )}
-      </div>
+      </section>
 
       {/* Modals */}
       <SlackConnectModal
@@ -171,8 +171,7 @@ export default function IntegrationsPage() {
         onSuccess={handleConnectionSuccess}
       />
 
-      {/* Info Box */}
-      <div className="mt-12 p-6 bg-primary-50 rounded-lg border border-primary-200">
+      <div className="app-inline-banner app-inline-banner-success">
         <h3 className="font-semibold text-primary-900 mb-2">💡 Dica</h3>
         <p className="text-primary-800 text-sm">
           Após conectar uma integração, você pode configurar regras para enviar mensagens

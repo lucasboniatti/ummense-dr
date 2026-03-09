@@ -93,21 +93,23 @@ export default function IntegrationCallbackPage() {
   }, [router.isReady, router.query]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-neutral-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+    <div className="app-auth-shell">
+      <div className="app-auth-card w-full max-w-md text-center animate-fade-up">
         {status === 'loading' && (
           <>
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-            <h1 className="text-2xl font-bold mb-2">Processando...</h1>
-            <p className="text-neutral-600">{message}</p>
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
+            <p className="app-kicker">Integracao</p>
+            <h1 className="mt-2 text-2xl font-bold tracking-[-0.03em] text-neutral-900">Processando...</h1>
+            <p className="mt-2 text-neutral-600">{message}</p>
           </>
         )}
 
         {status === 'success' && (
           <>
             <div className="text-5xl mb-4">✅</div>
-            <h1 className="text-2xl font-bold mb-2 text-success-600">Sucesso!</h1>
-            <p className="text-neutral-600 mb-4">{message}</p>
+            <p className="app-kicker">Integracao</p>
+            <h1 className="mb-2 mt-2 text-2xl font-bold tracking-[-0.03em] text-success-600">Sucesso</h1>
+            <p className="mb-4 text-neutral-600">{message}</p>
             <p className="text-sm text-neutral-500">Redirecionando para integrações...</p>
           </>
         )}
@@ -115,11 +117,12 @@ export default function IntegrationCallbackPage() {
         {status === 'error' && (
           <>
             <div className="text-5xl mb-4">❌</div>
-            <h1 className="text-2xl font-bold mb-2 text-error-600">Erro</h1>
-            <p className="text-neutral-600 mb-6">{message}</p>
+            <p className="app-kicker">Integracao</p>
+            <h1 className="mb-2 mt-2 text-2xl font-bold tracking-[-0.03em] text-error-600">Erro</h1>
+            <p className="mb-6 text-neutral-600">{message}</p>
             <button
               onClick={() => router.push('/dashboard/integrations')}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors w-full"
+              className="app-control h-11 w-full rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
             >
               Voltar para Integrações
             </button>

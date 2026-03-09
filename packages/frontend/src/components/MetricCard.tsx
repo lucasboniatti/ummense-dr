@@ -56,18 +56,25 @@ export function MetricCard({
   return (
     <Card
       onClick={onClick}
-      className={onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}
+      className={onClick ? 'cursor-pointer transition-transform hover:-translate-y-0.5' : ''}
       data-testid={dataTestId}
       aria-label={title}
       role="article"
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon && <div className="text-2xl">{icon}</div>}
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <div className="space-y-2">
+          <p className="app-kicker">{title}</p>
+          <CardTitle className="text-base font-semibold">{title}</CardTitle>
+        </div>
+        {icon && (
+          <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-primary-50 text-xl text-primary-700">
+            {icon}
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex items-baseline gap-2">
-          <div className="text-2xl font-bold" data-testid={dataTestId ? `${dataTestId}-value` : undefined}>
+          <div className="text-3xl font-bold tracking-[-0.04em]" data-testid={dataTestId ? `${dataTestId}-value` : undefined}>
             {value}
           </div>
           {unit && <span className="text-sm text-neutral-600">{unit}</span>}
@@ -80,7 +87,7 @@ export function MetricCard({
           )}
           {subtitle && <p className="text-xs text-neutral-600">{subtitle}</p>}
           {failedExecutions && failedExecutions.length > 0 && (
-            <p className="text-xs text-neutral-600">
+            <p className="text-xs font-medium text-neutral-600">
               Top: {failedExecutions[0].automation}
             </p>
           )}

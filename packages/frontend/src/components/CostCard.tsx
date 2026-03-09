@@ -64,12 +64,13 @@ export function CostCard({ summary }: CostCardProps) {
   ].join(' | ');
 
   return (
-    <Card data-testid="cost-card" className="border-neutral-200 shadow-sm">
+    <Card data-testid="cost-card" className="overflow-hidden">
       <CardHeader className="gap-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-2">
-          <CardTitle className="text-lg font-semibold">Cost Monitoring</CardTitle>
-          <p className="text-sm text-neutral-600">
-            ROI do arquivamento em S3 comparado ao armazenamento no banco.
+          <p className="app-kicker">Analitico financeiro</p>
+          <CardTitle className="text-xl font-semibold">Custo de armazenamento</CardTitle>
+          <p className="text-sm leading-6 text-neutral-600">
+            Acompanhe o ROI do arquivamento em S3 comparado ao volume mantido no banco.
           </p>
         </div>
 
@@ -85,34 +86,34 @@ export function CostCard({ summary }: CostCardProps) {
       <CardContent className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricTile
-            label="DB Storage Cost"
-            value={`${formatCurrency(summary.dbCost)}/mo`}
-            hint={`${summary.dbStorageGb.toFixed(2)} GB no banco`}
+            label="Banco"
+            value={`${formatCurrency(summary.dbCost)}/mes`}
+            hint={`${summary.dbStorageGb.toFixed(2)} GB mantidos no banco`}
           />
           <MetricTile
-            label="S3 Archival Cost"
-            value={`${formatCurrency(summary.s3Cost)}/mo`}
+            label="S3"
+            value={`${formatCurrency(summary.s3Cost)}/mes`}
             hint={`${summary.s3StorageGb.toFixed(2)} GB considerados`}
           />
           <MetricTile
-            label="Monthly Savings"
+            label="Economia mensal"
             value={formatCurrency(summary.monthlySavings)}
             hint={summary.monthlySavings >= 0 ? 'economia mensal atual' : 'custo adicional mensal'}
             emphasized={summary.monthlySavings >= 0}
           />
           <MetricTile
-            label="7-Year Projection"
+            label="Projecao em 7 anos"
             value={formatCurrency(summary.sevenYearProjection)}
             hint="projecao acumulada"
           />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,1fr)]">
-          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+          <div className="app-surface-muted rounded-[22px] p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold text-neutral-900">Storage Growth Trend</h3>
-                <p className="text-xs text-neutral-600">Media movel de 7 dias do ritmo de arquivamento</p>
+                <h3 className="text-sm font-semibold text-neutral-900">Ritmo de arquivamento</h3>
+                <p className="text-xs text-neutral-600">Media movel de 7 dias da taxa de arquivamento</p>
               </div>
               <span className="text-xs text-neutral-500">
                 {summary.lastUpdatedAt
@@ -149,9 +150,9 @@ export function CostCard({ summary }: CostCardProps) {
             </div>
           </div>
 
-          <div className="rounded-xl border border-neutral-200 bg-white p-4">
+          <div className="app-section-card">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-neutral-900">Breakdown</h3>
+              <h3 className="text-sm font-semibold text-neutral-900">Quebra de volume</h3>
               <span
                 className="cursor-help text-xs text-neutral-500 underline decoration-dotted"
                 title={breakdownLabel}
