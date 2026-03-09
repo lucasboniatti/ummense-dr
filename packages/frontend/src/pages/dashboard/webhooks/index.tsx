@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { webhookService } from '../../../services/webhook.service';
 import { analyticsService } from '../../../services/analytics.service';
 import { DeliveryStatusBadge } from '../../../components/DeliveryStatusBadge';
 import { WebhookForm } from '../../../components/WebhookForm';
 import { PageLoader, EmptyState } from '../../../components/ui';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { Webhook } from 'lucide-react';
+import { useToast } from '../../../contexts/ToastContext';
 
 interface Webhook {
   id: string;
@@ -24,6 +26,13 @@ export default function WebhooksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string; url: string }>({
+    open: false,
+    id: '',
+    url: '',
+  });
+  const [deleting, setDeleting] = useState(false);
+  const { success, error: toastError } = useToast();
 
   useEffect(() => {
     loadWebhooks();
@@ -48,13 +57,21 @@ export default function WebhooksPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Excluir este webhook? Esta ação não pode ser desfeita.')) return;
+    setDeleteConfirm({ open: true, id, url: webhooks.find(w => w.id === id)?.url || '' });
+  };
+
+  const confirmDelete = async () => {
+    setDeleting(true);
     try {
-      await webhookService.deleteWebhook(id);
-      analyticsService.trackWebhookDeleted(id);
-      setWebhooks(webhooks.filter(w => w.id !== id));
+      await webhookService.deleteWebhook(deleteConfirm.id);
+      analyticsService.trackWebhookDeleted(deleteConfirm.id);
+      setWebhooks(webhooks.filter(w => w.id !== deleteConfirm.id));
+      success('Webhook excluído', `O webhook ${deleteConfirm.url} foi removido com sucesso.`);
+      setDeleteConfirm({ open: false, id: '', url: '' });
     } catch (err) {
-      setError((err as Error).message);
+      toastError('Erro ao excluir', 'Não foi possível excluir o webhook.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -179,6 +196,7 @@ export default function WebhooksPage() {
             <WebhookForm
               onSubmit={async (data) => {
                 await webhookService.createWebhook(data);
+                success('Webhook criado', 'O webhook foi criado com sucesso.');
                 setShowCreateModal(false);
                 loadWebhooks();
               }}
@@ -187,6 +205,19 @@ export default function WebhooksPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
+        title="Excluir webhook"
+        description={`Tem certeza que deseja excluir o webhook "${deleteConfirm.url}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={deleting}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

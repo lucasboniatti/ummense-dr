@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   ArrowUpRight,
   CheckCircle2,
@@ -143,7 +143,7 @@ function clampProgress(value: number | undefined): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-export function Card({
+export const Card = memo(function Card({
   id,
   title,
   description,
@@ -325,4 +325,4 @@ export function Card({
       )}
     </div>
   );
-}
+});

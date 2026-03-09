@@ -143,56 +143,55 @@ export default function DashboardContainer() {
   }, [costSummary, metrics]);
 
   return (
-    <div
-      className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-4 md:p-6 lg:p-8"
-      data-testid="dashboard-container"
-    >
-      <div className="mb-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">
-              Analytics Dashboard
-            </h1>
-            <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-              Indicadores operacionais e custo do arquivamento em tempo quase real.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-success-500' : 'bg-neutral-400'
-                }`}
-              />
-              <span
-                className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                data-testid="websocket-status"
-              >
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
+    <div className="app-page" data-testid="dashboard-container">
+      <section className="app-page-hero animate-fade-up">
+        <div className="app-page-hero-grid">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="app-page-heading">
+              <p className="app-kicker">Analytics</p>
+              <h1 className="app-page-title">Indicadores operacionais</h1>
+              <p className="app-page-copy">
+                Monitore saude de execucao, custo de armazenamento e comportamento do sistema em uma leitura compacta.
+              </p>
             </div>
 
-            <button
-              onClick={handleExportCSV}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 font-medium transition-colors"
-              aria-label="Export dashboard data as CSV"
-            >
-              Export CSV
-            </button>
-          </div>
-        </div>
+            <div className="app-toolbar-cluster">
+              <div className="app-control flex items-center gap-2 rounded-full px-3 py-2">
+                <div
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    isConnected ? 'bg-success-500' : 'bg-neutral-400'
+                  }`}
+                />
+                <span
+                  className="text-sm font-medium text-neutral-700"
+                  data-testid="websocket-status"
+                >
+                  {isConnected ? 'Tempo real ativo' : 'Modo polling'}
+                </span>
+              </div>
 
-        {error && (
-          <div className="mt-4 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm text-warning-800 dark:text-warning-200">
-            {error}
+              <button
+                onClick={handleExportCSV}
+                className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+                aria-label="Export dashboard data as CSV"
+              >
+                Exportar CSV
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+
+          {error && (
+            <div className="app-inline-banner app-inline-banner-warning">
+              <strong>Analytics</strong>
+              {error}
+            </div>
+          )}
+        </div>
+      </section>
 
       {isLoading ? (
         <div className="flex items-center justify-center h-64" data-testid="dashboard-loading">
-          <div className="text-neutral-600 dark:text-neutral-400">Loading metrics...</div>
+          <div className="text-neutral-600">Carregando metricas...</div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -201,25 +200,25 @@ export default function DashboardContainer() {
             data-testid="metrics-grid"
           >
             <MetricCard
-              title="Success Rate"
+              title="Taxa de sucesso"
               value={`${metrics.successRate.toFixed(1)}%`}
               trend={metrics.successTrend}
-              trendLabel="7-day trend"
+              trendLabel="tendencia"
               icon="✓"
               dataTestId="metric-success-rate"
             />
 
             <MetricCard
-              title="Avg Duration"
+              title="Duracao media"
               value={`${metrics.avgDuration.toFixed(0)}ms`}
               trend={metrics.durationTrend}
-              trendLabel="Performance"
+              trendLabel="performance"
               icon="⏱"
               dataTestId="metric-avg-duration"
             />
 
             <MetricCard
-              title="Failed (Top 5)"
+              title="Falhas criticas"
               value={`${metrics.failedExecutions.length}`}
               failedExecutions={metrics.failedExecutions}
               icon="✗"
@@ -227,9 +226,9 @@ export default function DashboardContainer() {
             />
 
             <MetricCard
-              title="Storage Utilization"
+              title="Volume total"
               value={`${(costSummary.dbStorageGb + costSummary.s3StorageGb).toFixed(2)}GB`}
-              subtitle={costSummary.isEstimate ? 'DB + S3 (estimado)' : 'DB + S3'}
+              subtitle={costSummary.isEstimate ? 'DB + S3 estimado' : 'DB + S3'}
               icon="💾"
               dataTestId="metric-storage-utilization"
             />
