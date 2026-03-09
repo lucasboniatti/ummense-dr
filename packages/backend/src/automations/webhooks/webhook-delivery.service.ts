@@ -1,9 +1,8 @@
+import crypto from 'crypto';
 /**
  * WebhookDeliveryService - Webhook delivery with exponential backoff retry logic
  * Story 3.2: Webhook Reliability & Retry Logic
  */
-
-import { v4 as uuidv4 } from 'uuid';
 import { generateSignature, buildWebhookHeaders } from './signature.service';
 
 export interface WebhookConfig {
@@ -52,7 +51,7 @@ export class WebhookDeliveryService {
   ): Promise<WebhookDeliveryRecord> {
     const webhookId = webhook.url;
     const signature = generateSignature(payload, webhook.secret);
-    const deliveryId = uuidv4();
+    const deliveryId = crypto.randomUUID();
     const now = new Date().toISOString();
 
     // Create delivery record in 'pending' state
@@ -150,7 +149,7 @@ export class WebhookDeliveryService {
     delivery: WebhookDeliveryRecord,
     db: any
   ): Promise<void> {
-    const dlqId = uuidv4();
+    const dlqId = crypto.randomUUID();
     const now = new Date().toISOString();
 
     // Create DLQ record

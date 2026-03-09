@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import { v4 as uuid } from 'uuid';
 
 /**
  * OAuth PKCE (RFC 7636) Implementation
@@ -48,7 +47,7 @@ export class OAuthPKCEService {
     clientId: string,
     codeChallenge: string,
     redirectUri: string = process.env.SLACK_REDIRECT_URI || 'http://127.0.0.1:3000/auth/integration-callback?provider=slack',
-    state: string = uuid()
+    state: string = crypto.randomUUID()
   ): string {
     const params = new URLSearchParams({
       client_id: clientId,
@@ -69,7 +68,7 @@ export class OAuthPKCEService {
     clientId: string,
     codeChallenge: string,
     redirectUri: string = process.env.DISCORD_REDIRECT_URI || 'http://127.0.0.1:3000/auth/integration-callback?provider=discord',
-    state: string = uuid()
+    state: string = crypto.randomUUID()
   ): string {
     const params = new URLSearchParams({
       client_id: clientId,

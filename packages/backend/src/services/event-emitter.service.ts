@@ -1,5 +1,5 @@
+import crypto from 'crypto';
 import { EventEmitter } from 'events';
-import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 
 interface EventPayload {
@@ -38,7 +38,7 @@ export class EventEmitterService {
   async emitEvent(
     userId: string,
     eventType: string,
-    eventId: string = uuidv4(),
+    eventId: string = crypto.randomUUID(),
     payload: EventPayload,
     version: number = 1
   ): Promise<EmittedEvent> {

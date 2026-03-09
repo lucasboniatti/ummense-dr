@@ -4,7 +4,6 @@
  * Handles querying, retrying, and clearing DLQ items
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import { WebhookDeliveryService } from './webhook-delivery.service';
 
 export interface DLQItem {

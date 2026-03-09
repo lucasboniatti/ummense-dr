@@ -1,10 +1,9 @@
+import crypto from 'crypto';
 /**
  * ExecutionService - Core workflow execution engine
  * Handles sequential step execution with context passing
  * Story 3.1: Workflow Execution Engine Refactor
  */
-
-import { v4 as uuidv4 } from 'uuid';
 import { ExecutionContext, ExecutionContextBuilder, freezeContext } from './execution-context';
 import {
   AutomationExecution,
@@ -39,12 +38,12 @@ export class ExecutionService {
   ): Promise<{ id: string }> {
     void automationId;
     void triggerData;
-    const executionId = uuidv4();
+    const executionId = crypto.randomUUID();
 
     // If no workflow is available in this legacy path, return a tracked stub.
     // Scheduler uses this id only for logging/traceability.
     return {
-      id: executionId || automationId || uuidv4(),
+      id: executionId || automationId || crypto.randomUUID(),
     };
   }
 
@@ -67,7 +66,7 @@ export class ExecutionService {
     triggerData: Record<string, unknown>,
     variables?: Record<string, unknown>
   ): Promise<{ execution: AutomationExecution; steps: ExecutionStep[] }> {
-    const executionId = uuidv4();
+    const executionId = crypto.randomUUID();
     const startedAt = new Date().toISOString();
     const stepResults: ExecutionStep[] = [];
     const stepOutputs: Record<string, unknown> = {};
@@ -184,7 +183,7 @@ export class ExecutionService {
       const durationMs = new Date(completedAt).getTime() - new Date(startedAt).getTime();
 
       return {
-        id: uuidv4() as any,
+        id: crypto.randomUUID() as any,
         executionId: context.executionId as any,
         stepId,
         status: 'success',
@@ -202,7 +201,7 @@ export class ExecutionService {
       const stack = error instanceof Error ? error.stack || '' : '';
 
       return {
-        id: uuidv4() as any,
+        id: crypto.randomUUID() as any,
         executionId: context.executionId as any,
         stepId,
         status: 'failed',
