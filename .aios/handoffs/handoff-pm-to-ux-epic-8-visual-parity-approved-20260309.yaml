@@ -1,0 +1,36 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-09T17:44:58Z"
+  from_agent: "pm"
+  to_agent: "ux-design-expert"
+  consumed: false
+
+  story_context:
+    story_id: "EPIC-8-UX-UI-VISUAL-PARITY"
+    story_path: "docs/epics/EPIC-8-UX-UI-VISUAL-PARITY.md"
+    story_status: "Approved for UX Specification"
+    current_task: "UX must detail the visual and interaction specification for stories 8.1-8.4 following the approved sequencing"
+    branch: "master"
+
+  decisions:
+    - "PM scope review decision is APPROVED for Epic 8 and stories 8.1-8.5."
+    - "Epic 8 remains a visual/product-polish follow-up and must not expand product domain scope."
+    - "Story 8.1 must be specified first because it establishes the shared visual foundation and shell."
+    - "Stories 8.2 and 8.3 may be detailed after 8.1 and can run in parallel once the design foundation is stable."
+    - "Story 8.4 is P0 and must preserve real operator capability while removing raw technical controls from the primary path."
+    - "Story 8.5 remains reserved for final QA/UAT plus PM go/no-go after implementation."
+
+  files_modified:
+    - "docs/epics/EPIC-8-UX-UI-VISUAL-PARITY.md"
+    - "docs/stories/8.1.story.md"
+    - "docs/stories/8.2.story.md"
+    - "docs/stories/8.3.story.md"
+    - "docs/stories/8.4.story.md"
+    - "docs/stories/8.5.story.md"
+    - "docs/qa/gates/epic-8-pm-scope-validation.md"
+    - ".aios/handoffs/handoff-pm-to-ux-epic-8-visual-parity-approved-20260309.yaml"
+
+  blockers:
+    - "Do not start implementation before UX specifies the visual and interaction blueprint for each approved story."
+
+  next_action: "UX details Story 8.1 first, then 8.2 and 8.3, then 8.4, preserving the approved scope and release sequencing."

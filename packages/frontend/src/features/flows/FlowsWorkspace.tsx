@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
+import { BarChart3, Database, KeyRound, LayoutGrid, RefreshCw, Search, Table2 } from 'lucide-react';
 import { KanbanBoard } from '../../components/KanbanBoard';
 import {
   KanbanCard,
@@ -14,11 +15,13 @@ import {
   FlowListItem,
   flowsService,
 } from '../../services/flows.service';
+import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { LayoutGrid } from 'lucide-react';
+import { Input } from '../../components/ui/Input';
 
 type ViewMode = 'board' | 'table' | 'indicators';
 type FilterStatus = 'all' | 'active' | 'completed' | 'blocked';
+type VisualStatus = 'active' | 'completed' | 'blocked' | 'inactive';
 
 interface FlowsWorkspaceProps {
   initialFlowId?: number | null;
@@ -33,6 +36,19 @@ interface FlatCardRow extends FlowCardItem {
 interface FlowOption extends Pick<FlowListItem, 'id' | 'name'> { }
 
 const FALLBACK_FLOW_ID = 1;
+
+const VIEW_OPTIONS = [
+  { value: 'board' as const, label: 'Quadro', icon: LayoutGrid },
+  { value: 'table' as const, label: 'Tabela', icon: Table2 },
+  { value: 'indicators' as const, label: 'Indicadores', icon: BarChart3 },
+];
+
+const STATUS_FILTER_OPTIONS = [
+  { value: 'all' as const, label: 'Todos' },
+  { value: 'active' as const, label: 'Ativos' },
+  { value: 'completed' as const, label: 'Concluídos' },
+  { value: 'blocked' as const, label: 'Bloqueados' },
+];
 
 const fallbackFlow: FlowDetails = {
   id: FALLBACK_FLOW_ID,
@@ -178,6 +194,52 @@ function resolveEffectiveStatus(
   }
 
   return 'active';
+}
+
+function resolveVisualStatus(
+  status: string | null | undefined,
+  rawStatus: string | null | undefined,
+  columnName: string
+): VisualStatus {
+  const normalizedRawStatus = normalizeText(rawStatus);
+
+  if (
+    normalizedRawStatus === 'paused' ||
+    normalizedRawStatus === 'pausado' ||
+    normalizedRawStatus === 'canceled' ||
+    normalizedRawStatus === 'cancelled' ||
+    normalizedRawStatus === 'cancelado' ||
+    normalizedRawStatus === 'inactive' ||
+    normalizedRawStatus === 'inativo'
+  ) {
+    return 'inactive';
+  }
+
+  const effectiveStatus = resolveEffectiveStatus(status, columnName);
+
+  if (effectiveStatus === 'completed') {
+    return 'completed';
+  }
+
+  if (effectiveStatus === 'blocked') {
+    return 'blocked';
+  }
+
+  return 'active';
+}
+
+function visualStatusLabel(status: VisualStatus): string {
+  if (status === 'completed') return 'Concluído';
+  if (status === 'blocked') return 'Bloqueado';
+  if (status === 'inactive') return 'Inativo';
+  return 'Ativo';
+}
+
+function visualStatusTone(status: VisualStatus): string {
+  if (status === 'completed') return 'bg-success-50 text-success-700';
+  if (status === 'blocked') return 'bg-error-50 text-error-700';
+  if (status === 'inactive') return 'bg-warning-50 text-warning-700';
+  return 'bg-primary-50 text-primary-700';
 }
 
 function computeIndicators(rows: FlatCardRow[]): FlowIndicators {
@@ -404,6 +466,7 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
   const currentFlowName =
     flowOptions.find((option) => option.id === selectedFlowId)?.name ||
     'Fluxo sem nome';
+  const isLoading = loadingFlows || loadingDetails;
 
   const normalizedSearch = useMemo(() => normalizeText(searchText), [searchText]);
 
@@ -493,175 +556,200 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
   };
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-neutral-900">Fluxos 2.0</h1>
-            <p className="mt-1 text-sm text-neutral-600">
-              Quadro, tabela e indicadores compartilhando o mesmo dataset operacional.
-            </p>
+    <div className="space-y-4">
+      <section className="app-surface p-5 md:p-6">
+        <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-start 2xl:justify-between">
+          <div className="space-y-3">
+            <div>
+              <p className="app-kicker">Fluxos operacionais</p>
+              <h1 className="mt-2 text-[2rem] font-bold tracking-[-0.04em] text-neutral-900">
+                Fluxos 2.0
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">
+                Quadro, tabela e indicadores compartilhando o mesmo dataset operacional, com leitura rápida para triagem visual e acompanhamento diário.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700">
+                {filteredRows.length}/{cardsCount} cards visíveis
+              </span>
+              <span className="rounded-full bg-success-50 px-3 py-1.5 text-xs font-semibold text-success-700">
+                {indicators.completedCards} concluídos
+              </span>
+              <span className="rounded-full bg-error-50 px-3 py-1.5 text-xs font-semibold text-error-700">
+                {indicators.blockedCards} bloqueados
+              </span>
+              <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                {isFallbackMode ? 'Fallback local' : 'Dados reais'}
+              </span>
+              <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                {isLoading ? 'Sincronizando...' : 'Sincronizado'}
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="text-sm font-semibold text-neutral-700">Fluxo</label>
-            <select
-              value={selectedFlowId}
-              onChange={(event) => setSelectedFlowId(Number(event.target.value))}
-              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
-            >
-              {flowOptions.map((flow) => (
-                <option key={flow.id} value={flow.id}>
-                  {flow.name}
-                </option>
+          <div className="app-surface-muted min-w-[280px] p-4">
+            <label className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">
+              Fluxo ativo
+            </label>
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+              <select
+                value={selectedFlowId}
+                onChange={(event) => setSelectedFlowId(Number(event.target.value))}
+                disabled={loadingFlows}
+                className="app-control h-11 min-w-[220px] flex-1 px-3.5 text-sm text-neutral-900"
+              >
+                {flowOptions.map((flow) => (
+                  <option key={flow.id} value={flow.id}>
+                    {flow.name}
+                  </option>
+                ))}
+              </select>
+
+              <Button
+                type="button"
+                onClick={() => void loadFlowDetail()}
+                size="sm"
+                disabled={isLoading}
+                className="sm:h-11"
+              >
+                <RefreshCw size={14} className="mr-2" />
+                Recarregar
+              </Button>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-neutral-500">
+              {currentFlowName} · {cardsCount} cards no dataset atual.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {VIEW_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            const isActive = viewMode === option.value;
+
+            return (
+              <Button
+                key={option.value}
+                type="button"
+                variant={isActive ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode(option.value)}
+                className="h-10"
+              >
+                <Icon size={14} className="mr-2" />
+                {option.label}
+              </Button>
+            );
+          })}
+        </div>
+
+        <div className="app-toolbar mt-4 p-3">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto]">
+            <div className="relative">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+              />
+              <Input
+                type="text"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Filtrar por card, descrição, responsável ou tag..."
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {STATUS_FILTER_OPTIONS.map((option) => (
+                <Button
+                  key={option.value}
+                  type="button"
+                  variant={statusFilter === option.value ? 'primary' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter(option.value)}
+                  className="h-10"
+                >
+                  {option.label}
+                </Button>
               ))}
-            </select>
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="h-10"
+              >
+                Limpar filtros
+              </Button>
+            </div>
           </div>
         </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setViewMode('board')}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold ${viewMode === 'board'
-              ? 'bg-primary-600 text-white'
-              : 'border border-neutral-300 bg-white text-neutral-700'
-              }`}
-          >
-            Quadro
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('table')}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold ${viewMode === 'table'
-              ? 'bg-primary-600 text-white'
-              : 'border border-neutral-300 bg-white text-neutral-700'
-              }`}
-          >
-            Tabela
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('indicators')}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold ${viewMode === 'indicators'
-              ? 'bg-primary-600 text-white'
-              : 'border border-neutral-300 bg-white text-neutral-700'
-              }`}
-          >
-            Indicadores
-          </button>
-        </div>
       </section>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.4fr_0.8fr_auto_auto]">
-          <input
-            type="text"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Filtrar por texto (card, descrição, responsável, tag...)"
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900"
-          />
-
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as FilterStatus)}
-            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
-          >
-            <option value="all">Todos status</option>
-            <option value="active">Ativo</option>
-            <option value="completed">Concluído</option>
-            <option value="blocked">Bloqueado</option>
-          </select>
-
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-semibold text-neutral-700"
-          >
-            Limpar filtros
-          </button>
-
-          <button
-            type="button"
-            onClick={() => void loadFlowDetail()}
-            className="rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-700"
-          >
-            Recarregar
-          </button>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <div className="space-y-3">
+      <section className="app-surface-muted p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h2 className="text-lg font-bold text-neutral-900">Token de teste (opcional)</h2>
-            <p className="text-sm text-neutral-600">
-              Sem token, a página usa fallback local. Com token JWT, opera com dados reais do backend.
+            <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
+              <span className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-white text-primary-700 shadow-sm">
+                <KeyRound size={16} />
+              </span>
+              Modo técnico
+            </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
+              O token JWT continua disponível para smoke e UAT, mas fica abaixo da barra principal para não competir com o board.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="text"
-              value={tokenInput}
-              onChange={(event) => setTokenInput(event.target.value)}
-              placeholder="Cole aqui o token JWT"
-              className="min-w-[320px] flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-            />
-            <button
-              type="button"
-              onClick={applyToken}
-              className="rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-700"
-            >
-              Aplicar token
-            </button>
-            <button
-              type="button"
-              onClick={clearToken}
-              className="rounded-lg bg-neutral-200 px-3 py-2 text-sm font-semibold text-neutral-800 hover:bg-neutral-300"
-            >
-              Limpar token
-            </button>
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-neutral-600">
+            <Database size={13} />
+            {isFallbackMode ? 'Origem: fallback local' : 'Origem: backend'}
           </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <Input
+            type="text"
+            value={tokenInput}
+            onChange={(event) => setTokenInput(event.target.value)}
+            placeholder="Cole aqui o token JWT"
+          />
+          <Button type="button" onClick={applyToken} size="sm" className="h-11">
+            Aplicar token
+          </Button>
+          <Button type="button" onClick={clearToken} variant="outline" size="sm" className="h-11">
+            Limpar token
+          </Button>
         </div>
       </section>
 
       {hint && (
-        <section className="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm font-semibold text-warning-800">
+        <section className="rounded-[22px] border border-warning-200 bg-warning-50 px-4 py-3 text-sm font-semibold text-warning-800">
           {hint}
         </section>
       )}
 
       {error && (
-        <section className="rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-800">
+        <section className="rounded-[22px] border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-800">
           {error}
         </section>
       )}
 
       {lastMoveError && (
-        <section className="rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-800">
+        <section className="rounded-[22px] border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-800">
           Falha ao mover card: {lastMoveError}
         </section>
       )}
 
-      <section className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p>
-            <strong>Fluxo:</strong> {currentFlowName}
-          </p>
-          <p>
-            <strong>Cards visíveis:</strong> {filteredRows.length} / {cardsCount}
-          </p>
-          <p>
-            <strong>Modo:</strong> {isFallbackMode ? 'Fallback local' : 'Dados reais'}
-          </p>
-          <p>
-            <strong>Loading:</strong>{' '}
-            {loadingFlows || loadingDetails ? 'sincronizando...' : 'ok'}
-          </p>
-        </div>
-      </section>
+      {isLoading && (
+        <section className="app-surface-muted px-4 py-3 text-sm font-medium text-neutral-700">
+          Sincronizando fluxos e colunas para refletir o dataset mais recente.
+        </section>
+      )}
 
       {viewMode === 'board' && (
         <KanbanBoard
@@ -676,9 +764,10 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
       )}
 
       {viewMode === 'table' && (
-        <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-          <table className="w-full">
-            <thead className="border-b border-neutral-200 bg-neutral-100">
+        <section className="app-surface overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[880px]">
+            <thead className="border-b border-[color:var(--border-subtle)] bg-neutral-50/90">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-800">Card</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-800">Coluna</th>
@@ -689,7 +778,7 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
                 <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-800">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200">
+            <tbody className="divide-y divide-[color:var(--border-subtle)]">
               {filteredRows.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-5 py-8">
@@ -703,65 +792,81 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
                 </tr>
               )}
               {filteredRows.map((row) => (
-                <tr key={row.id} className="hover:bg-neutral-50">
+                <tr key={row.id} className="hover:bg-white/70">
                   <td className="px-4 py-3 text-sm font-semibold text-neutral-900">
                     <button
                       type="button"
                       onClick={() => openCardWorkspace(row.id)}
-                      className="text-left text-primary-700 hover:underline"
+                      className="inline-flex items-center gap-2 text-left text-primary-700 hover:underline"
                     >
                       {row.title}
+                      <LayoutGrid size={13} />
                     </button>
                   </td>
                   <td className="px-4 py-3 text-sm text-neutral-700">{row.columnName}</td>
-                  <td className="px-4 py-3 text-sm text-neutral-700">{row.effectiveStatus}</td>
+                  <td className="px-4 py-3 text-sm text-neutral-700">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${visualStatusTone(
+                        resolveVisualStatus(row.status, row.rawStatus, row.columnName)
+                      )}`}
+                    >
+                      {visualStatusLabel(
+                        resolveVisualStatus(row.status, row.rawStatus, row.columnName)
+                      )}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-sm text-neutral-700">
                     {row.responsible || 'Não definido'}
                   </td>
                   <td className="px-4 py-3 text-sm text-neutral-700">{row.progress.percent}%</td>
                   <td className="px-4 py-3 text-sm text-neutral-700">{formatDate(row.updatedAt)}</td>
                   <td className="px-4 py-3 text-sm text-neutral-700">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => void router.push(`/cards/${row.id}?newTask=1`)}
-                      className="rounded border border-neutral-300 px-2 py-1 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
+                      variant="outline"
+                      size="sm"
                     >
                       Nova tarefa
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         </section>
       )}
 
       {viewMode === 'indicators' && (
         <section className="space-y-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <article className="rounded-xl border border-primary-200 bg-primary-50 p-4">
+            <article className="app-surface p-4">
               <p className="text-sm font-semibold text-primary-700">Cards ativos</p>
               <p className="text-3xl font-bold text-primary-900">{indicators.activeCards}</p>
             </article>
-            <article className="rounded-xl border border-success-200 bg-success-50 p-4">
+            <article className="app-surface p-4">
               <p className="text-sm font-semibold text-success-700">Cards concluídos</p>
               <p className="text-3xl font-bold text-success-900">{indicators.completedCards}</p>
             </article>
-            <article className="rounded-xl border border-error-200 bg-error-50 p-4">
+            <article className="app-surface p-4">
               <p className="text-sm font-semibold text-error-700">Cards bloqueados</p>
               <p className="text-3xl font-bold text-error-900">{indicators.blockedCards}</p>
             </article>
-            <article className="rounded-xl border border-neutral-300 bg-neutral-100 p-4">
+            <article className="app-surface p-4">
               <p className="text-sm font-semibold text-neutral-700">Throughput (7 dias)</p>
               <p className="text-3xl font-bold text-neutral-900">{indicators.throughput}</p>
             </article>
           </div>
 
-          <div className="rounded-xl border border-neutral-200 bg-white p-4">
+          <div className="app-surface p-4">
             <h3 className="mb-3 text-lg font-bold text-neutral-900">Distribuição por coluna</h3>
             <div className="space-y-2">
               {cardsByColumn.map((item) => (
-                <div key={item.id} className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                <div
+                  key={item.id}
+                  className="rounded-[20px] border border-[color:var(--border-subtle)] bg-neutral-50/80 p-3"
+                >
                   <div className="mb-1 flex items-center justify-between text-sm font-semibold text-neutral-800">
                     <span>{item.name}</span>
                     <span>

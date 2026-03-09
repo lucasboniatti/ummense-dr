@@ -1,0 +1,34 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-10T00:10:00Z"
+  from_agent: "sm"
+  to_agent: "qa"
+  consumed: false
+
+  story_context:
+    story_id: "EPIC-8-UX-UI-VISUAL-PARITY"
+    story_path: "docs/stories/8.1.story.md"
+    story_status: "Story Drafts Ready for QA Spec Review"
+    current_task: "QA review of story drafts 8.1-8.5 before PM approval"
+    branch: "master"
+
+  decisions:
+    - "Created draft epic shell EPIC-8-UX-UI-VISUAL-PARITY to anchor the follow-up stories."
+    - "Drafted stories 8.1 through 8.5 in the same order approved by QA preflight."
+    - "Added QA Results and PM Results placeholders to each story for the next stages."
+    - "Kept scope bounded to shell, home, flows board, card workspace, and final release gate."
+    - "Used before/after evidence as a mandatory story requirement."
+
+  files_modified:
+    - "docs/epics/EPIC-8-UX-UI-VISUAL-PARITY.md"
+    - "docs/stories/8.1.story.md"
+    - "docs/stories/8.2.story.md"
+    - "docs/stories/8.3.story.md"
+    - "docs/stories/8.4.story.md"
+    - "docs/stories/8.5.story.md"
+    - ".aios/handoffs/handoff-sm-to-qa-ux-ui-story-drafts-20260309.yaml"
+
+  blockers:
+    - "QA should confirm whether Story 8.1 needs to be split further before PM approval."
+
+  next_action: "Review stories 8.1-8.5 for clarity, testability, dependency quality, and objective acceptance criteria. If approved, hand off to @pm for scope and priority validation."

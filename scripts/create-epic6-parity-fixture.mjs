@@ -54,6 +54,30 @@ async function createSupabaseUser(email, password) {
   return payload;
 }
 
+async function ensureAppUser(id, email) {
+  const response = await fetch(`${supabaseUrl}/rest/v1/users`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates,return=representation',
+    },
+    body: JSON.stringify({
+      id,
+      email,
+      password_hash: 'parity-fixture-password-hash',
+    }),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    return null;
+  }
+
+  return payload;
+}
+
 async function apiRequest(token, method, path, body) {
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method,
@@ -127,6 +151,11 @@ async function main() {
     createSupabaseUser(emailB, password),
   ]);
 
+  await Promise.all([
+    ensureAppUser(userA.id, emailA),
+    ensureAppUser(userB.id, emailB),
+  ]);
+
   const tokenA = buildJwt(userA.id, emailA);
   const tokenB = buildJwt(userB.id, emailB);
 
@@ -167,12 +196,16 @@ async function main() {
   await requestOrFail(tokenA, 'POST', `/api/tags/tasks/${task.id}/tags/${tag.id}`);
   await requestOrFail(tokenA, 'POST', `/api/tags/cards/${card.id}/tags/${tag.id}`);
 
-  const webhookUrl = `https://example.com/webhook-parity-${suffix}`;
-  await requestOrFail(tokenA, 'POST', '/api/webhooks', {
-    url: webhookUrl,
+  let webhookUrl = '';
+  const desiredWebhookUrl = `https://example.com/webhook-parity-${suffix}`;
+  const webhookAttempt = await apiRequest(tokenA, 'POST', '/api/webhooks', {
+    url: desiredWebhookUrl,
     description: 'Webhook de fixture parity',
     enabled: true,
   });
+  if (webhookAttempt.ok) {
+    webhookUrl = desiredWebhookUrl;
+  }
 
   const deniedGet = await apiRequest(tokenB, 'GET', `/api/tags/tasks/${task.id}/tags`);
   const deniedAdd = await apiRequest(
@@ -214,6 +247,7 @@ async function main() {
     taskTitle: task.title,
     tagId: tag.id,
     webhookUrl,
+    webhookProvisioning: webhookAttempt.ok ? 'created' : `skipped:${webhookAttempt.status}`,
     tokenA,
     tokenB,
     permissionChecks: {

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { TaskHistoryItem, TaskItem, TaskTag, tasksService } from '../services/tasks.service';
+import { CalendarDays, Clock3, Tag as TagIcon, Trash2, UserRound, X } from 'lucide-react';
 import { FlowTag } from '../services/flows.service';
+import { TaskHistoryItem, TaskItem, TaskTag, tasksService } from '../services/tasks.service';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
 
 interface TaskModalProps {
   open: boolean;
@@ -40,7 +43,12 @@ function formatHistoryDate(value: string): string {
     return value;
   }
 
-  return parsed.toLocaleString('pt-BR');
+  return parsed.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function getInitialForm(task: TaskItem | null): TaskFormState {
@@ -52,6 +60,32 @@ function getInitialForm(task: TaskItem | null): TaskFormState {
     assignedTo: task?.assignedTo || '',
     dueDate: toLocalDateInput(task?.dueDate || null),
   };
+}
+
+function statusLabel(status: string): string {
+  if (status === 'completed') return 'Concluída';
+  if (status === 'in_progress') return 'Em andamento';
+  if (status === 'todo') return 'A iniciar';
+  if (status === 'blocked') return 'Bloqueada';
+  return 'Aberta';
+}
+
+function statusTone(status: string): string {
+  if (status === 'completed') return 'bg-success-50 text-success-700';
+  if (status === 'in_progress') return 'bg-primary-50 text-primary-700';
+  if (status === 'blocked') return 'bg-error-50 text-error-700';
+  return 'bg-neutral-100 text-neutral-700';
+}
+
+function priorityTone(priority: string): string {
+  if (priority === 'P1') return 'bg-error-50 text-error-700';
+  if (priority === 'P2') return 'bg-warning-50 text-warning-700';
+  return 'bg-primary-50 text-primary-700';
+}
+
+function historyLabel(action: string): string {
+  const normalized = action.replace(/[._-]+/g, ' ').trim();
+  return normalized ? normalized[0].toUpperCase() + normalized.slice(1) : 'Atualização';
 }
 
 export default function TaskModal({
@@ -73,7 +107,7 @@ export default function TaskModal({
   const [selectedTagId, setSelectedTagId] = useState('');
 
   const isEditMode = Boolean(task?.id);
-  const title = isEditMode ? 'Editar tarefa' : 'Nova tarefa';
+  const modalTitle = isEditMode ? 'Editar tarefa' : 'Nova tarefa';
 
   useEffect(() => {
     setForm(getInitialForm(task));
@@ -185,11 +219,7 @@ export default function TaskModal({
       await onSaved();
       onClose();
     } catch (saveError) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : 'Falha ao salvar tarefa.'
-      );
+      setError(saveError instanceof Error ? saveError.message : 'Falha ao salvar tarefa.');
     } finally {
       setSaving(false);
     }
@@ -208,11 +238,7 @@ export default function TaskModal({
       await onSaved();
       onClose();
     } catch (deleteError) {
-      setError(
-        deleteError instanceof Error
-          ? deleteError.message
-          : 'Falha ao remover tarefa.'
-      );
+      setError(deleteError instanceof Error ? deleteError.message : 'Falha ao remover tarefa.');
     } finally {
       setDeleting(false);
     }
@@ -254,150 +280,219 @@ export default function TaskModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4">
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
-          <div>
-            <h2 className="text-xl font-bold text-neutral-900">{title}</h2>
-            <p className="text-xs text-neutral-600">
-              Card #{cardId}
-            </p>
+    <div
+      data-testid="task-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label={modalTitle}
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm"
+    >
+      <div className="app-surface max-h-[94vh] w-full max-w-5xl overflow-hidden">
+        <header className="border-b border-[color:var(--border-subtle)] px-5 py-4 md:px-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="app-kicker">Workspace de tarefa</p>
+              <h2 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.03em] text-neutral-900">
+                {modalTitle}
+              </h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                  Card #{cardId}
+                </span>
+                {isEditMode && task && (
+                  <>
+                    <span
+                      className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusTone(
+                        task.status
+                      )}`}
+                    >
+                      {statusLabel(task.status)}
+                    </span>
+                    <span
+                      className={`rounded-full px-3 py-1.5 text-xs font-semibold ${priorityTone(
+                        task.priority
+                      )}`}
+                    >
+                      {task.priority}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <Button type="button" variant="ghost" size="sm" onClick={onClose} className="h-10">
+              <X size={16} className="mr-2" />
+              Fechar
+            </Button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
-          >
-            Fechar
-          </button>
         </header>
 
-        <div className="grid max-h-[calc(92vh-72px)] grid-cols-1 overflow-y-auto lg:grid-cols-[1.2fr_1fr]">
-          <section className="space-y-3 border-b border-neutral-200 p-5 lg:border-b-0 lg:border-r">
+        <div className="grid max-h-[calc(94vh-104px)] grid-cols-1 overflow-y-auto lg:grid-cols-[1.18fr_0.82fr]">
+          <section className="space-y-4 border-b border-[color:var(--border-subtle)] p-5 lg:border-b-0 lg:border-r lg:p-6">
             {error && (
-              <div className="rounded-lg border border-error-200 bg-error-50 px-3 py-2 text-sm text-error-800">
+              <div className="rounded-[18px] border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-800">
                 {error}
               </div>
             )}
 
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
-                Título
-              </label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(event) => setForm((previous) => ({ ...previous, title: event.target.value }))}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900"
-                placeholder="Ex.: Revisar estratégia de onboarding"
-              />
-            </div>
+            <article className="app-surface-muted p-4">
+              <div className="grid gap-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    Título
+                  </label>
+                  <Input
+                    type="text"
+                    value={form.title}
+                    onChange={(event) =>
+                      setForm((previous) => ({ ...previous, title: event.target.value }))
+                    }
+                    placeholder="Ex.: Revisar estratégia de onboarding"
+                  />
+                </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
-                Descrição
-              </label>
-              <textarea
-                value={form.description}
-                onChange={(event) => setForm((previous) => ({ ...previous, description: event.target.value }))}
-                className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900"
-                placeholder="Detalhes da tarefa..."
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
-                  Prioridade
-                </label>
-                <select
-                  value={form.priority}
-                  onChange={(event) => setForm((previous) => ({ ...previous, priority: event.target.value }))}
-                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
-                >
-                  <option value="P1">P1</option>
-                  <option value="P2">P2</option>
-                  <option value="P3">P3</option>
-                </select>
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    Descrição
+                  </label>
+                  <textarea
+                    value={form.description}
+                    onChange={(event) =>
+                      setForm((previous) => ({ ...previous, description: event.target.value }))
+                    }
+                    className="app-control min-h-[120px] w-full resize-y px-3.5 py-3 text-sm leading-6"
+                    placeholder="Descreva a entrega da tarefa."
+                  />
+                </div>
               </div>
+            </article>
 
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
-                  Status
-                </label>
-                <select
-                  value={form.status}
-                  onChange={(event) => setForm((previous) => ({ ...previous, status: event.target.value }))}
-                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
-                >
-                  <option value="open">open</option>
-                  <option value="todo">todo</option>
-                  <option value="in_progress">in_progress</option>
-                  <option value="completed">completed</option>
-                  <option value="blocked">blocked</option>
-                </select>
+            <article className="app-surface p-4">
+              <header className="mb-4">
+                <p className="app-kicker">Operação</p>
+                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-neutral-900">
+                  Propriedades da tarefa
+                </h3>
+              </header>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    Prioridade
+                  </label>
+                  <select
+                    value={form.priority}
+                    onChange={(event) =>
+                      setForm((previous) => ({ ...previous, priority: event.target.value }))
+                    }
+                    className="app-control h-11 w-full bg-white px-3.5 text-sm text-neutral-900"
+                  >
+                    <option value="P1">P1</option>
+                    <option value="P2">P2</option>
+                    <option value="P3">P3</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    Status
+                  </label>
+                  <select
+                    value={form.status}
+                    onChange={(event) =>
+                      setForm((previous) => ({ ...previous, status: event.target.value }))
+                    }
+                    className="app-control h-11 w-full bg-white px-3.5 text-sm text-neutral-900"
+                  >
+                    <option value="open">Aberta</option>
+                    <option value="todo">A iniciar</option>
+                    <option value="in_progress">Em andamento</option>
+                    <option value="completed">Concluída</option>
+                    <option value="blocked">Bloqueada</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    Responsável
+                  </label>
+                  <div className="relative">
+                    <UserRound
+                      size={14}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                    />
+                    <Input
+                      type="text"
+                      value={form.assignedTo}
+                      onChange={(event) =>
+                        setForm((previous) => ({ ...previous, assignedTo: event.target.value }))
+                      }
+                      placeholder="Nome do responsável"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    Prazo
+                  </label>
+                  <div className="relative">
+                    <CalendarDays
+                      size={14}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                    />
+                    <Input
+                      type="date"
+                      value={form.dueDate}
+                      onChange={(event) =>
+                        setForm((previous) => ({ ...previous, dueDate: event.target.value }))
+                      }
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
               </div>
+            </article>
 
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
-                  Responsável
-                </label>
-                <input
-                  type="text"
-                  value={form.assignedTo}
-                  onChange={(event) =>
-                    setForm((previous) => ({ ...previous, assignedTo: event.target.value }))
-                  }
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900"
-                  placeholder="Nome do responsável"
-                />
-              </div>
+            <article className="app-surface p-4">
+              <header className="mb-4">
+                <p className="app-kicker">Tags</p>
+                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-neutral-900">
+                  Classificação da tarefa
+                </h3>
+              </header>
 
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
-                  Prazo
-                </label>
-                <input
-                  type="date"
-                  value={form.dueDate}
-                  onChange={(event) => setForm((previous) => ({ ...previous, dueDate: event.target.value }))}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900"
-                />
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-              <h4 className="text-xs font-bold uppercase tracking-wide text-neutral-700">
-                Tags da tarefa
-              </h4>
-
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 {taskTags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+                    className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-white"
                     style={{ backgroundColor: tag.color }}
                   >
+                    <TagIcon size={12} />
                     {tag.name}
                     <button
                       type="button"
                       onClick={() => onRemoveTag(Number(tag.id))}
-                      className="rounded bg-white/20 px-1"
+                      className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px]"
+                      aria-label={`Remover tag ${tag.name}`}
                     >
                       x
                     </button>
                   </span>
                 ))}
+
                 {taskTags.length === 0 && (
-                  <span className="text-xs text-neutral-600">Sem tags vinculadas.</span>
+                  <span className="text-sm text-neutral-500">Sem tags vinculadas.</span>
                 )}
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
                 <select
                   value={selectedTagId}
                   onChange={(event) => setSelectedTagId(event.target.value)}
-                  className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
+                  className="app-control h-11 bg-white px-3.5 text-sm text-neutral-900"
                 >
                   <option value="">Selecionar tag</option>
                   {availableTags.map((tag) => (
@@ -406,67 +501,116 @@ export default function TaskModal({
                     </option>
                   ))}
                 </select>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={onAddTag}
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
+                  className="h-11"
                 >
                   Adicionar tag
-                </button>
+                </Button>
               </div>
-            </div>
+            </article>
 
-            <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-4">
-              <button
-                type="button"
-                onClick={onSubmit}
-                disabled={saving}
-                className="rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
-              >
+            <div className="flex flex-wrap items-center gap-2 border-t border-[color:var(--border-subtle)] pt-4">
+              <Button type="button" onClick={() => void onSubmit()} disabled={saving} className="h-11">
                 {saving ? 'Salvando...' : isEditMode ? 'Salvar alterações' : 'Criar tarefa'}
-              </button>
+              </Button>
 
               {isEditMode && (
-                <button
+                <Button
                   type="button"
+                  variant="destructive"
                   onClick={() => void onDelete()}
                   disabled={deleting}
-                  className="rounded-lg bg-error-600 px-3 py-2 text-sm font-semibold text-white hover:bg-error-700 disabled:opacity-60"
+                  className="h-11"
                 >
+                  <Trash2 size={14} className="mr-2" />
                   {deleting ? 'Removendo...' : 'Remover tarefa'}
-                </button>
+                </Button>
               )}
             </div>
           </section>
 
-          <aside className="space-y-3 p-5">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-neutral-700">
-              Histórico da tarefa
-            </h3>
+          <aside className="space-y-4 p-5 lg:p-6">
+            <article className="app-surface-muted p-4">
+              <header>
+                <p className="app-kicker">Resumo</p>
+                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-neutral-900">
+                  Estado atual
+                </h3>
+              </header>
 
-            {loadingHistory && (
-              <p className="text-sm text-neutral-600">Carregando histórico...</p>
-            )}
-
-            {!loadingHistory && history.length === 0 && (
-              <p className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
-                Sem histórico disponível.
-              </p>
-            )}
-
-            <div className="space-y-2">
-              {history.map((item) => (
-                <article
-                  key={item.id}
-                  className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2"
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusTone(
+                    form.status
+                  )}`}
                 >
-                  <p className="text-xs font-semibold text-neutral-900">{item.action}</p>
-                  <p className="mt-1 text-[11px] text-neutral-600">
-                    {formatHistoryDate(item.created_at)}
-                  </p>
-                </article>
-              ))}
-            </div>
+                  {statusLabel(form.status)}
+                </span>
+                <span
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${priorityTone(
+                    form.priority
+                  )}`}
+                >
+                  {form.priority}
+                </span>
+                {form.assignedTo.trim() && (
+                  <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                    {form.assignedTo.trim()}
+                  </span>
+                )}
+                {form.dueDate && (
+                  <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                    {form.dueDate}
+                  </span>
+                )}
+              </div>
+            </article>
+
+            <article className="app-surface p-4">
+              <header className="mb-4">
+                <p className="app-kicker">Histórico</p>
+                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-neutral-900">
+                  Timeline da tarefa
+                </h3>
+              </header>
+
+              {loadingHistory && (
+                <p className="text-sm text-neutral-600">Carregando histórico...</p>
+              )}
+
+              {!loadingHistory && history.length === 0 && (
+                <div className="rounded-[18px] border border-dashed border-[color:var(--border-strong)] bg-white/65 px-4 py-5 text-sm text-neutral-500">
+                  Sem histórico disponível para esta tarefa.
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {history.map((item) => (
+                  <article
+                    key={item.id}
+                    className="rounded-[20px] border border-[color:var(--border-subtle)] bg-white/94 p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700">
+                        <Clock3 size={15} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-neutral-900">
+                          {historyLabel(item.action)}
+                        </p>
+                        <p className="mt-1 text-xs text-neutral-500">
+                          {formatHistoryDate(item.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </article>
           </aside>
         </div>
       </div>

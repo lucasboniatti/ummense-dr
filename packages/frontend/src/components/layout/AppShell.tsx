@@ -86,10 +86,19 @@ export default function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] text-neutral-900">
+    <div className="relative min-h-screen overflow-x-hidden bg-[var(--app-canvas)] text-neutral-900">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-64 opacity-80"
+        style={{
+          background:
+            'radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 42%)',
+        }}
+      />
+
       <AppSidebar isMobileOpen={isMobileOpen} onCloseMobile={() => setIsMobileOpen(false)} />
 
-      <div className="lg:pl-64">
+      <div className="relative z-10 min-h-screen lg:pl-64">
         <AppTopbar
           pageTitle={pageTitle}
           searchValue={searchValue}
@@ -102,7 +111,9 @@ export default function AppShell({ children }: AppShellProps) {
           onQuickAction={handleQuickAction}
         />
 
-        <main className="px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-7">{children}</main>
+        <main className="mx-auto max-w-[1600px] px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-7">
+          {children}
+        </main>
       </div>
     </div>
   );

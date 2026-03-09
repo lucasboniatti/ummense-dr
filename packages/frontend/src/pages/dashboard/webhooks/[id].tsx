@@ -53,11 +53,12 @@ export default function WebhookDetailPage() {
         <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
           {error || 'Webhook não encontrado'}
         </div>
-        <Link href="/dashboard/webhooks">
-          <a className="text-primary-600 hover:underline mt-4 inline-flex items-center gap-2 font-medium">
-            <ArrowLeft size={18} />
-            Voltar para Webhooks
-          </a>
+        <Link
+          href="/dashboard/webhooks"
+          className="mt-4 inline-flex items-center gap-2 font-medium text-primary-600 hover:underline"
+        >
+          <ArrowLeft size={18} />
+          Voltar para Webhooks
         </Link>
       </div>
     );
@@ -67,10 +68,8 @@ export default function WebhookDetailPage() {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/webhooks">
-          <a className="text-primary-600 hover:text-primary-700">
-            <ArrowLeft size={24} />
-          </a>
+        <Link href="/dashboard/webhooks" className="text-primary-600 hover:text-primary-700">
+          <ArrowLeft size={24} />
         </Link>
         <div>
           <h1 className="text-3xl font-bold">{webhook.url}</h1>

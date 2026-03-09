@@ -1,0 +1,30 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-09T23:59:30Z"
+  from_agent: "qa"
+  to_agent: "sm"
+  consumed: false
+
+  story_context:
+    story_id: "UX-UI-VISUAL-PARITY-FOLLOWUP"
+    story_path: "docs/ux-ui-visual-parity-follow-up-plan.md"
+    story_status: "QA Preflight Passed"
+    current_task: "SM story breakdown from validated plan"
+    branch: "master"
+
+  decisions:
+    - "QA preflight decision is PASS."
+    - "Story creation may proceed in the order defined by the follow-up plan."
+    - "Each story must include mobile behavior, state handling, file list, and before/after evidence."
+    - "Do not expand backend scope unless a UI blocker is proven."
+    - "Treat card workspace productization as highest UX-risk story after foundation stabilizes."
+
+  files_modified:
+    - "docs/ux-ui-visual-parity-follow-up-plan.md"
+    - "docs/qa/gates/ux-ui-visual-parity-plan-qa-preflight.md"
+    - ".aios/handoffs/handoff-qa-to-sm-ux-ui-parity-20260309.yaml"
+
+  blockers:
+    - "If Story Candidate 1 becomes too large, split it during SM breakdown."
+
+  next_action: "Create story drafts from docs/ux-ui-visual-parity-follow-up-plan.md in the approved order, keeping scope inside the listed routes and guardrails."

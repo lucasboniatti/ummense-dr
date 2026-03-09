@@ -83,11 +83,12 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
         {loading ? 'Entrando...' : 'Entrar'}
       </Button>
 
-      <div className="text-center mt-4">
-        <Link href="/auth/signup">
-          <a className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-            Não tem uma conta? Criar conta
-          </a>
+      <div className="mt-4 text-center">
+        <Link
+          href="/auth/signup"
+          className="text-sm font-medium text-primary-600 hover:text-primary-700"
+        >
+          Não tem uma conta? Criar conta
         </Link>
       </div>
     </form>
