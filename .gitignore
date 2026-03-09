@@ -19,6 +19,7 @@ logs/
 *.tsbuildinfo
 .next/
 packages/*/.next/
+test-results/
 
 # IDE & OS (AIOS)
 .DS_Store
