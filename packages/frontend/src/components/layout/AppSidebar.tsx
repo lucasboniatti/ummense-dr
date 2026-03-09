@@ -24,9 +24,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     label: 'Painel',
-    href: '/',
+    href: '/dashboard',
     icon: Home,
-    matches: (pathname) => pathname === '/' || pathname === '/Dashboard',
+    matches: (pathname) => pathname === '/' || pathname === '/dashboard',
   },
   {
     label: 'Fluxos',

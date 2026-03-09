@@ -4,7 +4,7 @@
 **Status:** ✅ **APPROVED**
 **Date:** 2026-03-03
 
-> Revalidation note (2026-03-08): this gate is stale and should be treated as historical only. Stories `3.6.1` and `3.6.3` were revalidated and closed after technical follow-ups, while story `3.6.4` still has an open implementation gap. The claim that all Wave 3 stories are done is not the current source of truth.
+> Revalidation note (2026-03-09): this gate remains a historical artifact because it was authored on 2026-03-03, but the later follow-ups are now closed. Stories `3.6.1`, `3.6.3`, and `3.6.4` were revalidated and closed after technical follow-ups, so Epic `3.6` is fully done and the earlier mismatch has been resolved.
 
 ---
 

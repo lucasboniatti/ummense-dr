@@ -9,6 +9,7 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"api/**/*.ts\"",
     "typecheck": "tsc --project tsconfig.quality.json --noEmit",
     "test": "tsx --test src/__tests__/auth.service.security.test.ts",
+    "test:cost-monitoring": "vitest run src/__tests__/cost-snapshot.service.test.ts src/__tests__/analytics-cost-summary.test.ts src/__tests__/nightly-cost-snapshot.test.ts",
     "test:saved-filters": "vitest run src/__tests__/saved-filters.test.ts",
     "test:websocket": "vitest run src/__tests__/websocket-unit.test.ts",
     "benchmark:websocket": "tsx src/scripts/websocket-load-benchmark.ts",

@@ -3,8 +3,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import MetricCard from './MetricCard';
+import { CostCard, type CostCardSummary } from './CostCard';
 
-interface Metrics {
+interface MetricsResponse {
   successRate: number;
   avgDuration: number;
   failedExecutions: { automation: string; count: number }[];
@@ -14,7 +15,7 @@ interface Metrics {
   durationTrend: { date: string; duration: number }[];
 }
 
-const initialMetrics: Metrics = {
+const initialMetrics: MetricsResponse = {
   successRate: 0,
   avgDuration: 0,
   failedExecutions: [],
@@ -24,124 +25,114 @@ const initialMetrics: Metrics = {
   durationTrend: [],
 };
 
-/**
- * Analytics Dashboard Container
- *
- * Displays 5 key metrics with real-time WebSocket updates:
- * 1. Execution success rate (7-day trend, line chart)
- * 2. Average execution duration (performance, line chart)
- * 3. Failed executions by automation (top 5, bar chart)
- * 4. Cost savings from S3 archival (metric card)
- * 5. Storage utilization (DB + S3, gauge chart)
- *
- * Performance targets:
- * - Initial load: <1s
- * - Real-time updates: <100ms (WebSocket to render)
- * - 60 FPS chart animations
- *
- * Responsive design: Mobile-first (375px → 768px → 1920px)
- * Accessibility: WCAG 2.1 AA (contrast, keyboard nav, screen readers)
- */
+const emptyCostSummary: CostCardSummary = {
+  dbCost: 0,
+  s3Cost: 0,
+  monthlySavings: 0,
+  sevenYearProjection: 0,
+  storageGrowthTrend: [],
+  accuracy: 95,
+  dbStorageGb: 0,
+  s3StorageGb: 0,
+  archivedStorageGb: 0,
+  compressionRatio: 3.5,
+  trend: 'stable',
+  trendLabel: 'Aguardando serie historica',
+  lastUpdatedAt: null,
+  isEstimate: true,
+};
+
 export default function DashboardContainer() {
-  const { isConnected, metrics: wsMetrics, subscribe, unsubscribe } = useWebSocket();
-  const [metrics, setMetrics] = useState<Metrics>(initialMetrics);
+  const { isConnected, subscribe, unsubscribe } = useWebSocket();
+  const [metrics, setMetrics] = useState<MetricsResponse>(initialMetrics);
+  const [costSummary, setCostSummary] = useState<CostCardSummary>(emptyCostSummary);
   const [isLoading, setIsLoading] = useState(true);
-  const [dateRange, setDateRange] = useState({ from: '7d', to: 'now' });
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch initial metrics from API
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/analytics/metrics', {
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+
+      const [metricsResponse, costResponse] = await Promise.all([
+        fetch('/api/analytics/metrics', {
           headers: { 'Content-Type': 'application/json' },
-        });
+        }),
+        fetch('/api/analytics/cost-summary', {
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ]);
 
-        if (!response.ok) {
-          throw new Error(`API error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setMetrics(data);
-        setError(null);
-      } catch (err) {
-        console.error('[Dashboard] Failed to fetch metrics:', err);
-        setError('Failed to load metrics. Using WebSocket updates.');
-        // Continue with WebSocket updates
-      } finally {
-        setIsLoading(false);
+      if (!metricsResponse.ok) {
+        throw new Error(`Metrics API error: ${metricsResponse.statusText}`);
       }
-    };
 
-    fetchMetrics();
-  }, [dateRange]);
+      if (!costResponse.ok) {
+        throw new Error(`Cost summary API error: ${costResponse.statusText}`);
+      }
 
-  // Subscribe to WebSocket real-time updates
-  useEffect(() => {
-    if (isConnected) {
-      subscribe('execution-updates');
+      const [metricsPayload, costPayload] = await Promise.all([
+        metricsResponse.json(),
+        costResponse.json(),
+      ]);
 
-      // Listen for WebSocket messages
-      const handleUpdate = (delta: any) => {
-        setMetrics((prev) => ({
-          ...prev,
-          // Update metrics based on delta (execution update)
-          successRate: prev.successRate, // Recalculate on next batch
-          avgDuration: prev.avgDuration,
-          failedExecutions: prev.failedExecutions,
-          costSavings: prev.costSavings,
-          storageUtilization: prev.storageUtilization,
-          successTrend: prev.successTrend,
-          durationTrend: prev.durationTrend,
-        }));
-      };
-
-      window.addEventListener('websocket:execution-update', handleUpdate);
-
-      return () => {
-        window.removeEventListener('websocket:execution-update', handleUpdate);
-        unsubscribe('execution-updates');
-      };
+      setMetrics(metricsPayload);
+      setCostSummary(costPayload);
+      setError(null);
+    } catch (err) {
+      console.error('[Dashboard] Failed to fetch dashboard data:', err);
+      setError('Nao foi possivel carregar o dashboard. Exibindo os ultimos valores conhecidos.');
+    } finally {
+      setIsLoading(false);
     }
-  }, [isConnected, subscribe, unsubscribe]);
+  }, []);
 
-  // Fallback polling if WebSocket unavailable
+  useEffect(() => {
+    void fetchDashboardData();
+  }, [fetchDashboardData]);
+
   useEffect(() => {
     if (!isConnected) {
-      const pollInterval = setInterval(async () => {
-        try {
-          const response = await fetch('/api/analytics/metrics');
-          if (response.ok) {
-            const data = await response.json();
-            setMetrics(data);
-          }
-        } catch (err) {
-          console.error('[Dashboard] Polling failed:', err);
-        }
-      }, 10000); // Poll every 10 seconds
+      const pollInterval = setInterval(() => {
+        void fetchDashboardData();
+      }, 10000);
 
       return () => clearInterval(pollInterval);
     }
-  }, [isConnected]);
+
+    subscribe('execution-updates');
+
+    const handleUpdate = () => {
+      void fetchDashboardData();
+    };
+
+    window.addEventListener('websocket:execution-update', handleUpdate);
+
+    return () => {
+      window.removeEventListener('websocket:execution-update', handleUpdate);
+      unsubscribe('execution-updates');
+    };
+  }, [fetchDashboardData, isConnected, subscribe, unsubscribe]);
 
   const handleExportCSV = useCallback(() => {
-    // Prepare CSV data
-    const headers = ['Date', 'Success Rate (%)', 'Avg Duration (ms)', 'Storage (GB)'];
-    const rows = metrics.successTrend.map((point, idx) => [
-      point.date,
-      metrics.successTrend[idx]?.rate ?? 0,
-      metrics.durationTrend[idx]?.duration ?? 0,
-      metrics.storageUtilization,
-    ]);
+    const headers = [
+      'Date',
+      'Success Rate (%)',
+      'Avg Duration (ms)',
+      'Storage (GB)',
+      'Monthly Savings (USD)',
+    ];
 
-    // Convert to CSV
-    const csv = [
-      headers.join(','),
-      ...rows.map((row) => row.join(',')),
-    ].join('\n');
+    const rows = (metrics.successTrend.length > 0 ? metrics.successTrend : [{ date: new Date().toISOString(), rate: metrics.successRate }]).map(
+      (point, idx) => [
+        point.date,
+        metrics.successTrend[idx]?.rate ?? metrics.successRate,
+        metrics.durationTrend[idx]?.duration ?? metrics.avgDuration,
+        costSummary.dbStorageGb + costSummary.s3StorageGb,
+        costSummary.monthlySavings,
+      ]
+    );
 
-    // Download
+    const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -149,26 +140,25 @@ export default function DashboardContainer() {
     link.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-  }, [metrics]);
+  }, [costSummary, metrics]);
 
   return (
     <div
       className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-4 md:p-6 lg:p-8"
       data-testid="dashboard-container"
     >
-      {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">
               Analytics Dashboard
             </h1>
             <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-              Real-time execution metrics and trends
+              Indicadores operacionais e custo do arquivamento em tempo quase real.
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            {/* WebSocket Connection Badge */}
+
+          <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
               <div
                 className={`w-2 h-2 rounded-full ${
@@ -182,7 +172,7 @@ export default function DashboardContainer() {
                 {isConnected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
-            {/* Export Button */}
+
             <button
               onClick={handleExportCSV}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 font-medium transition-colors"
@@ -193,76 +183,59 @@ export default function DashboardContainer() {
           </div>
         </div>
 
-        {/* Error Message */}
         {error && (
-          <div className="p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm text-warning-800 dark:text-warning-200">
+          <div className="mt-4 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm text-warning-800 dark:text-warning-200">
             {error}
           </div>
         )}
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div
-          className="flex items-center justify-center h-64"
-          data-testid="dashboard-loading"
-        >
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64" data-testid="dashboard-loading">
           <div className="text-neutral-600 dark:text-neutral-400">Loading metrics...</div>
         </div>
-      )}
+      ) : (
+        <div className="space-y-6">
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6"
+            data-testid="metrics-grid"
+          >
+            <MetricCard
+              title="Success Rate"
+              value={`${metrics.successRate.toFixed(1)}%`}
+              trend={metrics.successTrend}
+              trendLabel="7-day trend"
+              icon="✓"
+              dataTestId="metric-success-rate"
+            />
 
-      {/* Metrics Grid */}
-      {!isLoading && (
-        <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6"
-          data-testid="metrics-grid"
-        >
-          {/* Success Rate Card */}
-          <MetricCard
-            title="Success Rate"
-            value={`${metrics.successRate.toFixed(1)}%`}
-            trend={metrics.successTrend}
-            trendLabel="7-day trend"
-            icon="✓"
-            dataTestId="metric-success-rate"
-          />
+            <MetricCard
+              title="Avg Duration"
+              value={`${metrics.avgDuration.toFixed(0)}ms`}
+              trend={metrics.durationTrend}
+              trendLabel="Performance"
+              icon="⏱"
+              dataTestId="metric-avg-duration"
+            />
 
-          {/* Avg Duration Card */}
-          <MetricCard
-            title="Avg Duration"
-            value={`${metrics.avgDuration.toFixed(0)}ms`}
-            trend={metrics.durationTrend}
-            trendLabel="Performance"
-            icon="⏱"
-            dataTestId="metric-avg-duration"
-          />
+            <MetricCard
+              title="Failed (Top 5)"
+              value={`${metrics.failedExecutions.length}`}
+              failedExecutions={metrics.failedExecutions}
+              icon="✗"
+              dataTestId="metric-failed-executions"
+            />
 
-          {/* Failed Executions Card */}
-          <MetricCard
-            title="Failed (Top 5)"
-            value={`${metrics.failedExecutions.length}`}
-            failedExecutions={metrics.failedExecutions}
-            icon="✗"
-            dataTestId="metric-failed-executions"
-          />
+            <MetricCard
+              title="Storage Utilization"
+              value={`${(costSummary.dbStorageGb + costSummary.s3StorageGb).toFixed(2)}GB`}
+              subtitle={costSummary.isEstimate ? 'DB + S3 (estimado)' : 'DB + S3'}
+              icon="💾"
+              dataTestId="metric-storage-utilization"
+            />
+          </div>
 
-          {/* Cost Savings Card */}
-          <MetricCard
-            title="Cost Savings"
-            value={`$${metrics.costSavings.toFixed(2)}/mo`}
-            subtitle="vs. DB storage"
-            icon="💰"
-            dataTestId="metric-cost-savings"
-          />
-
-          {/* Storage Utilization Card */}
-          <MetricCard
-            title="Storage"
-            value={`${metrics.storageUtilization.toFixed(1)}GB`}
-            subtitle="DB + S3"
-            icon="💾"
-            dataTestId="metric-storage-utilization"
-          />
+          <CostCard summary={costSummary} />
         </div>
       )}
     </div>

@@ -8,7 +8,7 @@ interface AppShellProps {
 }
 
 function resolvePageTitle(pathname: string): string {
-  if (pathname === '/' || pathname === '/Dashboard') return 'Painel Operacional';
+  if (pathname === '/' || pathname === '/dashboard') return 'Painel Operacional';
   if (pathname.startsWith('/dashboard/automations')) return 'Fluxos';
   if (pathname.startsWith('/flows')) return 'Fluxos';
   if (pathname.startsWith('/cards')) return 'Card Workspace';

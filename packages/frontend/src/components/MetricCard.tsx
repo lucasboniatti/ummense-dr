@@ -67,7 +67,9 @@ export function MetricCard({
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex items-baseline gap-2">
-          <div className="text-2xl font-bold">{value}</div>
+          <div className="text-2xl font-bold" data-testid={dataTestId ? `${dataTestId}-value` : undefined}>
+            {value}
+          </div>
           {unit && <span className="text-sm text-neutral-600">{unit}</span>}
         </div>
         <div className="flex items-center gap-2">

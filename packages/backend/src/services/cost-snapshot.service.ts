@@ -1,40 +1,35 @@
-/**
- * Cost Snapshot Service — Story 3.6.4
- *
- * Manages cost calculations and persistence for S3 archival ROI tracking.
- * Integrates with S3ArchivalService from Story 3.5.1.
- *
- * Cost Model:
- * - RDS: $1.5/GB/month
- * - S3: $0.023/GB/month
- * - Compression: 3.5x typical for JSON/text execution logs
- *
- * Usage:
- * const service = new CostSnapshotService(supabaseClient);
- * const metrics = await service.calculateUserCostMetrics(userId);
- */
-
 import { SupabaseClient } from '@supabase/supabase-js';
+import { S3ArchivalService } from '../automations/history/s3-archival.service';
+
+const DEFAULT_COMPRESSION_RATIO = Number(process.env.S3_COMPRESSION_RATIO || '3.5');
+const DEFAULT_RDS_PRICE_PER_GB = Number(process.env.RDS_PRICE_PER_GB || '1.5');
+const DEFAULT_S3_PRICE_PER_GB = Number(process.env.S3_PRICE_PER_GB || '0.023');
+const DEFAULT_ACCURACY_THRESHOLD = Number(process.env.COST_ACCURACY_THRESHOLD || '95');
+const SAMPLE_SIZE = 100;
+const DEFAULT_ROW_SIZE_BYTES = 2048;
+const STORAGE_OVERHEAD_MULTIPLIER = 1.15;
 
 export interface CostMetrics {
   dbStorageGb: number;
   s3StorageGb: number;
+  archivedStorageGb: number;
   dbCostMonthly: number;
   s3CostMonthly: number;
   monthlySavings: number;
   sevenYearProjection: number;
   compressionRatio: number;
-  accuracy: number; // 95 = ±5% variance
+  accuracy: number;
+  isEstimate: boolean;
 }
 
 export interface CostSnapshot extends CostMetrics {
   id: string;
   userId: string;
-  timestamp: Date;
+  timestamp: string;
 }
 
 export interface StorageTrendPoint {
-  date: Date;
+  date: string;
   archivalRateGbPerDay: number;
 }
 
@@ -45,127 +40,86 @@ export interface CostSummary {
   sevenYearProjection: number;
   storageGrowthTrend: StorageTrendPoint[];
   accuracy: number;
+  dbStorageGb: number;
+  s3StorageGb: number;
+  archivedStorageGb: number;
+  compressionRatio: number;
+  trend: 'up' | 'down' | 'stable';
+  trendLabel: string;
+  lastUpdatedAt: string | null;
+  isEstimate: boolean;
 }
 
-const COST_MODEL = {
-  rds: {
-    pricePerGb: 1.5, // $/GB/month (AWS RDS gp2)
-  },
-  s3: {
-    pricePerGb: 0.023, // $/GB/month (S3 Standard)
-    compressionRatio: 3.5, // Typical for JSON/text
-  },
-};
+interface StorageBreakdown {
+  recordCount: number;
+  dbStorageBytes: number;
+  dbStorageGb: number;
+}
 
-const ACCURACY_THRESHOLD = 95; // ±5% variance
+interface ArchivedStorageBreakdown {
+  archivedBytes: number;
+  archivedStorageGb: number;
+  effectiveStorageBytes: number;
+  effectiveStorageGb: number;
+  isEstimate: boolean;
+  archiveEnabled: boolean;
+}
+
+interface RetentionPolicy {
+  archive_enabled?: boolean;
+  archive_bucket?: string | null;
+}
+
+interface CostSnapshotServiceOptions {
+  archivalStorageProvider?: (userId: string, bucket: string) => Promise<number>;
+  now?: () => Date;
+}
 
 export class CostSnapshotService {
-  constructor(private supabase: SupabaseClient) {}
+  private readonly archivalStorageProvider: (userId: string, bucket: string) => Promise<number>;
+  private readonly now: () => Date;
 
-  /**
-   * Calculate cost metrics for a user
-   * Reuses S3ArchivalService.calculateCostSavings() from Story 3.5.1
-   */
+  constructor(
+    private readonly supabase: SupabaseClient,
+    options: CostSnapshotServiceOptions = {}
+  ) {
+    this.archivalStorageProvider =
+      options.archivalStorageProvider || defaultArchivalStorageProvider;
+    this.now = options.now || (() => new Date());
+  }
+
   async calculateUserCostMetrics(userId: string): Promise<CostMetrics> {
-    try {
-      // 1. Query user's DB storage size from automation_executions
-      const dbStorageGb = await this.calculateUserDbStorage(userId);
+    const dbStorage = await this.calculateUserDbStorage(userId);
+    const retentionPolicy = await this.getUserRetentionPolicy(userId);
+    const archivedStorage = await this.calculateArchivedStorage(
+      userId,
+      dbStorage.dbStorageBytes,
+      retentionPolicy
+    );
 
-      // 2. Query user's S3 archival size (from existing archival objects)
-      const s3StorageGb = await this.calculateUserS3Storage(userId);
-
-      // 3. Calculate cost metrics
-      return this.calculateCostMetrics(dbStorageGb, s3StorageGb);
-    } catch (error) {
-      console.error(`[CostSnapshotService] Error calculating metrics for user ${userId}:`, error);
-      throw new Error(`Failed to calculate cost metrics: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    return this.buildMetrics(dbStorage, archivedStorage);
   }
 
-  /**
-   * Calculate current DB storage (in GB) for a user
-   * Estimates based on automation_executions table size
-   */
-  private async calculateUserDbStorage(userId: string): Promise<number> {
-    // This is a simplified estimate - in production, would query actual table size
-    // For now, estimate based on execution count * average size (2KB per execution)
-    const { count, error } = await this.supabase
-      .from('automation_executions')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('[CostSnapshotService] Error querying executions:', error);
-      return 0;
+  async captureDailySnapshot(userId: string): Promise<CostSnapshot> {
+    const existingSnapshot = await this.findSnapshotForDate(userId, this.now());
+    if (existingSnapshot) {
+      return existingSnapshot;
     }
 
-    const executionCount = count || 0;
-    const avgExecutionSizeKb = 2; // Average execution record size
-    const storageGb = (executionCount * avgExecutionSizeKb) / (1024 * 1024);
-
-    return Math.round(storageGb * 100) / 100; // Round to 2 decimals
+    const metrics = await this.calculateUserCostMetrics(userId);
+    return this.insertCostSnapshot(userId, metrics, this.now());
   }
 
-  /**
-   * Calculate S3 archival storage (in GB) for a user
-   * Queries archived objects from S3ArchivalService
-   */
-  private async calculateUserS3Storage(userId: string): Promise<number> {
-    // This would query the archival tracking in a real implementation
-    // For now, estimate based on execution count that's been archived
-    const { count, error } = await this.supabase
-      .from('s3_archival_logs') // Hypothetical table from Story 3.5.1
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'archived');
-
-    if (error) {
-      console.error('[CostSnapshotService] Error querying archived storage:', error);
-      return 0;
-    }
-
-    // Archived objects are gzip compressed (3.5x compression ratio)
-    const avgExecutionSizeKb = 2;
-    const compressedSizeKb = (avgExecutionSizeKb / COST_MODEL.s3.compressionRatio);
-    const storageGb = (count || 0) * compressedSizeKb / (1024 * 1024);
-
-    return Math.round(storageGb * 100) / 100;
-  }
-
-  /**
-   * Calculate cost metrics from storage sizes
-   * Formula:
-   * - DB cost = dbStorageGb * $1.5/GB
-   * - S3 cost = s3StorageGb * $0.023/GB
-   * - Savings = DB cost - S3 cost
-   * - 7-year projection = Savings * 84 months
-   */
-  private calculateCostMetrics(dbStorageGb: number, s3StorageGb: number): CostMetrics {
-    const dbCostMonthly = dbStorageGb * COST_MODEL.rds.pricePerGb;
-    const s3CostMonthly = s3StorageGb * COST_MODEL.s3.pricePerGb;
-    const savings = dbCostMonthly - s3CostMonthly;
-    const sevenYearSavings = savings * 7 * 12; // 84 months
-
-    return {
-      dbStorageGb: Math.round(dbStorageGb * 100) / 100,
-      s3StorageGb: Math.round(s3StorageGb * 100) / 100,
-      dbCostMonthly: Math.round(dbCostMonthly * 10000) / 10000,
-      s3CostMonthly: Math.round(s3CostMonthly * 10000) / 10000,
-      monthlySavings: Math.round(savings * 10000) / 10000,
-      sevenYearProjection: Math.round(sevenYearSavings * 100) / 100,
-      compressionRatio: COST_MODEL.s3.compressionRatio,
-      accuracy: ACCURACY_THRESHOLD,
-    };
-  }
-
-  /**
-   * Persist cost snapshot to database
-   */
-  async insertCostSnapshot(userId: string, metrics: CostMetrics): Promise<CostSnapshot> {
+  async insertCostSnapshot(
+    userId: string,
+    metrics: CostMetrics,
+    timestamp: Date = this.now()
+  ): Promise<CostSnapshot> {
     const { data, error } = await this.supabase
       .from('cost_snapshots')
       .insert({
         user_id: userId,
+        timestamp: timestamp.toISOString(),
         db_storage_gb: metrics.dbStorageGb,
         s3_storage_gb: metrics.s3StorageGb,
         db_cost_monthly: metrics.dbCostMonthly,
@@ -179,25 +133,192 @@ export class CostSnapshotService {
       .single();
 
     if (error) {
-      console.error('[CostSnapshotService] Error inserting snapshot:', error);
       throw new Error(`Failed to insert cost snapshot: ${error.message}`);
     }
 
+    return this.mapSnapshotRow(data, metrics.isEstimate);
+  }
+
+  async getCostSummary(userId: string): Promise<CostSummary> {
+    const snapshots = await this.loadRecentSnapshots(userId);
+
+    if (snapshots.length === 0) {
+      const metrics = await this.calculateUserCostMetrics(userId);
+      return this.buildSummaryFromMetrics(metrics, [], null);
+    }
+
+    const latest = snapshots[0];
+
     return {
-      ...metrics,
-      id: data.id,
-      userId: data.user_id,
-      timestamp: new Date(data.timestamp),
+      dbCost: latest.dbCostMonthly,
+      s3Cost: latest.s3CostMonthly,
+      monthlySavings: latest.monthlySavings,
+      sevenYearProjection: latest.sevenYearProjection,
+      storageGrowthTrend: this.calculateStorageGrowthTrend(snapshots),
+      accuracy: latest.accuracy,
+      dbStorageGb: latest.dbStorageGb,
+      s3StorageGb: latest.s3StorageGb,
+      archivedStorageGb: latest.archivedStorageGb,
+      compressionRatio: latest.compressionRatio,
+      trend: this.calculateTrendDirection(snapshots),
+      trendLabel: this.calculateTrendLabel(snapshots),
+      lastUpdatedAt: latest.timestamp,
+      isEstimate: latest.isEstimate,
     };
   }
 
-  /**
-   * Get cost summary for dashboard
-   * Returns latest snapshot + storage growth trend
-   */
-  async getCostSummary(userId: string): Promise<CostSummary> {
-    // Fetch last 7 days of snapshots
-    const { data: snapshots, error } = await this.supabase
+  async validateCostAccuracy(snapshot: CostSnapshot): Promise<boolean> {
+    return snapshot.accuracy >= DEFAULT_ACCURACY_THRESHOLD;
+  }
+
+  private async calculateUserDbStorage(userId: string): Promise<StorageBreakdown> {
+    const countResult = await this.supabase
+      .from('execution_histories')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (countResult.error) {
+      throw new Error(`Failed to count execution history records: ${countResult.error.message}`);
+    }
+
+    const recordCount = countResult.count || 0;
+    if (recordCount === 0) {
+      return {
+        recordCount: 0,
+        dbStorageBytes: 0,
+        dbStorageGb: 0,
+      };
+    }
+
+    const sampleResult = await this.supabase
+      .from('execution_histories')
+      .select(
+        'id, automation_id, status, trigger_type, trigger_data, started_at, completed_at, duration_ms, error_context, created_at'
+      )
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(SAMPLE_SIZE);
+
+    if (sampleResult.error) {
+      throw new Error(`Failed to sample execution history rows: ${sampleResult.error.message}`);
+    }
+
+    const sampleRows = sampleResult.data || [];
+    const averageRowBytes =
+      sampleRows.length === 0
+        ? DEFAULT_ROW_SIZE_BYTES
+        : Math.max(
+            DEFAULT_ROW_SIZE_BYTES,
+            Math.ceil(
+              (sampleRows.reduce((sum, row) => {
+                return sum + Buffer.byteLength(JSON.stringify(row), 'utf8');
+              }, 0) /
+                sampleRows.length) *
+                STORAGE_OVERHEAD_MULTIPLIER
+            )
+          );
+
+    const dbStorageBytes = Math.round(recordCount * averageRowBytes);
+
+    return {
+      recordCount,
+      dbStorageBytes,
+      dbStorageGb: roundTo(dbStorageBytes / BYTES_PER_GB, 4),
+    };
+  }
+
+  private async calculateArchivedStorage(
+    userId: string,
+    dbStorageBytes: number,
+    retentionPolicy: RetentionPolicy | null
+  ): Promise<ArchivedStorageBreakdown> {
+    const estimatedArchivedBytes =
+      dbStorageBytes > 0 ? Math.round(dbStorageBytes / DEFAULT_COMPRESSION_RATIO) : 0;
+
+    const archiveEnabled = Boolean(
+      retentionPolicy?.archive_enabled && retentionPolicy?.archive_bucket
+    );
+
+    if (!archiveEnabled || !retentionPolicy?.archive_bucket) {
+      return {
+        archivedBytes: 0,
+        archivedStorageGb: 0,
+        effectiveStorageBytes: estimatedArchivedBytes,
+        effectiveStorageGb: roundTo(estimatedArchivedBytes / BYTES_PER_GB, 4),
+        isEstimate: true,
+        archiveEnabled: false,
+      };
+    }
+
+    const archivedBytes = await this.archivalStorageProvider(
+      userId,
+      retentionPolicy.archive_bucket
+    );
+
+    if (archivedBytes > 0) {
+      return {
+        archivedBytes,
+        archivedStorageGb: roundTo(archivedBytes / BYTES_PER_GB, 4),
+        effectiveStorageBytes: archivedBytes,
+        effectiveStorageGb: roundTo(archivedBytes / BYTES_PER_GB, 4),
+        isEstimate: false,
+        archiveEnabled: true,
+      };
+    }
+
+    return {
+      archivedBytes: 0,
+      archivedStorageGb: 0,
+      effectiveStorageBytes: estimatedArchivedBytes,
+      effectiveStorageGb: roundTo(estimatedArchivedBytes / BYTES_PER_GB, 4),
+      isEstimate: true,
+      archiveEnabled: true,
+    };
+  }
+
+  private buildMetrics(
+    dbStorage: StorageBreakdown,
+    archivedStorage: ArchivedStorageBreakdown
+  ): CostMetrics {
+    const costSavings = S3ArchivalService.calculateCostSavings(
+      dbStorage.recordCount,
+      archivedStorage.effectiveStorageBytes,
+      7
+    );
+
+    const dbCostMonthly = roundTo(dbStorage.dbStorageGb * DEFAULT_RDS_PRICE_PER_GB, 4);
+    const s3CostMonthly =
+      archivedStorage.effectiveStorageBytes > 0
+        ? roundTo(costSavings.monthlyS3Cost, 4)
+        : 0;
+    const monthlySavings = roundTo(dbCostMonthly - s3CostMonthly, 4);
+    const effectiveCompressionRatio =
+      archivedStorage.effectiveStorageBytes > 0 && dbStorage.dbStorageBytes > 0
+        ? roundTo(
+            Math.max(
+              1,
+              dbStorage.dbStorageBytes / archivedStorage.effectiveStorageBytes
+            ),
+            2
+          )
+        : DEFAULT_COMPRESSION_RATIO;
+
+    return {
+      dbStorageGb: roundTo(dbStorage.dbStorageGb, 4),
+      s3StorageGb: roundTo(archivedStorage.effectiveStorageGb, 4),
+      archivedStorageGb: roundTo(archivedStorage.archivedStorageGb, 4),
+      dbCostMonthly,
+      s3CostMonthly,
+      monthlySavings,
+      sevenYearProjection: roundTo(monthlySavings * 84, 2),
+      compressionRatio: effectiveCompressionRatio,
+      accuracy: DEFAULT_ACCURACY_THRESHOLD,
+      isEstimate: archivedStorage.isEstimate,
+    };
+  }
+
+  private async loadRecentSnapshots(userId: string): Promise<CostSnapshot[]> {
+    const { data, error } = await this.supabase
       .from('cost_snapshots')
       .select('*')
       .eq('user_id', userId)
@@ -205,74 +326,174 @@ export class CostSnapshotService {
       .limit(7);
 
     if (error) {
-      console.error('[CostSnapshotService] Error fetching cost summary:', error);
-      throw new Error(`Failed to fetch cost summary: ${error.message}`);
+      throw new Error(`Failed to fetch cost snapshots: ${error.message}`);
     }
 
-    if (!snapshots || snapshots.length === 0) {
-      // Return zero metrics if no snapshots yet
-      return {
-        dbCost: 0,
-        s3Cost: 0,
-        monthlySavings: 0,
-        sevenYearProjection: 0,
-        storageGrowthTrend: [],
-        accuracy: ACCURACY_THRESHOLD,
-      };
+    return (data || []).map((row) => this.mapSnapshotRow(row, false));
+  }
+
+  private async findSnapshotForDate(userId: string, date: Date): Promise<CostSnapshot | null> {
+    const startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+
+    const { data, error } = await this.supabase
+      .from('cost_snapshots')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('timestamp', startOfDay.toISOString())
+      .lt('timestamp', endOfDay.toISOString())
+      .order('timestamp', { ascending: false })
+      .limit(1);
+
+    if (error) {
+      throw new Error(`Failed to query existing daily snapshot: ${error.message}`);
     }
 
-    // Get latest snapshot
-    const latest = snapshots[0];
+    if (!data || data.length === 0) {
+      return null;
+    }
 
-    // Calculate storage growth trend (7-day moving average)
-    const storageGrowthTrend = this.calculateStorageGrowthTrend(snapshots);
+    return this.mapSnapshotRow(data[0], false);
+  }
+
+  private async getUserRetentionPolicy(userId: string): Promise<RetentionPolicy | null> {
+    const { data, error } = await this.supabase
+      .from('user_retention_policies')
+      .select('archive_enabled, archive_bucket')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') {
+      throw new Error(`Failed to fetch retention policy: ${error.message}`);
+    }
+
+    return data || null;
+  }
+
+  private mapSnapshotRow(row: any, isEstimateFallback: boolean): CostSnapshot {
+    const dbStorageGb = Number(row.db_storage_gb || 0);
+    const s3StorageGb = Number(row.s3_storage_gb || 0);
+    const compressionRatio = Number(row.compression_ratio || DEFAULT_COMPRESSION_RATIO);
 
     return {
-      dbCost: latest.db_cost_monthly,
-      s3Cost: latest.s3_cost_monthly,
-      monthlySavings: latest.monthly_savings,
-      sevenYearProjection: latest.seven_year_savings,
-      storageGrowthTrend,
-      accuracy: latest.accuracy_percent,
+      id: row.id,
+      userId: row.user_id,
+      timestamp: new Date(row.timestamp).toISOString(),
+      dbStorageGb,
+      s3StorageGb,
+      archivedStorageGb: s3StorageGb,
+      dbCostMonthly: Number(row.db_cost_monthly || 0),
+      s3CostMonthly: Number(row.s3_cost_monthly || 0),
+      monthlySavings: Number(row.monthly_savings || 0),
+      sevenYearProjection: Number(row.seven_year_savings || 0),
+      compressionRatio,
+      accuracy: Number(row.accuracy_percent || DEFAULT_ACCURACY_THRESHOLD),
+      isEstimate: isEstimateFallback,
     };
   }
 
-  /**
-   * Calculate storage growth trend from snapshots
-   * Returns 7-day moving average of archival rate (GB/day)
-   */
-  private calculateStorageGrowthTrend(snapshots: CostSnapshot[]): StorageTrendPoint[] {
-    // Reverse to get chronological order (oldest first)
-    const reversed = [...snapshots].reverse();
+  private buildSummaryFromMetrics(
+    metrics: CostMetrics,
+    snapshots: CostSnapshot[],
+    lastUpdatedAt: string | null
+  ): CostSummary {
+    return {
+      dbCost: metrics.dbCostMonthly,
+      s3Cost: metrics.s3CostMonthly,
+      monthlySavings: metrics.monthlySavings,
+      sevenYearProjection: metrics.sevenYearProjection,
+      storageGrowthTrend: this.calculateStorageGrowthTrend(snapshots),
+      accuracy: metrics.accuracy,
+      dbStorageGb: metrics.dbStorageGb,
+      s3StorageGb: metrics.s3StorageGb,
+      archivedStorageGb: metrics.archivedStorageGb,
+      compressionRatio: metrics.compressionRatio,
+      trend: 'stable',
+      trendLabel: 'Aguardando serie historica',
+      lastUpdatedAt,
+      isEstimate: metrics.isEstimate,
+    };
+  }
 
-    return reversed.map((snapshot, idx) => {
-      const prevSnapshot = idx > 0 ? reversed[idx - 1] : null;
-      const archivalRateGbPerDay = prevSnapshot
-        ? snapshot.s3StorageGb - prevSnapshot.s3StorageGb
-        : 0;
+  private calculateStorageGrowthTrend(snapshots: CostSnapshot[]): StorageTrendPoint[] {
+    const chronological = [...snapshots].reverse();
+
+    return chronological.map((snapshot, index) => {
+      if (index === 0) {
+        return {
+          date: snapshot.timestamp,
+          archivalRateGbPerDay: 0,
+        };
+      }
+
+      const windowStart = Math.max(0, index - 6);
+      const deltas: number[] = [];
+
+      for (let cursor = windowStart + 1; cursor <= index; cursor += 1) {
+        const current = chronological[cursor];
+        const previous = chronological[cursor - 1];
+        deltas.push(Math.max(0, current.archivedStorageGb - previous.archivedStorageGb));
+      }
+
+      const averageDelta =
+        deltas.length > 0
+          ? deltas.reduce((sum, delta) => sum + delta, 0) / deltas.length
+          : 0;
 
       return {
-        date: new Date(snapshot.timestamp),
-        archivalRateGbPerDay: Math.max(0, archivalRateGbPerDay), // Ensure non-negative
+        date: snapshot.timestamp,
+        archivalRateGbPerDay: roundTo(averageDelta, 4),
       };
     });
   }
 
-  /**
-   * Validate cost accuracy against AWS pricing API (daily)
-   * For now, returns ±5% variance band
-   */
-  async validateCostAccuracy(snapshot: CostSnapshot): Promise<boolean> {
-    // In production, would call AWS Cost Explorer API to validate
-    // For now, always return true (within accuracy threshold)
-    const isAccurate = snapshot.accuracy >= ACCURACY_THRESHOLD - 5 && snapshot.accuracy <= ACCURACY_THRESHOLD + 5;
-
-    if (!isAccurate) {
-      console.warn(
-        `[CostSnapshotService] Snapshot ${snapshot.id} outside accuracy threshold: ${snapshot.accuracy}%`
-      );
+  private calculateTrendDirection(
+    snapshots: CostSnapshot[]
+  ): 'up' | 'down' | 'stable' {
+    if (snapshots.length < 2) {
+      return 'stable';
     }
 
-    return isAccurate;
+    const [latest, previous] = snapshots;
+    const delta = roundTo(latest.monthlySavings - previous.monthlySavings, 4);
+
+    if (Math.abs(delta) < 0.01) {
+      return 'stable';
+    }
+
+    return delta > 0 ? 'down' : 'up';
   }
+
+  private calculateTrendLabel(snapshots: CostSnapshot[]): string {
+    const trend = this.calculateTrendDirection(snapshots);
+
+    if (trend === 'down') {
+      return 'economia aumentando';
+    }
+
+    if (trend === 'up') {
+      return 'custo aumentando';
+    }
+
+    return 'economia estavel';
+  }
+}
+
+const BYTES_PER_GB = 1024 * 1024 * 1024;
+
+function roundTo(value: number, decimals: number): number {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
+async function defaultArchivalStorageProvider(userId: string, bucket: string): Promise<number> {
+  const archivalService = new S3ArchivalService({
+    bucket,
+    region: process.env.S3_REGION || 'us-east-1',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  });
+
+  return archivalService.getArchiveStorageBytes(userId);
 }

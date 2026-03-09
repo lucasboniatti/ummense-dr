@@ -31,6 +31,7 @@
     "test:wave2:harness": "npm run test:wave2-harness --workspace @ummense/backend",
     "test:wave3:websocket": "npm run test:websocket --workspace @ummense/backend",
     "test:wave3:saved-filters": "npm run test:saved-filters --workspace @ummense/backend",
+    "test:wave3:cost": "npm run test:cost-monitoring --workspace @ummense/backend",
     "benchmark:wave3:websocket": "npm run benchmark:websocket --workspace @ummense/backend",
     "benchmark:wave3:websocket:smoke": "npm run benchmark:websocket:smoke --workspace @ummense/backend",
     "test:e2e:parity": "playwright test -c packages/e2e/playwright.parity.config.ts",

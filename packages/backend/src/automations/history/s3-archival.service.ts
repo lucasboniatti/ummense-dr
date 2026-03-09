@@ -270,6 +270,41 @@ export class S3ArchivalService {
   }
 
   /**
+   * Sum compressed bytes currently stored for a user's archives.
+   * Used by cost analytics to report actual S3 usage.
+   */
+  async getArchiveStorageBytes(userId: string): Promise<number> {
+    try {
+      await this.initializeS3Client();
+
+      const { ListObjectsV2Command } = await import('@aws-sdk/client-s3');
+      let continuationToken: string | undefined;
+      let totalBytes = 0;
+
+      do {
+        const command = new ListObjectsV2Command({
+          Bucket: this.config.bucket,
+          Prefix: `archive/${userId}/`,
+          ContinuationToken: continuationToken,
+        });
+
+        const response = await this.s3Client.send(command);
+
+        totalBytes += (response.Contents || []).reduce((sum: number, object: any) => {
+          return sum + Number(object.Size || 0);
+        }, 0);
+
+        continuationToken = response.IsTruncated ? response.NextContinuationToken : undefined;
+      } while (continuationToken);
+
+      return totalBytes;
+    } catch (error) {
+      console.error(`[S3 Archival] Failed to measure archive storage:`, error);
+      return 0;
+    }
+  }
+
+  /**
    * Delete an archive from S3
    */
   async deleteArchive(userId: string, archiveDate: string): Promise<boolean> {
