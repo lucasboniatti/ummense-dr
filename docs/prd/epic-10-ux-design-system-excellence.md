@@ -1,7 +1,7 @@
 # Epic 10: UX Design System Excellence
 
 **Epic ID:** EPIC-10-UX-DESIGN-SYSTEM-EXCELLENCE
-**Status:** Ready for Release
+**Status:** Released
 **Priority:** P0 (Critical)
 **Created:** 2026-03-09
 **PM Reviewed:** 2026-03-10
@@ -199,3 +199,4 @@ A auditoria UX/UI identificou os seguintes gaps críticos:
 - **2026-03-10:** `@ux-design-expert` consolidou a especificacao visual/interacional em `docs/guides/ux-design-system-excellence-spec.md` e liberou o epic para implementacao por `@dev`.
 - **2026-03-10:** Especificacao UX refinada com rollout targets reais, coexistencia explicita entre busca global e filtros locais, e guardrails de PT-BR, motion e consolidacao de assets antes do handoff final para `@dev`.
 - **2026-03-10:** QA consolidou UAT final e registrou `PASS` em `docs/qa/gates/story-10.20-qa-gate.md`; `@pm` registrou decisao final `GO` e liberou handoff para `@devops`.
+- **2026-03-10:** `@devops` publicou a branch `codex/epic-10-yolo`, executou deploy do frontend em `https://ummense-dr-frontend.vercel.app` e validou smoke HTTP nas rotas criticas do release.
