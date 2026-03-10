@@ -94,7 +94,7 @@ export default function LocalWebhooksPage({
 
     const params = new URLSearchParams(window.location.search);
     const tokenFromUrl = params.get('devToken');
-    const tokenFromStorage = window.localStorage.getItem('synkra_dev_token');
+    const tokenFromStorage = window.localStorage.getItem('tasksflow_dev_token');
     const token = tokenFromUrl || tokenFromStorage || '';
 
     if (!token) {
@@ -103,7 +103,7 @@ export default function LocalWebhooksPage({
 
     setDevToken(token);
     setTokenInput(token);
-    window.localStorage.setItem('synkra_dev_token', token);
+    window.localStorage.setItem('tasksflow_dev_token', token);
   }, []);
 
   useEffect(() => {
@@ -160,9 +160,9 @@ export default function LocalWebhooksPage({
 
     if (typeof window !== 'undefined') {
       if (token) {
-        window.localStorage.setItem('synkra_dev_token', token);
+        window.localStorage.setItem('tasksflow_dev_token', token);
       } else {
-        window.localStorage.removeItem('synkra_dev_token');
+        window.localStorage.removeItem('tasksflow_dev_token');
       }
     }
   };
@@ -171,7 +171,7 @@ export default function LocalWebhooksPage({
     setTokenInput('');
     setDevToken('');
     if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('synkra_dev_token');
+      window.localStorage.removeItem('tasksflow_dev_token');
     }
   };
 

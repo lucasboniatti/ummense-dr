@@ -17,7 +17,7 @@ apiClient.interceptors.request.use((config) => {
   }
 
   const token =
-    window.localStorage.getItem('synkra_dev_token') ||
+    window.localStorage.getItem('tasksflow_dev_token') ||
     window.localStorage.getItem('token');
 
   if (!token) {
@@ -45,7 +45,7 @@ apiClient.interceptors.response.use(
 
     if (status === 401) {
       if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('synkra_dev_token');
+        window.localStorage.removeItem('tasksflow_dev_token');
         window.localStorage.removeItem('token');
         window.location.href = '/auth/login';
       }

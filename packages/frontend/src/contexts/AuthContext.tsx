@@ -19,7 +19,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const TOKEN_KEY = 'synkra_dev_token';
+const TOKEN_KEY = 'tasksflow_dev_token';
 const LEGACY_TOKEN_KEY = 'token';
 
 function getStoredToken(): string | null {

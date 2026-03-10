@@ -15,7 +15,7 @@ function resolvePageTitle(pathname: string): string {
   if (pathname.startsWith('/dashboard/webhooks')) return 'Contatos & Webhooks';
   if (pathname.startsWith('/automations/history')) return 'Arquivos de Execução';
   if (pathname.startsWith('/admin')) return 'Mais Configurações';
-  return 'Synkra Operations';
+  return 'Tasks Flow';
 }
 
 export default function AppShell({ children }: AppShellProps) {

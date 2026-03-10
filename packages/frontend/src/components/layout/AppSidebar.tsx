@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import Logo from '../ui/Logo';
 
 interface AppSidebarProps {
   isMobileOpen: boolean;
@@ -83,15 +84,13 @@ export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarPr
         <div className="flex h-full flex-col">
           <header className="flex items-start justify-between border-b border-[color:var(--border-subtle)] px-4 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-primary-600 text-base font-black text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.95)]">
-                S
-              </div>
+              <Logo size="md" />
               <div className="min-w-0">
-                <p className="app-kicker">Synkra Ops</p>
+                <p className="app-kicker">Tasks Flow</p>
                 <h1 className="truncate text-lg font-bold tracking-[-0.02em] text-neutral-900">
                   Meu Painel
                 </h1>
-                <p className="mt-1 text-xs font-medium text-neutral-500">Operação centralizada</p>
+                <p className="mt-1 text-xs font-medium text-neutral-500">Gestão de tarefas</p>
               </div>
             </div>
             <button

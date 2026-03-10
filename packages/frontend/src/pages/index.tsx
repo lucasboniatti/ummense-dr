@@ -158,11 +158,11 @@ function getLocalDevToken(): string {
 
   const params = new URLSearchParams(window.location.search);
   const tokenFromUrl = params.get('devToken');
-  const tokenFromStorage = window.localStorage.getItem('synkra_dev_token');
+  const tokenFromStorage = window.localStorage.getItem('tasksflow_dev_token');
   const token = tokenFromUrl || tokenFromStorage || '';
 
   if (tokenFromUrl) {
-    window.localStorage.setItem('synkra_dev_token', tokenFromUrl);
+    window.localStorage.setItem('tasksflow_dev_token', tokenFromUrl);
   }
 
   return token;

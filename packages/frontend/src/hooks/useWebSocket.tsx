@@ -18,7 +18,7 @@ function getStoredAuthToken(): string | null {
   }
 
   return (
-    window.localStorage.getItem('synkra_dev_token') ||
+    window.localStorage.getItem('tasksflow_dev_token') ||
     window.localStorage.getItem('token')
   );
 }
