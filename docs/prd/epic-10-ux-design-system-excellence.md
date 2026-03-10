@@ -17,7 +17,7 @@ Transformar o frontend em uma aplicação de alto padrão de usabilidade e otimi
 
 - Em 2026-03-10 foi preparada uma tranche complementar de recuperacao visual e consolidacao do design system no workspace atual.
 - Esta tranche amplia o release original com polimento adicional de shell, dashboard, automacoes, webhooks, integracoes, historico e superfices secundarias.
-- O pacote follow-up ja possui auditoria, handoff e checklist comercial, mas ainda depende de commit, push e deploy para substituir a versao atualmente publicada.
+- A tranche complementar foi publicada na branch `codex/epic-10-yolo` no commit `c9367d1` e entregue em `https://ummense-dr-frontend.vercel.app`, com deployment Vercel `5VmkNpAQvF2ECiZXmCHMgPuBnex6`.
 
 ---
 
@@ -210,4 +210,4 @@ A auditoria UX/UI identificou os seguintes gaps críticos:
 - **2026-03-10:** Especificacao UX refinada com rollout targets reais, coexistencia explicita entre busca global e filtros locais, e guardrails de PT-BR, motion e consolidacao de assets antes do handoff final para `@dev`.
 - **2026-03-10:** QA consolidou UAT final e registrou `PASS` em `docs/qa/gates/story-10.20-qa-gate.md`; `@pm` registrou decisao final `GO` e liberou handoff para `@devops`.
 - **2026-03-10:** `@devops` publicou a branch `codex/epic-10-yolo`, executou deploy do frontend em `https://ummense-dr-frontend.vercel.app` e validou smoke HTTP nas rotas criticas do release.
-- **2026-03-10:** Foi preparada uma tranche complementar de recuperacao visual/design system, com auditoria em `docs/qa/product-recovery-audit-20260310.md`, handoff em `docs/design-system-handoff.md` e checklist comercial em `docs/qa/epic-10-post-deploy-commercial-checklist.md`, aguardando commit/push/deploy para nova publicacao.
+- **2026-03-10:** Foi publicada uma tranche complementar de recuperacao visual/design system, com auditoria em `docs/qa/product-recovery-audit-20260310.md`, handoff em `docs/design-system-handoff.md`, checklist comercial em `docs/qa/epic-10-post-deploy-commercial-checklist.md`, commit `c9367d1` e deploy do frontend em `https://ummense-dr-frontend.vercel.app`.

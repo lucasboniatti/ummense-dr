@@ -42,10 +42,10 @@ notes: 'Epic 10 design-system excellence is approved for release handoff. Produc
 
 release_execution:
   git_branch: codex/epic-10-yolo
-  git_commit: bc06ed4
+  git_commit: c9367d1
   pushed_to: origin/codex/epic-10-yolo
-  frontend_inspect_url: https://vercel.com/lucas-6558s-projects/ummense-dr-frontend/6KmEA2HBg4FZpTbmoUKN8EZP1ZwN
-  frontend_production_url: https://ummense-dr-frontend-jar62xasf-lucas-6558s-projects.vercel.app
+  frontend_inspect_url: https://vercel.com/lucas-6558s-projects/ummense-dr-frontend/5VmkNpAQvF2ECiZXmCHMgPuBnex6
+  frontend_production_url: https://ummense-dr-frontend-16umaynwi-lucas-6558s-projects.vercel.app
   frontend_alias_url: https://ummense-dr-frontend.vercel.app
   backend_health_url: https://ummense-dr-backend.vercel.app/health
   smoke_checks:
@@ -53,6 +53,7 @@ release_execution:
     - https://ummense-dr-frontend.vercel.app/dashboard => 200
     - https://ummense-dr-frontend.vercel.app/dashboard/automations => 200
     - https://ummense-dr-frontend.vercel.app/dashboard/integrations => 200
+    - https://ummense-dr-frontend.vercel.app/dashboard/webhooks => 200
     - https://ummense-dr-backend.vercel.app/health => 200
 
 consumed: true
