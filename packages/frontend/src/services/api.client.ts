@@ -1,7 +1,24 @@
 import axios from 'axios';
 
-const baseURL =
+const backendOrigin =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001';
+const baseURL = typeof window === 'undefined' ? backendOrigin : '';
+
+function isAbsoluteUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
+
+function normalizeApiUrl(url?: string): string | undefined {
+  if (!url) {
+    return url;
+  }
+
+  if (isAbsoluteUrl(url) || url.startsWith('/api')) {
+    return url;
+  }
+
+  return `/api${url.startsWith('/') ? '' : '/'}${url}`;
+}
 
 export const apiClient = axios.create({
   baseURL,
@@ -12,6 +29,8 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  config.url = normalizeApiUrl(config.url);
+
   if (typeof window === 'undefined') {
     return config;
   }

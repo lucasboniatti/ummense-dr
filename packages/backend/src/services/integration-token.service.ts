@@ -51,6 +51,18 @@ export class IntegrationTokenService {
   );
   private encryption = new TokenEncryptionService();
 
+  private isMissingTableError(error: { code?: string; message?: string } | null, tableName: string): boolean {
+    if (!error) {
+      return false;
+    }
+
+    return (
+      error.code === 'PGRST205' &&
+      typeof error.message === 'string' &&
+      error.message.includes(`'public.${tableName}'`)
+    );
+  }
+
   /**
    * Store Slack token (encrypted)
    */
@@ -216,6 +228,10 @@ export class IntegrationTokenService {
       .is('deleted_at', null);
 
     if (error) {
+      if (this.isMissingTableError(error, 'slack_tokens')) {
+        return [];
+      }
+
       throw new Error(`Failed to list Slack tokens: ${error.message}`);
     }
 
@@ -235,6 +251,10 @@ export class IntegrationTokenService {
       .is('deleted_at', null);
 
     if (error) {
+      if (this.isMissingTableError(error, 'discord_tokens')) {
+        return [];
+      }
+
       throw new Error(`Failed to list Discord tokens: ${error.message}`);
     }
 
