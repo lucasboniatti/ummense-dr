@@ -1,9 +1,9 @@
 import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { hashPassword, comparePasswords, validatePassword } from '../utils/password';
+import { validatePassword } from '../utils/password';
 import { AuthPayload } from '../types/user';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseAuth } from '../lib/supabase';
 import { getRequiredEnvVar } from '../config/env';
 
 const JWT_SECRET = getRequiredEnvVar('JWT_SECRET');
@@ -11,6 +11,44 @@ const JWT_EXPIRATION = '24h';
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function issueToken(id: string, email: string): string {
+  return jwt.sign({ id, email }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
+}
+
+function setAuthCookie(res: Response, token: string): void {
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string') {
+      return message;
+    }
+  }
+
+  return 'Internal server error';
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (typeof error === 'object' && error !== null && 'status' in error) {
+    const status = (error as { status?: unknown }).status;
+    if (typeof status === 'number') {
+      return status;
+    }
+  }
+
+  return undefined;
 }
 
 export async function signup(
@@ -41,55 +79,34 @@ export async function signup(
       return;
     }
 
-    const { data: existingUser, error: existingUserError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
-
-    if (existingUserError) {
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-
-    if (existingUser) {
-      res.status(409).json({ error: 'Email already registered' });
-      return;
-    }
-
-    const password_hash = await hashPassword(password);
-    const { data: user, error: insertError } = await supabase
-      .from('users')
-      .insert({
-        email: normalizedEmail,
-        password_hash,
-      })
-      .select('id,email')
-      .single();
-
-    if (insertError || !user) {
-      const message = insertError?.code === '23505' ? 'Email already registered' : 'Internal server error';
-      const status = insertError?.code === '23505' ? 409 : 500;
-      res.status(status).json({ error: message });
-      return;
-    }
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRATION }
-    );
-
-    // Set httpOnly cookie
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000,
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: normalizedEmail,
+      password,
+      email_confirm: true,
     });
+
+    if (error || !data.user) {
+      const message = getErrorMessage(error);
+      const status = getErrorStatus(error);
+      const lowered = message.toLowerCase();
+      const isDuplicate =
+        lowered.includes('already') ||
+        lowered.includes('registered') ||
+        status === 422;
+
+      res.status(isDuplicate ? 409 : status || 500).json({
+        error: isDuplicate ? 'Email already registered' : message,
+      });
+      return;
+    }
+
+    const user = data.user;
+    const token = issueToken(user.id, user.email ?? normalizedEmail);
+    setAuthCookie(res, token);
 
     res.status(201).json({
       id: user.id,
-      email: user.email,
+      email: user.email ?? normalizedEmail,
       token,
     });
   } catch (error) {
@@ -110,42 +127,35 @@ export async function login(
       return;
     }
 
-    const { data: user, error: selectError } = await supabase
-      .from('users')
-      .select('id,email,password_hash')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
+    const { data, error } = await supabaseAuth.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
 
-    if (selectError) {
+    if (error || !data.user) {
+      const message = getErrorMessage(error);
+      const status = getErrorStatus(error);
+      const lowered = message.toLowerCase();
+      const isInvalidCredentials =
+        lowered.includes('invalid login credentials') ||
+        lowered.includes('invalid credentials') ||
+        status === 400 ||
+        status === 401;
+
+      res.status(isInvalidCredentials ? 401 : status || 500).json({
+        error: isInvalidCredentials ? 'Invalid credentials' : message,
+      });
+      return;
+    }
+
+    const user = data.user;
+    if (!user.email) {
       res.status(500).json({ error: 'Internal server error' });
       return;
     }
 
-    if (!user) {
-      res.status(401).json({ error: 'Invalid credentials' });
-      return;
-    }
-
-    // Compare password
-    const isPasswordValid = await comparePasswords(password, user.password_hash);
-    if (!isPasswordValid) {
-      res.status(401).json({ error: 'Invalid credentials' });
-      return;
-    }
-
-    // Generate JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRATION }
-    );
-
-    // Set httpOnly cookie
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    const token = issueToken(user.id, user.email);
+    setAuthCookie(res, token);
 
     res.status(200).json({
       id: user.id,
@@ -163,30 +173,10 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
     return;
   }
 
-  try {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id,email')
-      .eq('id', String(req.user?.id))
-      .maybeSingle();
-
-    if (error) {
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-
-    res.status(200).json({
-      id: user.id,
-      email: user.email,
-    });
-  } catch {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  res.status(200).json({
+    id: String(req.user.id),
+    email: req.user.email,
+  });
 }
 
 export function logout(req: AuthRequest, res: Response): void {
