@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { AlertTriangle, Clock3, Layers3, Sparkles } from 'lucide-react';
+import { Badge, PageLoader } from '@/components/ui';
 import { ExecutionHistoryTable } from '@/components/ExecutionHistoryTable';
-import { PageLoader } from '@/components/ui';
+import { Button } from '@/components/ui';
 import {
   historyService,
   SavedFilterDefinition,
@@ -43,6 +45,21 @@ export default function ExecutionHistoryPage() {
   const [presetActionPending, setPresetActionPending] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState('');
   const [filters, setFilters] = useState<HistoryFilters>(DEFAULT_HISTORY_FILTERS);
+  const successCount = executions.filter((execution) => execution.status === 'success').length;
+  const failedCount = executions.filter((execution) => execution.status === 'failed').length;
+  const skippedCount = executions.filter((execution) => execution.status === 'skipped').length;
+  const averageDurationMs = executions.length
+    ? Math.round(
+      executions.reduce((acc, execution) => acc + (execution.duration_ms || 0), 0) /
+      executions.length
+    )
+    : 0;
+  const activeFiltersCount = [
+    filters.automationId,
+    filters.status,
+    filters.searchTerm,
+    filters.dateRange !== '7d' ? filters.dateRange : '',
+  ].filter(Boolean).length;
 
   const fetchExecutions = useCallback(async (activeFilters: HistoryFilters) => {
     setLoading(true);
@@ -56,7 +73,7 @@ export default function ExecutionHistoryPage() {
       setExecutions(response.executions);
       setTotal(response.total);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar historico');
+      setError(err instanceof Error ? err.message : 'Erro ao carregar histórico');
     } finally {
       setLoading(false);
     }
@@ -208,92 +225,190 @@ export default function ExecutionHistoryPage() {
         <div className="app-page-hero-grid">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="app-page-heading">
-              <p className="app-kicker">Historico</p>
-              <h1 className="app-page-title">Historico de execucoes</h1>
+              <p className="app-kicker">Histórico</p>
+              <h1 className="app-page-title">Histórico de execuções</h1>
               <p className="app-page-copy">
-              Consulte, filtre e reutilize buscas do historico das automacoes.
-            </p>
+                Consulte, filtre e reutilize buscas do histórico das automações.
+              </p>
             </div>
 
             <div className="app-toolbar-cluster">
-            <button
-              onClick={() => void handleExportCSV()}
-              className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
-            >
-              Exportar CSV
-            </button>
-            <button
-              onClick={() => void handleExportJSON()}
-              className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-success-600 px-4 text-sm font-semibold text-white hover:bg-success-700"
-            >
-              Exportar JSON
-            </button>
+              <Button onClick={() => void handleExportCSV()} variant="primary">
+                Exportar CSV
+              </Button>
+              <Button onClick={() => void handleExportJSON()} variant="success">
+                Exportar JSON
+              </Button>
             </div>
           </div>
 
           {error && (
             <div className="app-inline-banner app-inline-banner-error">
-              <strong>Historico</strong>
+              <strong>Histórico</strong>
               {error}
             </div>
           )}
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="app-surface rounded-[20px] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Janela analisada
+              </p>
+              <p className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                {total}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                execuções encontradas na vista atual
+              </p>
+            </div>
+            <div className="app-surface rounded-[20px] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Resultado
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p className="text-3xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                  {successCount}
+                </p>
+                <Badge tone="success">sucesso</Badge>
+              </div>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                {failedCount} falhas e {skippedCount} ignoradas
+              </p>
+            </div>
+            <div className="app-surface rounded-[20px] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Duração média
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <p className="text-3xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                  {averageDurationMs}
+                </p>
+                <Badge tone="info">ms</Badge>
+              </div>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                média desta página de resultados
+              </p>
+            </div>
+            <div className="app-surface rounded-[20px] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Contexto ativo
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p className="text-3xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                  {activeFiltersCount}
+                </p>
+                <Badge tone={selectedPresetId ? 'info' : 'neutral'}>
+                  {selectedPresetId ? 'preset ativo' : 'vista base'}
+                </Badge>
+              </div>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                filtros aplicados para navegar melhor nas execuções
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
         {loading ? (
-          <PageLoader message="Carregando historico..." />
+          <PageLoader message="Carregando histórico..." />
         ) : (
-          <ExecutionHistoryTable
-            executions={executions}
-            total={total}
-            limit={filters.limit}
-            offset={filters.offset}
-            sortBy={filters.sortBy}
-            currentFilters={buildSavedFilterDefinition(filters)}
-            savedFilters={savedFilters}
-            selectedPresetId={selectedPresetId}
-            savedFiltersLoading={savedFiltersLoading}
-            savedFiltersError={savedFiltersError}
-            presetActionPending={presetActionPending}
-            onSort={(sortBy) =>
-              updateFilters({
-                sortBy: sortBy as HistoryFilters['sortBy'],
-                sortOrder: 'desc',
-              })
-            }
-            onPageChange={(offset) =>
-              updateFilters(
-                (current) => ({
-                  ...current,
-                  offset,
-                }),
-                { resetPage: false, preservePreset: true }
-              )
-            }
-            onSearch={(searchTerm) =>
-              updateFilters({
-                searchTerm,
-              })
-            }
-            onSearchSuggestions={async (searchTerm) => {
-              const suggestions = await historyService.getSearchSuggestions(15);
-              return suggestions.filter((suggestion) =>
-                suggestion.toLowerCase().includes(searchTerm.toLowerCase())
-              );
-            }}
-            onFilterChange={(partialFilters) =>
-              updateFilters({
-                ...partialFilters,
-                status: partialFilters.status ?? '',
-                dateRange: partialFilters.dateRange ?? filters.dateRange,
-              } as Partial<HistoryFilters>)
-            }
-            onApplyPreset={handleApplyPreset}
-            onSavePreset={handleSavePreset}
-            onDeletePreset={handleDeletePreset}
-            searchTerm={filters.searchTerm}
-            onRowClick={(executionId) => router.push(`/automations/history/${executionId}`)}
-          />
+          <div className="space-y-4">
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]">
+              <ExecutionHistoryTable
+                executions={executions}
+                total={total}
+                limit={filters.limit}
+                offset={filters.offset}
+                sortBy={filters.sortBy}
+                currentFilters={buildSavedFilterDefinition(filters)}
+                savedFilters={savedFilters}
+                selectedPresetId={selectedPresetId}
+                savedFiltersLoading={savedFiltersLoading}
+                savedFiltersError={savedFiltersError}
+                presetActionPending={presetActionPending}
+                onSort={(sortBy) =>
+                  updateFilters({
+                    sortBy: sortBy as HistoryFilters['sortBy'],
+                    sortOrder: 'desc',
+                  })
+                }
+                onPageChange={(offset) =>
+                  updateFilters(
+                    (current) => ({
+                      ...current,
+                      offset,
+                    }),
+                    { resetPage: false, preservePreset: true }
+                  )
+                }
+                onSearch={(searchTerm) =>
+                  updateFilters({
+                    searchTerm,
+                  })
+                }
+                onSearchSuggestions={async (searchTerm) => {
+                  const suggestions = await historyService.getSearchSuggestions(15);
+                  return suggestions.filter((suggestion) =>
+                    suggestion.toLowerCase().includes(searchTerm.toLowerCase())
+                  );
+                }}
+                onFilterChange={(partialFilters) =>
+                  updateFilters({
+                    ...partialFilters,
+                    status: partialFilters.status ?? '',
+                    dateRange: partialFilters.dateRange ?? filters.dateRange,
+                  } as Partial<HistoryFilters>)
+                }
+                onApplyPreset={handleApplyPreset}
+                onSavePreset={handleSavePreset}
+                onDeletePreset={handleDeletePreset}
+                searchTerm={filters.searchTerm}
+                onRowClick={(executionId) => router.push(`/automations/history/${executionId}`)}
+              />
+
+              <div className="space-y-3">
+                <div className="app-note-card flex gap-3">
+                  <Sparkles className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
+                  <div>
+                    <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">
+                      Leitura rápida
+                    </h3>
+                    <p className="text-sm text-[color:var(--text-secondary)]">
+                      Salve presets para repetir investigações importantes e manter a mesma leitura entre operação, suporte e produto.
+                    </p>
+                  </div>
+                </div>
+                <div className="app-note-card flex gap-3">
+                  <Clock3 className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
+                  <div>
+                    <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">
+                      Ritmo da fila
+                    </h3>
+                    <p className="text-sm text-[color:var(--text-secondary)]">
+                      Observe duração, falhas e gatilhos para detectar gargalos cedo, antes de afetarem entregas e integrações externas.
+                    </p>
+                  </div>
+                </div>
+                <div className="app-note-card flex gap-3">
+                  {failedCount > 0 ? (
+                    <AlertTriangle className="mt-0.5 h-5 w-5 text-warning-500" />
+                  ) : (
+                    <Layers3 className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
+                  )}
+                  <div>
+                    <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">
+                      Sinal desta janela
+                    </h3>
+                    <p className="text-sm text-[color:var(--text-secondary)]">
+                      {failedCount > 0
+                        ? `${failedCount} execuções falharam na vista atual. Vale abrir os detalhes e consolidar um preset de acompanhamento.`
+                        : 'Sem falhas visíveis nesta janela. Use esta vista como baseline para comparações futuras.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
     </div>
   );

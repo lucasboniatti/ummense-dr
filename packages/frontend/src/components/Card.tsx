@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FlowCardStatus, FlowCardTasksSummary } from '../services/flows.service';
+import { ProgressSegments } from './ui/ProgressSegments';
 
 type VisualStatus = 'active' | 'completed' | 'blocked' | 'inactive';
 
@@ -36,37 +37,27 @@ const STATUS_STYLES: Record<
   {
     label: string;
     chip: string;
-    bar: string;
-    progress: string;
     icon: React.ReactNode;
   }
 > = {
   active: {
     label: 'Ativo',
-    chip: 'border-primary-200 bg-primary-50 text-primary-700',
-    bar: 'from-primary-500 via-primary-400 to-secondary-400',
-    progress: 'bg-primary-600',
+    chip: 'app-status-pill app-status-pill-info',
     icon: <ArrowUpRight size={12} />,
   },
   completed: {
     label: 'Concluído',
-    chip: 'border-success-200 bg-success-50 text-success-700',
-    bar: 'from-success-500 via-success-400 to-emerald-300',
-    progress: 'bg-success-600',
+    chip: 'app-status-pill app-status-pill-success',
     icon: <CheckCircle2 size={12} />,
   },
   blocked: {
     label: 'Bloqueado',
-    chip: 'border-error-200 bg-error-50 text-error-700',
-    bar: 'from-error-500 via-error-400 to-orange-300',
-    progress: 'bg-error-500',
+    chip: 'app-status-pill app-status-pill-error',
     icon: <CircleAlert size={12} />,
   },
   inactive: {
     label: 'Inativo',
-    chip: 'border-warning-200 bg-warning-50 text-warning-700',
-    bar: 'from-warning-500 via-amber-400 to-neutral-300',
-    progress: 'bg-warning-500',
+    chip: 'app-status-pill app-status-pill-warning',
     icon: <PauseCircle size={12} />,
   },
 };
@@ -168,6 +159,10 @@ export const Card = memo(function Card({
     (tasksSummary?.inProgress ?? 0) +
     (tasksSummary?.completed ?? 0) +
     (tasksSummary?.blocked ?? 0);
+  const filledSegments =
+    totalTasks > 0
+      ? Math.max(1, Math.round(((tasksSummary?.completed ?? 0) / totalTasks) * 4))
+      : Math.max(1, Math.round(progressValue / 25));
   const hasInteraction = Boolean(onClick);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -196,34 +191,30 @@ export const Card = memo(function Card({
       aria-busy={isPending}
       data-card-id={id}
       className={cn(
-        'group relative overflow-hidden rounded-[24px] border border-[color:var(--border-subtle)] bg-white/96 p-4 shadow-[0_22px_38px_-32px_rgba(15,23,42,0.55)] transition duration-200',
+        'group relative overflow-hidden rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-4 shadow-[var(--shadow-soft)] transition duration-200',
         draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
         hasInteraction &&
-          'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--focus-ring)] hover:-translate-y-0.5 hover:border-[color:var(--border-strong)] hover:shadow-[0_28px_42px_-34px_rgba(15,23,42,0.6)]',
-        isPending && 'border-primary-300 bg-primary-50/80 shadow-[0_18px_38px_-28px_rgba(37,99,235,0.38)]'
+          'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--focus-ring)] hover:-translate-y-0.5 hover:border-[color:var(--border-accent)] hover:shadow-[var(--shadow-primary-day)]',
+        isPending && 'border-primary-300 bg-primary-50/70 shadow-[var(--shadow-primary-day)]'
       )}
     >
-      <div
-        className={cn(
-          'absolute inset-x-4 top-0 h-1 rounded-b-full bg-gradient-to-r',
-          statusStyle.bar
-        )}
-      />
-
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-3">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-neutral-100 text-neutral-500">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]">
             <GripVertical size={14} />
           </div>
 
           <div className="min-w-0">
-            <h4 className="text-[0.98rem] font-semibold leading-5 text-neutral-900">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+              {responsible || 'Sem responsável'}
+            </p>
+            <h4 className="text-sm font-bold leading-5 text-[color:var(--text-strong)]">
               {title}
             </h4>
 
             {description && (
               <p
-                className="mt-1 text-xs leading-5 text-neutral-500"
+                className="mt-1 text-xs leading-5 text-[color:var(--text-secondary)]"
                 style={{
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
@@ -240,7 +231,6 @@ export const Card = memo(function Card({
         <div className="flex shrink-0 flex-col items-end gap-2">
           <span
             className={cn(
-              'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em]',
               statusStyle.chip
             )}
           >
@@ -249,21 +239,21 @@ export const Card = memo(function Card({
           </span>
 
           {isPending ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-1 text-[11px] font-semibold text-primary-700">
+            <span className="app-status-pill app-status-pill-info">
               <Clock3 size={11} />
               Movendo
             </span>
           ) : (
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 transition group-hover:bg-primary-50 group-hover:text-primary-700">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--surface-muted)] text-[color:var(--text-muted)] transition group-hover:bg-primary-50 group-hover:text-primary-700">
               <ArrowUpRight size={14} />
             </span>
           )}
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-neutral-600">
-        <div className="flex items-center gap-2 rounded-full bg-neutral-100 px-2.5 py-1.5">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[11px] font-bold text-neutral-700 shadow-sm">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-[color:var(--text-secondary)]">
+        <div className="flex items-center gap-2 rounded-full bg-[color:var(--surface-muted)] px-2.5 py-1.5">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--surface-card)] text-[11px] font-bold text-[color:var(--text-strong)] shadow-sm">
             {initials(responsible)}
           </span>
           <span className="inline-flex items-center gap-1">
@@ -272,39 +262,46 @@ export const Card = memo(function Card({
           </span>
         </div>
 
-        <span className="rounded-full bg-neutral-100 px-2.5 py-1.5">
+        <span className="rounded-full bg-[color:var(--surface-muted)] px-2.5 py-1.5">
           Atualizado {formatCompactDate(updatedAt)}
         </span>
       </div>
 
-      <div className="mt-3 rounded-[18px] bg-neutral-50/90 p-3">
-        <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500">
+      <div className="mt-3 rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-3">
+        <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
           <span>Progresso</span>
           <span>{progressValue}%</span>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200">
-          <div
-            className={cn('h-1.5 rounded-full transition-all', statusStyle.progress)}
-            style={{ width: `${progressValue}%` }}
-          />
-        </div>
+        <ProgressSegments
+          filled={filledSegments}
+          total={4}
+          color={
+            visualStatus === 'completed'
+              ? 'success'
+              : visualStatus === 'blocked'
+                ? 'error'
+                : visualStatus === 'inactive'
+                  ? 'warning'
+                  : 'primary'
+          }
+        />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {totalTasks > 0 && (
-          <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-semibold text-neutral-700">
+          <span className="app-status-pill app-status-pill-neutral">
             {tasksSummary?.completed || 0}/{totalTasks} tarefas
           </span>
         )}
 
         {(tasksSummary?.inProgress || 0) > 0 && (
-          <span className="rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-700">
+          <span className="app-status-pill app-status-pill-info">
             {tasksSummary?.inProgress} em andamento
           </span>
         )}
 
         {(tasksSummary?.blocked || 0) > 0 && (
-          <span className="rounded-full bg-error-50 px-2.5 py-1 text-[11px] font-semibold text-error-700">
+          <span className="app-status-pill app-status-pill-error">
             {tasksSummary?.blocked} bloqueios
           </span>
         )}
@@ -315,8 +312,8 @@ export const Card = memo(function Card({
           {tags.map((tag) => (
             <span
               key={tag.id}
-              className="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white"
-              style={{ backgroundColor: tag.color }}
+              className="inline-flex items-center rounded-full border border-[color:var(--border-default)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-secondary)]"
+              style={{ backgroundColor: `color-mix(in srgb, ${tag.color} 12%, white)` }}
             >
               {tag.name}
             </span>

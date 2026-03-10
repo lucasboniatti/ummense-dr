@@ -12,8 +12,13 @@ export function SignupPage() {
     <div className="app-auth-shell">
       <div className="app-auth-card animate-fade-up">
         <div className="app-auth-brand">
-          <h1>Tasks Flow</h1>
-          <p>Crie seu acesso e comece a gerenciar suas tarefas com eficiência.</p>
+          <span className="app-kicker">Tasks Flow</span>
+          <h1>Crie seu acesso.</h1>
+          <p>Abra sua conta e comece a operar com um painel único para tarefas, webhooks e integrações.</p>
+          <div className="app-auth-meta">
+            <span className="app-auth-pill">Onboarding rápido</span>
+            <span className="app-auth-pill">Fluxos prontos</span>
+          </div>
         </div>
         <SignupForm onSuccess={handleSuccess} />
       </div>

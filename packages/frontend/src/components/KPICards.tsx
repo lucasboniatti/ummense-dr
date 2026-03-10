@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/CardUI';
 import { Badge } from './ui/Badge';
+import { ProgressSegments } from './ui/ProgressSegments';
 
 interface KPIData {
   label: string;
@@ -52,27 +52,39 @@ export function KPICards({ data, metrics, columns = 4 }: KPICardsProps) {
   return (
     <div className={`grid gap-4 ${gridClass}`}>
       {normalizedData.map((kpi, idx) => (
-        <Card key={idx}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{kpi.label}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-2xl font-bold">{kpi.value}</div>
-            {kpi.trend && (
+        <article
+          key={idx}
+          className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-4 shadow-[var(--shadow-soft)]"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+            {kpi.label}
+          </p>
+          <div className="mt-3 text-2xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+            {kpi.value}
+          </div>
+          <div className="mt-3">
+            <ProgressSegments
+              filled={kpi.trendType === 'up' ? 4 : kpi.trendType === 'down' ? 1 : 2}
+              total={4}
+              color={kpi.trendType === 'down' ? 'error' : kpi.trendType === 'up' ? 'success' : 'primary'}
+            />
+          </div>
+          {kpi.trend && (
+            <div className="mt-3">
               <Badge
-                variant={
+                tone={
                   kpi.trendType === 'up'
                     ? 'success'
                     : kpi.trendType === 'down'
-                      ? 'destructive'
-                      : 'default'
+                      ? 'error'
+                      : 'info'
                 }
               >
                 {kpi.trendType === 'up' ? '↑' : kpi.trendType === 'down' ? '↓' : '→'} {kpi.trend}
               </Badge>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+        </article>
       ))}
     </div>
   );

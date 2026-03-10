@@ -113,11 +113,17 @@ export function ConfirmDialog({
               {config.icon}
             </div>
             <div className="min-w-0 flex-1">
-              <h2 id={titleId} className="text-xl font-semibold tracking-[-0.02em] text-neutral-900">
+              <h2
+                id={titleId}
+                className="text-xl font-semibold tracking-[-0.02em] text-[color:var(--text-strong)]"
+              >
                 {title}
               </h2>
               {description && (
-                <p id={descriptionId} className="mt-2 text-sm leading-6 text-neutral-600">
+                <p
+                  id={descriptionId}
+                  className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]"
+                >
                   {description}
                 </p>
               )}
@@ -125,7 +131,7 @@ export function ConfirmDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-[color:var(--border-subtle)] p-4">
+        <div className="flex justify-end gap-3 border-t border-[color:var(--border-subtle)] bg-[color:var(--surface-overlay)] p-4">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

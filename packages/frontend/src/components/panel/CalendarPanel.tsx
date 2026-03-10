@@ -15,6 +15,7 @@ import { ptBR } from 'date-fns/locale';
 import { CalendarDays, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import EventEditor from '../events/EventEditor';
+import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 
 export interface CalendarEvent {
@@ -73,15 +74,15 @@ function eventDate(event: CalendarEvent): Date | null {
 
 function resolveVolumeStyle(eventsCount: number): string {
   if (eventsCount >= 5) {
-    return 'border-primary-300 bg-primary-100 text-primary-900';
+    return 'border-primary-300 bg-primary-100 text-primary-800';
   }
 
   if (eventsCount >= 3) {
-    return 'border-primary-200 bg-primary-50 text-primary-900';
+    return 'border-primary-200 bg-primary-50 text-primary-700';
   }
 
   if (eventsCount >= 1) {
-    return 'border-primary-100 bg-white text-neutral-800';
+    return 'border-[color:var(--border-accent)] bg-[color:var(--surface-card)] text-[color:var(--text-strong)]';
   }
 
   return '';
@@ -250,14 +251,14 @@ export default function CalendarPanel({
         <div>
           <p className="app-kicker">Agenda</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h2 className="text-[1.75rem] font-bold tracking-[-0.03em] text-neutral-900">
+            <h2 className="font-display text-[1.75rem] font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">
               {format(visibleMonth, 'MMMM yyyy', { locale: ptBR })}
             </h2>
-            <span className="rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-primary-700">
+            <span className="app-status-pill app-status-pill-info">
               {monthlyEventCount} eventos no mês
             </span>
           </div>
-          <p className="mt-2 max-w-md text-sm text-neutral-600">
+          <p className="mt-2 max-w-md text-sm text-[color:var(--text-secondary)]">
             Visualize prazos, próximos eventos e filtros temporais sem sair da superfície operacional.
           </p>
         </div>
@@ -289,33 +290,21 @@ export default function CalendarPanel({
           <button
             type="button"
             onClick={() => setQuickFilter('next7days')}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-              quickFilter === 'next7days'
-                ? 'bg-primary-600 text-white'
-                : 'border border-neutral-300 bg-white text-neutral-700'
-            }`}
+            className={quickFilter === 'next7days' ? 'app-chip-toggle app-chip-toggle-active' : 'app-chip-toggle'}
           >
             Próximos 7 dias
           </button>
           <button
             type="button"
             onClick={() => setQuickFilter('undated')}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-              quickFilter === 'undated'
-                ? 'bg-primary-600 text-white'
-                : 'border border-neutral-300 bg-white text-neutral-700'
-            }`}
+            className={quickFilter === 'undated' ? 'app-chip-toggle app-chip-toggle-active' : 'app-chip-toggle'}
           >
             Sem data
           </button>
           <button
             type="button"
             onClick={() => setQuickFilter('all')}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-              quickFilter === 'all'
-                ? 'bg-primary-600 text-white'
-                : 'border border-neutral-300 bg-white text-neutral-700'
-            }`}
+            className={quickFilter === 'all' ? 'app-chip-toggle app-chip-toggle-active' : 'app-chip-toggle'}
           >
             Todos
           </button>
@@ -329,8 +318,15 @@ export default function CalendarPanel({
         )}
       </div>
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Badge tone="info">{monthlyEventCount} eventos no mês</Badge>
+        <Badge tone={undatedTasksCount > 0 ? 'warning' : 'neutral'}>
+          {undatedTasksCount} tarefas sem prazo
+        </Badge>
+      </div>
+
       {sourceHint && (
-        <div className="mb-4 rounded-[18px] border border-warning-200 bg-warning-50 px-3 py-2 text-sm font-medium text-warning-800">
+        <div className="mb-4 rounded-xl border border-warning-200 bg-warning-50 px-3 py-2 text-sm font-medium text-warning-800">
           {sourceHint}
         </div>
       )}
@@ -339,14 +335,14 @@ export default function CalendarPanel({
         <div className="space-y-3">
           <div className="grid grid-cols-7 gap-2">
             {Array.from({ length: 35 }).map((_, index) => (
-              <div key={index} className="h-14 animate-pulse rounded-[18px] bg-neutral-100" />
+              <div key={index} className="h-14 animate-pulse rounded-xl bg-[color:var(--surface-muted)]" />
             ))}
           </div>
         </div>
       )}
 
       {!loading && error && (
-        <div className="rounded-[20px] border border-error-200 bg-error-50 p-4 text-sm text-error-800">
+        <div className="rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-800">
           <p className="font-semibold">Falha ao carregar eventos.</p>
           <p className="mt-1">{error}</p>
           <Button
@@ -364,7 +360,7 @@ export default function CalendarPanel({
       {!loading && !error && (
         <>
           <div className="app-surface-muted p-3">
-            <div className="mb-3 grid grid-cols-7 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-500">
+            <div className="mb-3 grid grid-cols-7 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
               {weekLabels.map((label, index) => (
                 <span key={`${label}-${index}`}>{label}</span>
               ))}
@@ -382,10 +378,10 @@ export default function CalendarPanel({
                     key={key}
                     aria-label={`Dia ${format(day, 'dd/MM/yyyy')} com ${eventsCount} evento(s)`}
                     className={[
-                      'relative min-h-[64px] rounded-[18px] border p-2 text-left text-sm transition-colors',
+                      'relative min-h-[64px] rounded-xl border p-2 text-left text-sm transition-colors',
                       isSameMonth(day, visibleMonth)
-                        ? 'border-neutral-200 bg-white text-neutral-800'
-                        : 'border-neutral-100 bg-neutral-50 text-neutral-400',
+                        ? 'border-[color:var(--border-default)] bg-[color:var(--surface-card)] text-[color:var(--text-strong)]'
+                        : 'border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]',
                       volumeStyle,
                       isToday(day) ? 'ring-2 ring-primary-300 ring-offset-1 ring-offset-[var(--surface-muted)]' : '',
                     ].join(' ')}
@@ -393,7 +389,7 @@ export default function CalendarPanel({
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-sm font-semibold">{format(day, 'd')}</span>
                       {isToday(day) && (
-                        <span className="rounded-full bg-primary-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        <span className="app-status-pill app-status-pill-info px-1.5 py-0.5 text-[10px]">
                           Hoje
                         </span>
                       )}
@@ -401,8 +397,8 @@ export default function CalendarPanel({
 
                     {eventsCount > 0 && (
                       <div className="absolute bottom-2 left-2 flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-full bg-primary-600" />
-                        <span className="text-[11px] font-semibold text-neutral-700">
+                        <span className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="text-[11px] font-semibold text-[color:var(--text-secondary)]">
                           {eventsCount}
                         </span>
                       </div>
@@ -413,19 +409,19 @@ export default function CalendarPanel({
             </div>
           </div>
 
-          <div className="mt-5 rounded-[22px] border border-[color:var(--border-subtle)] bg-neutral-50/85 p-4">
+          <div className="mt-5 rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)]/85 p-4">
             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-neutral-700">
+                <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-[color:var(--text-secondary)]">
                   Próximos eventos
                 </h3>
-                <p className="mt-1 text-sm text-neutral-600">
+                <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
                   Agenda operacional conectada aos cards e tarefas visíveis.
                 </p>
               </div>
 
               {quickFilter === 'undated' && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-neutral-700">
+                <span className="app-status-pill app-status-pill-neutral normal-case tracking-normal">
                   <CalendarDays size={13} />
                   {undatedTasksCount} tarefas sem prazo
                 </span>
@@ -433,7 +429,7 @@ export default function CalendarPanel({
             </div>
 
             {upcomingEvents.length === 0 && quickFilter !== 'undated' && (
-              <p className="rounded-[18px] border border-neutral-200 bg-white px-3 py-3 text-sm text-neutral-600">
+              <p className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] px-3 py-3 text-sm text-[color:var(--text-secondary)]">
                 Nenhum evento programado.
               </p>
             )}
@@ -442,12 +438,12 @@ export default function CalendarPanel({
               {upcomingEvents.map(({ event, date }) => (
                 <li
                   key={event.id}
-                  className="rounded-[18px] border border-neutral-200 bg-white px-3 py-3 text-sm shadow-[0_12px_24px_-22px_rgba(15,23,42,0.42)]"
+                  className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] px-3 py-3 text-sm shadow-[var(--shadow-soft)]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-semibold text-neutral-900">{event.title}</p>
-                      <p className="mt-1 text-xs text-neutral-600">
+                      <p className="font-semibold text-[color:var(--text-strong)]">{event.title}</p>
+                      <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
                         {format(date, "dd 'de' MMM, HH:mm", { locale: ptBR })}
                         {event.cardId ? ` • Card #${event.cardId}` : ''}
                         {event.taskId ? ` • Tarefa #${event.taskId}` : ''}

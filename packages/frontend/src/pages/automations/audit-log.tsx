@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronRight, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronRight, ShieldAlert, Sparkles } from 'lucide-react';
 import { apiClient } from '../../services/api.client';
-import { PageLoader, EmptyState } from '../../components/ui';
+import { Badge, Button, EmptyState, PageLoader } from '../../components/ui';
 
 interface AuditLog {
   id: string;
@@ -26,6 +26,9 @@ export default function AuditLogPage() {
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
   const limit = 50;
+  const createCount = logs.filter((log) => log.action.startsWith('create')).length;
+  const modifyCount = logs.filter((log) => log.action.startsWith('modify')).length;
+  const deleteCount = logs.filter((log) => log.action.startsWith('delete')).length;
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -65,11 +68,11 @@ export default function AuditLogPage() {
     return labels[action] || action;
   };
 
-  const getActionColor = (action: string) => {
-    if (action.startsWith('create')) return 'bg-success-100 text-success-700';
-    if (action.startsWith('delete')) return 'bg-error-100 text-error-700';
-    if (action.startsWith('modify')) return 'bg-primary-100 text-primary-700';
-    return 'bg-neutral-100 text-neutral-700';
+  const getActionTone = (action: string) => {
+    if (action.startsWith('create')) return 'success';
+    if (action.startsWith('delete')) return 'error';
+    if (action.startsWith('modify')) return 'info';
+    return 'neutral';
   };
 
   const currentPage = Math.floor(offset / limit) + 1;
@@ -78,61 +81,100 @@ export default function AuditLogPage() {
   return (
     <div className="app-page">
       <section className="app-page-hero animate-fade-up">
-        <div className="app-page-heading">
-          <p className="app-kicker">Compliance</p>
-          <h1 className="app-page-title">Log de auditoria</h1>
-          <p className="app-page-copy">Historico consolidado das acoes executadas pelos usuarios no sistema.</p>
-        </div>
-
-        {error && (
-          <div className="app-inline-banner app-inline-banner-error">
-            <strong>Auditoria</strong>
-            {error}
+        <div className="app-page-hero-grid gap-4">
+          <div className="app-page-heading">
+            <p className="app-kicker">Compliance</p>
+            <h1 className="app-page-title">Log de auditoria</h1>
+            <p className="app-page-copy">Histórico consolidado das ações executadas pelos usuários no sistema.</p>
           </div>
-        )}
+
+          {error && (
+            <div className="app-inline-banner app-inline-banner-error">
+              <strong>Auditoria</strong>
+              {error}
+            </div>
+          )}
+
+          <div className="app-metric-strip">
+            <div className="app-metric-tile">
+              <div className="flex items-center justify-between gap-3">
+                <p className="app-metric-label">Janela atual</p>
+                <Badge tone="neutral">página {currentPage}</Badge>
+              </div>
+              <p className="app-metric-value">{logs.length}</p>
+              <p className="app-metric-copy">registros carregados nesta página</p>
+            </div>
+            <div className="app-metric-tile">
+              <div className="flex items-center justify-between gap-3">
+                <p className="app-metric-label">Criações</p>
+                <Badge tone="success">create</Badge>
+              </div>
+              <p className="app-metric-value">{createCount}</p>
+              <p className="app-metric-copy">novas ações registradas</p>
+            </div>
+            <div className="app-metric-tile">
+              <div className="flex items-center justify-between gap-3">
+                <p className="app-metric-label">Alterações</p>
+                <Badge tone="info">modify</Badge>
+              </div>
+              <p className="app-metric-value">{modifyCount}</p>
+              <p className="app-metric-copy">mudanças de configuração e operação</p>
+            </div>
+            <div className="app-metric-tile">
+              <div className="flex items-center justify-between gap-3">
+                <p className="app-metric-label">Remoções</p>
+                <Badge tone={deleteCount > 0 ? 'warning' : 'neutral'}>delete</Badge>
+              </div>
+              <p className="app-metric-value">{deleteCount}</p>
+              <p className="app-metric-copy">eventos sensíveis na janela atual</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {loading && <PageLoader message="Carregando logs de auditoria..." />}
 
       {!loading && logs.length > 0 && (
-          <div className="space-y-3">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="space-y-3">
             {logs.map((log) => (
               <div key={log.id} className="app-table-shell">
                 <button
                   onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
-                  className="flex w-full items-center justify-between px-6 py-4 transition hover:bg-neutral-50"
+                  className="flex w-full items-center justify-between px-6 py-4 transition hover:bg-[color:var(--surface-emphasis)]/60"
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <span
-                      className={`px-2 py-1 rounded-md text-xs font-medium ${getActionColor(
-                        log.action
-                      )}`}
-                    >
-                      {getActionLabel(log.action)}
-                    </span>
                     <div className="text-left">
-                      <p className="font-medium text-neutral-900">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge tone={getActionTone(log.action)}>
+                          {getActionLabel(log.action)}
+                        </Badge>
+                        {log.automation_id && <Badge tone="neutral">{log.automation_id}</Badge>}
+                        <Badge tone="neutral">{log.user_id}</Badge>
+                      </div>
+                      <p className="mt-2 font-medium text-[color:var(--text-strong)]">
                         {format(new Date(log.created_at), 'dd MMM yyyy HH:mm:ss', {
                           locale: ptBR,
                         })}
                       </p>
-                      {log.ip_address && (
-                        <p className="text-xs text-neutral-500">{log.ip_address}</p>
-                      )}
+                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-[color:var(--text-muted)]">
+                        {log.ip_address && <span>{log.ip_address}</span>}
+                        {log.user_agent && <span className="hidden lg:inline">{log.user_agent.slice(0, 42)}...</span>}
+                      </div>
                     </div>
                   </div>
                   {expandedLog === log.id ? (
-                    <ChevronDown className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                    <ChevronDown className="h-4 w-4 text-[color:var(--text-muted)]" aria-hidden="true" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                    <ChevronRight className="h-4 w-4 text-[color:var(--text-muted)]" aria-hidden="true" />
                   )}
                 </button>
 
                 {expandedLog === log.id && (
-                  <div className="space-y-4 border-t border-[color:var(--border-subtle)] bg-neutral-50/85 px-6 py-4">
+                  <div className="space-y-4 border-t border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)]/85 px-6 py-4">
                     {log.old_values && (
                       <div>
-                        <p className="text-sm font-medium text-neutral-700 mb-2">Valores Anteriores</p>
+                        <p className="mb-2 text-sm font-medium text-[color:var(--text-secondary)]">Valores anteriores</p>
                         <pre className="app-code-block max-h-32">
                           {JSON.stringify(log.old_values, null, 2)}
                         </pre>
@@ -140,7 +182,7 @@ export default function AuditLogPage() {
                     )}
                     {log.new_values && (
                       <div>
-                        <p className="text-sm font-medium text-neutral-700 mb-2">Novos Valores</p>
+                        <p className="mb-2 text-sm font-medium text-[color:var(--text-secondary)]">Novos valores</p>
                         <pre className="app-code-block max-h-32">
                           {JSON.stringify(log.new_values, null, 2)}
                         </pre>
@@ -148,14 +190,38 @@ export default function AuditLogPage() {
                     )}
                     {log.user_agent && (
                       <div>
-                        <p className="text-sm font-medium text-neutral-700 mb-1">User Agent</p>
-                        <p className="text-xs text-neutral-600 break-all">{log.user_agent}</p>
+                        <p className="mb-1 text-sm font-medium text-[color:var(--text-secondary)]">User agent</p>
+                        <p className="break-all text-xs text-[color:var(--text-secondary)]">{log.user_agent}</p>
                       </div>
                     )}
                   </div>
                 )}
               </div>
             ))}
+            </div>
+
+            <div className="space-y-3">
+              <div className="app-note-card flex gap-3">
+                <ShieldAlert className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
+                <div>
+                  <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">Leitura rápida</h3>
+                  <p className="text-sm text-[color:var(--text-secondary)]">
+                    Expanda os registros mais críticos para entender quem mudou o quê, quando e com qual contexto técnico.
+                  </p>
+                </div>
+              </div>
+              <div className="app-note-card flex gap-3">
+                <Sparkles className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
+                <div>
+                  <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">Sinal da página</h3>
+                  <p className="text-sm text-[color:var(--text-secondary)]">
+                    {deleteCount > 0
+                      ? `${deleteCount} remoções apareceram nesta janela. Vale priorizar revisão desses eventos antes de encerrar a análise.`
+                      : 'Sem remoções na janela atual. A maior parte do movimento está em criação e alteração de rotinas.'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
       )}
 
@@ -171,29 +237,33 @@ export default function AuditLogPage() {
 
       {!loading && logs.length > 0 && (
           <div className="app-toolbar mt-2 flex items-center justify-between p-3">
-            <div className="text-sm text-neutral-600">
+            <div className="text-sm text-[color:var(--text-secondary)]">
               Mostrando {offset + 1} a {Math.min(offset + limit, total)} de {total} registros
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
                 onClick={() => setOffset(Math.max(0, offset - limit))}
                 disabled={offset === 0}
-                className="app-control inline-flex h-10 items-center gap-1.5 rounded-[var(--radius-control)] px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                variant="outline"
+                size="sm"
+                className="h-10 gap-1.5"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 Anterior
-              </button>
-              <div className="text-sm text-neutral-600 flex items-center px-4">
+              </Button>
+              <div className="flex items-center px-4 text-sm text-[color:var(--text-secondary)]">
                 Página {currentPage} de {totalPages}
               </div>
-              <button
+              <Button
                 onClick={() => setOffset(Math.min(offset + limit, (totalPages - 1) * limit))}
                 disabled={currentPage >= totalPages}
-                className="app-control inline-flex h-10 items-center gap-1.5 rounded-[var(--radius-control)] px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                variant="outline"
+                size="sm"
+                className="h-10 gap-1.5"
               >
-                Proxima
+                Próxima
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </button>
+              </Button>
             </div>
           </div>
       )}

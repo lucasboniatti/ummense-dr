@@ -11,7 +11,7 @@ export function PageLoader({ message = 'Carregando...' }: PageLoaderProps) {
             <Spinner size="lg" />
             <div className="space-y-1">
                 <p className="app-kicker">Sincronizando</p>
-                <p className="text-sm font-medium text-neutral-600">{message}</p>
+                <p className="text-sm font-medium text-[color:var(--text-secondary)]">{message}</p>
             </div>
         </div>
     );

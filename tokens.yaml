@@ -1,251 +1,367 @@
-# Design System Tokens — Synkra AIOS
-# Generated: 2026-03-03
-# Version: 1.0.0
+# Design System Tokens — ummense-dr
+# Version: 2.0.0
+# Source: Stitch Project ID 1735790001150301799
+# Screens: Meu Painel · Quadro Kanban · Detalhe do Card · Coletar Aprovação
+# Extracted: 2026-03-10
 
 ## COLOR PALETTE
 colors:
-  # Brand / Primary
+  # ─── Brand / Primary (Blue) ─────────────────────────────────────────────────
+  # Base: #0d60b8 (updated from Stitch orange to brand blue)
   primary:
-    50: '#f0f9ff'
-    100: '#e0f2fe'
-    200: '#bae6fd'
-    300: '#7dd3fc'
-    400: '#38bdf8'
-    500: '#0ea5e9'
-    600: '#0284c7'
-    700: '#0369a1'
-    800: '#075985'
-    900: '#0c3d66'
+    DEFAULT: '#0d60b8'
+    50:  '#eef4fc'
+    100: '#d4e6f9'
+    200: '#a8ccf3'
+    300: '#6aaae8'
+    400: '#3a83d8'
+    500: '#0d60b8'   # brand primary
+    600: '#0b52a0'   # hover states
+    700: '#094287'
+    800: '#073469'
+    900: '#042551'
 
-  # Secondary (Accent)
-  secondary:
-    50: '#f5f3ff'
-    100: '#ede9fe'
-    200: '#ddd6fe'
-    300: '#c4b5fd'
-    400: '#a78bfa'
-    500: '#8b5cf6'
-    600: '#7c3aed'
-    700: '#6d28d9'
-    800: '#5b21b6'
-    900: '#4c1d95'
+  # ─── Brand Backgrounds ──────────────────────────────────────────────────────
+  brand:
+    light: '#f0f5fb'  # background-light — app canvas, page background
+    dark:  '#061224'  # background-dark  — dark mode canvas, dark sidebar
 
-  # Success
+  # ─── PRO / Feature Badge ────────────────────────────────────────────────────
+  pro: '#0bda7a'   # used on PRO badges and FLOW PLUS IA tags
+
+  # ─── Neutral (Slate) ────────────────────────────────────────────────────────
+  # Stitch uses Tailwind slate throughout (not gray/zinc)
+  neutral:
+    0:   '#ffffff'
+    50:  '#f8fafc'   # slate-50
+    100: '#f1f5f9'   # slate-100 — input bg, chip bg, secondary btn
+    200: '#e2e8f0'   # slate-200 — borders, separators, progress track
+    300: '#cbd5e1'   # slate-300 — placeholder borders
+    400: '#94a3b8'   # slate-400 — muted icons, timestamps, helper text
+    500: '#64748b'   # slate-500 — secondary text, labels
+    600: '#475569'   # slate-600 — secondary btn text
+    700: '#334155'   # slate-700 — dividers dark
+    800: '#1e293b'   # slate-800 — dark borders, dark input bg
+    900: '#0f172a'   # slate-900 — primary text (light mode)
+    950: '#020617'
+
+  # ─── Info / Active ──────────────────────────────────────────────────────────
+  # Used for "Ativo" Kanban column, task status badges, status buttons
+  info:
+    50:  '#eff6ff'
+    100: '#dbeafe'   # blue-100 — "Revisão" badge bg, tag bg
+    500: '#3b82f6'   # blue-500 — "Ativo" progress bar
+    600: '#2563eb'   # blue-600 — "Ativo" status button bg
+    700: '#1d4ed8'   # blue-700 — "Revisão" badge text
+
+  # ─── Success ────────────────────────────────────────────────────────────────
+  # Used for "Em dia" badge, completed progress bars, power icon active
   success:
-    50: '#f0fdf4'
-    100: '#dcfce7'
-    200: '#bbf7d0'
-    300: '#86efac'
-    400: '#4ade80'
-    500: '#22c55e'
-    600: '#16a34a'
-    700: '#15803d'
-    800: '#166534'
-    900: '#145231'
+    50:  '#f0fdf4'
+    100: '#dcfce7'   # emerald-100 — "Em dia" badge bg
+    500: '#10b981'   # emerald-500 — overall progress bar fill
+    600: '#059669'
+    700: '#15803d'   # emerald-700 — "Em dia" badge text
 
-  # Warning
+  # ─── Warning / Pending ──────────────────────────────────────────────────────
+  # Used for "Pendente" task badge, "Cancelando" column (orange-400 variant)
   warning:
-    50: '#fffbeb'
-    100: '#fef3c7'
-    200: '#fde68a'
-    300: '#fcd34d'
-    400: '#fbbf24'
-    500: '#f59e0b'
+    50:  '#fffbeb'
+    100: '#fef3c7'   # amber-100 — "Pendente" badge bg
+    400: '#fb923c'   # orange-400 — "Cancelando" column progress, medium priority
+    500: '#f59e0b'   # amber-500
     600: '#d97706'
-    700: '#b45309'
-    800: '#92400e'
-    900: '#78350f'
+    700: '#b45309'   # amber-700 — "Pendente" badge text
 
-  # Error / Destructive
+  # ─── Error / Urgent ─────────────────────────────────────────────────────────
+  # Used for urgent task priority bars, power icon inactive, notification dot
   error:
-    50: '#fef2f2'
+    50:  '#fef2f2'
     100: '#fee2e2'
-    200: '#fecaca'
-    300: '#fca5a5'
-    400: '#f87171'
-    500: '#ef4444'
+    500: '#ef4444'   # red-500 — urgent tasks, notification dot, power off
     600: '#dc2626'
     700: '#b91c1c'
-    800: '#991b1b'
-    900: '#7f1d1d'
 
-  # Neutral / Grayscale
-  neutral:
-    0: '#ffffff'
-    50: '#f9fafb'
-    100: '#f3f4f6'
-    200: '#e5e7eb'
-    300: '#d1d5db'
-    400: '#9ca3af'
-    500: '#6b7280'
-    600: '#4b5563'
-    700: '#374151'
-    800: '#1f2937'
-    900: '#111827'
-    950: '#030712'
+  # ─── Tag Colors (from Detalhe do Card) ──────────────────────────────────────
+  tags:
+    metaAds:
+      bg:   '#dbeafe'   # blue-100
+      text: '#1d4ed8'   # blue-700
+    squad:
+      bg:   '#1e293b'   # slate-800
+      text: '#ffffff'
+    onboarding:
+      bg:   '#f3e8ff'   # purple-100
+      text: '#7e22ce'   # purple-700
 
-## SEMANTIC COLORS (Usage-based naming)
+## SEMANTIC TOKENS
 semantic:
   background:
-    primary: '{colors.neutral.0}'
-    secondary: '{colors.neutral.50}'
-    tertiary: '{colors.neutral.100}'
-
-  surface:
-    default: '{colors.neutral.0}'
-    hover: '{colors.neutral.50}'
-    active: '{colors.neutral.100}'
+    app:        '#f8f6f6'   # app canvas (light mode) — background-light
+    appDark:    '#221610'   # app canvas (dark mode) — background-dark
+    page:       '#f8fafc'   # main content bg — slate-50
+    surface:    '#ffffff'   # cards, panels, sidebar bg
+    muted:      '#f1f5f9'   # slate-100 — inputs, chips, secondary areas
+    emphasis:   '#eef4fc'   # primary-50 — highlighted sections
 
   text:
-    primary: '{colors.neutral.900}'
-    secondary: '{colors.neutral.700}'
-    tertiary: '{colors.neutral.500}'
-    inverse: '{colors.neutral.0}'
+    primary:    '#0f172a'   # slate-900 — headings, card titles
+    secondary:  '#475569'   # slate-600 — labels, meta text
+    muted:      '#94a3b8'   # slate-400 — placeholders, timestamps, icons
+    inverse:    '#ffffff'   # white — on colored backgrounds
+    accent:     '#0d60b8'   # primary blue — active states, links
 
   border:
-    default: '{colors.neutral.200}'
-    subtle: '{colors.neutral.100}'
-    strong: '{colors.neutral.300}'
+    default:    '#e2e8f0'   # slate-200 — cards, sidebar, header
+    subtle:     '#f1f5f9'   # slate-100 — section dividers
+    strong:     '#cbd5e1'   # slate-300 — inputs on hover
+    accent:     '#0d60b8'   # primary — active tab underline, active column
 
   interactive:
-    primary: '{colors.primary.600}'
-    secondary: '{colors.secondary.600}'
-    success: '{colors.success.600}'
-    warning: '{colors.warning.600}'
-    error: '{colors.error.600}'
+    primary:    '#0d60b8'
+    primaryHover: '#0b52a0'              # primary-600
+    activeBg:   'rgba(13, 96, 184, 0.15)'  # sidebar active bg
+    activeBgSm: 'rgba(13, 96, 184, 0.10)'  # lighter active bg (Kanban header)
+    focusRing:  'rgba(13, 96, 184, 0.18)'  # input focus ring
 
-## DARK MODE OVERRIDES
+## DARK MODE
 dark:
   background:
-    primary: '{colors.neutral.900}'
-    secondary: '{colors.neutral.800}'
-    tertiary: '{colors.neutral.700}'
-
+    app:     '#061224'
+    page:    '#0a1a2e'    # slightly lighter — used as main dark content bg
+    surface: '#061224'
+    muted:   '#0d1f38'
   text:
-    primary: '{colors.neutral.0}'
-    secondary: '{colors.neutral.100}'
-    tertiary: '{colors.neutral.400}'
-
+    primary:  '#f1f5f9'  # slate-100
+    secondary: '#94a3b8' # slate-400
+    muted:    '#64748b'  # slate-500
   border:
-    default: '{colors.neutral.700}'
-    subtle: '{colors.neutral.800}'
-    strong: '{colors.neutral.600}'
-
-## SPACING
-spacing:
-  # Base unit: 4px
-  0: '0'
-  1: '4px'
-  2: '8px'
-  3: '12px'
-  4: '16px'
-  5: '20px'
-  6: '24px'
-  8: '32px'
-  10: '40px'
-  12: '48px'
-  16: '64px'
-  20: '80px'
-  24: '96px'
-  32: '128px'
+    default: '#1e293b'   # slate-800
+    subtle:  '#0f172a'   # slate-900
 
 ## TYPOGRAPHY
 typography:
-  # Font families
   families:
-    sans: 'system-ui, -apple-system, sans-serif'
-    mono: '"SF Mono", Monaco, Consolas, monospace'
+    display: '"Public Sans", sans-serif'  # primary font (Stitch — all screens)
+    mono:    '"SF Mono", Monaco, Consolas, monospace'
 
-  # Font sizes
+  # Exact sizes extracted from Stitch HTML classes
   size:
-    xs: '12px'
-    sm: '14px'
-    base: '16px'
-    lg: '18px'
-    xl: '20px'
-    2xl: '24px'
-    3xl: '30px'
-    4xl: '36px'
-    5xl: '48px'
+    tiny: '10px'   # text-[10px] — badges, labels, meta kickers
+    xs:   '12px'   # text-xs — tab labels, field labels, tiny buttons
+    sm:   '14px'   # text-sm — nav items, card titles, body (most common)
+    base: '16px'   # text-base — modal fields, form labels
+    lg:   '18px'   # text-lg — calendar widget header
+    xl:   '20px'   # text-xl — page header title
+    2xl:  '24px'   # text-2xl — section heading ("Tarefas")
 
-  # Font weights
   weight:
-    light: 300
-    normal: 400
-    medium: 500
+    light:    300
+    normal:   400
+    medium:   500
     semibold: 600
-    bold: 700
-    extrabold: 800
+    bold:     700
 
-  # Line heights
-  lineHeight:
-    tight: 1.2
-    snug: 1.375
-    normal: 1.5
-    relaxed: 1.625
-    loose: 2
-
-  # Letter spacing
   letterSpacing:
-    tighter: '-0.05em'
-    tight: '-0.025em'
-    normal: '0em'
-    wide: '0.025em'
-    wider: '0.05em'
+    tight:   '-0.025em'  # tracking-tight — page titles
+    normal:  '0em'
+    wide:    '0.025em'
+    wider:   '0.05em'    # tracking-wider — section/field labels
+    widest:  '0.1em'     # tracking-widest — nav items uppercase
 
 ## BORDER RADIUS
+# Exactly from Stitch tailwind.config
 radius:
-  none: '0'
-  sm: '2px'
-  base: '4px'
-  md: '6px'
-  lg: '8px'
-  xl: '12px'
-  2xl: '16px'
-  3xl: '24px'
-  full: '9999px'
+  none:  '0'
+  sm:    '4px'    # DEFAULT (0.25rem)
+  base:  '4px'    # DEFAULT
+  lg:    '8px'    # rounded-lg (0.5rem) — tabs, some buttons
+  xl:    '12px'   # rounded-xl (0.75rem) — PRIMARY: cards, inputs, nav items, buttons
+  2xl:   '16px'   # rounded-2xl (1rem) — calendar widget, event empty state
+  full:  '9999px' # avatars, progress bars, notification dot, pill badges
+
+## SPACING (4px base unit)
+spacing:
+  0:   '0'
+  0.5: '2px'
+  1:   '4px'
+  1.5: '6px'
+  2:   '8px'
+  2.5: '10px'
+  3:   '12px'
+  4:   '16px'
+  5:   '20px'
+  6:   '24px'
+  8:   '32px'
+  10:  '40px'
+  12:  '48px'
+  16:  '64px'
+  20:  '80px'
 
 ## SHADOWS
 shadow:
-  none: 'none'
-  sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-  base: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
-  md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-  xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-  2xl: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+  none:       'none'
+  sm:         '0 1px 2px 0 rgba(0, 0, 0, 0.05)'                              # cards, task items
+  base:       '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06)'
+  md:         '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06)'
+  lg:         '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05)'
+  # Brand shadows (Stitch: shadow-lg + shadow-primary/20)
+  primary:    '0 10px 15px -3px rgba(236, 91, 19, 0.2), 0 4px 6px -4px rgba(236, 91, 19, 0.1)'
+  primaryDay: '0 4px 12px -2px rgba(236, 91, 19, 0.5)'  # calendar active day
+  # Layout shadows
+  soft:       '0 24px 48px -34px rgba(15, 23, 42, 0.32)'
+  shell:      '0 30px 60px -38px rgba(15, 23, 42, 0.4)'
+  floating:   '0 20px 38px -28px rgba(15, 23, 42, 0.36)'
 
-## COMPONENT TOKENS (High-level patterns)
+## DIMENSIONS
+dimensions:
+  sidebar:
+    width:        '256px'   # w-64 — standard (Painel + Kanban)
+    widthCollapsed: '80px'  # w-20 — collapsed (Detalhe do Card mobile)
+  header:
+    height: '64px'          # h-16 — all screens
+  avatar:
+    xs:  '24px'   # w-6 h-6 — kanban card avatars
+    sm:  '28px'   # size-7 — task list avatars
+    md:  '32px'   # size-8 — timeline, team members
+    lg:  '40px'   # size-10 — header avatar, logo badge
+  progress:
+    thin: '6px'   # h-1.5 — kanban card mini progress
+    base: '8px'   # h-2 — task section, overall progress
+
+## COMPONENT TOKENS
 components:
+  # Sidebar
+  sidebar:
+    background:       '#ffffff'
+    backgroundDark:   '#221610'
+    border:           '#e2e8f0'
+    activeBackground: 'rgba(236, 91, 19, 0.15)'
+    activeColor:      '#ec5b13'
+    navItem:
+      padding:      '10px 12px'   # px-3 py-2.5
+      borderRadius: '12px'        # rounded-xl
+      fontSize:     '14px'        # text-sm
+      fontWeight:   700
+
+  # Header
+  header:
+    height:     '64px'
+    background: '#ffffff'
+    border:     '#e2e8f0'
+    padding:    '16px 32px'      # py-4 px-8
+
+  # Kanban card
+  kanbanCard:
+    background:   '#ffffff'
+    border:       '#e2e8f0'
+    borderRadius: '12px'
+    padding:      '16px'
+    shadow:       '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+    progressBar:
+      height:      '6px'        # h-1.5
+      borderRadius: '9999px'
+
+  # Task item (Meu Painel)
+  taskItem:
+    background:     '#ffffff'
+    border:         '#e2e8f0'
+    borderRadius:   '12px'
+    padding:        '16px'
+    shadow:         '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+    hoverBorder:    'rgba(236, 91, 19, 0.3)'
+    priorityBar:
+      width:        '6px'       # w-1.5
+      height:       '40px'      # h-10
+      borderRadius: '9999px'
+
+  # Buttons
   button:
-    padding:
-      sm: '{spacing.2} {spacing.3}'
-      md: '{spacing.3} {spacing.4}'
-      lg: '{spacing.4} {spacing.6}'
-    fontSize: '{typography.size.base}'
-    fontWeight: '{typography.weight.semibold}'
-    borderRadius: '{radius.md}'
+    primary:
+      background:   '#ec5b13'
+      color:        '#ffffff'
+      padding:      '8px 16px'
+      borderRadius: '12px'
+      fontWeight:   700
+      shadow:       '0 10px 15px -3px rgba(236, 91, 19, 0.2)'
+    secondary:
+      background:   '#f1f5f9'
+      color:        '#475569'
+      padding:      '8px 16px'
+      borderRadius: '12px'
+      fontWeight:   700
+    icon:
+      padding:      '10px'
+      borderRadius: '8px'
 
+  # Input / Search
   input:
-    padding: '{spacing.2} {spacing.3}'
-    fontSize: '{typography.size.base}'
-    borderRadius: '{radius.md}'
-    border: '1px solid {colors.neutral.200}'
+    background:   '#f1f5f9'
+    borderRadius: '12px'
+    padding:      '8px 16px 8px 40px'
+    fontSize:     '14px'
+    focusBorder:  'rgba(236, 91, 19, 0.2)'
 
-  card:
-    padding: '{spacing.6}'
-    borderRadius: '{radius.lg}'
-    boxShadow: '{shadow.md}'
-
+  # Badges
   badge:
-    padding: '{spacing.1} {spacing.2}'
-    fontSize: '{typography.size.xs}'
-    fontWeight: '{typography.weight.semibold}'
-    borderRadius: '{radius.full}'
+    sm:
+      padding:      '2px 8px'
+      fontSize:     '10px'
+      fontWeight:   700
+      borderRadius: '4px'
+    pill:
+      padding:      '4px 12px'
+      fontSize:     '12px'
+      fontWeight:   700
+      borderRadius: '9999px'
+
+  # Status badges (task/kanban states)
+  statusBadge:
+    pendente:
+      background: '#fef3c7'
+      color:      '#b45309'
+    emDia:
+      background: '#dcfce7'
+      color:      '#15803d'
+    revisao:
+      background: '#dbeafe'
+      color:      '#1d4ed8'
+    ativo:
+      background: '#2563eb'
+      color:      '#ffffff'
+
+  # PRO badge
+  proBadge:
+    background:   'rgba(11, 218, 122, 0.1)'
+    color:        '#0bda7a'
+    fontSize:     '10px'
+    fontWeight:   700
+    padding:      '2px 8px'
+    borderRadius: '4px'
+
+  # Modal
+  modal:
+    maxWidth:     '600px'
+    background:   '#ffffff'
+    border:       '#e2e8f0'
+    borderRadius: '12px'
+    shadow:       '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+
+## MOTION
+motion:
+  fast:   '150ms'
+  normal: '250ms'
+  slow:   '400ms'
+  easing: 'ease'
 
 metadata:
-  version: '1.0.0'
-  author: 'Design System Team'
-  license: 'Proprietary'
-  created: '2026-03-03'
-  updated: '2026-03-03'
+  version: '2.0.0'
+  author:  'Uma — UX Design Expert (Synkra AIOS)'
+  source:  'Stitch Project ID 1735790001150301799'
+  screens:
+    - 'Meu Painel (Fiel)    — 40c1a3c281164eab967f09c9ab885df8'
+    - 'Quadro Kanban (Fiel)  — 4951f3a867174b8b980778d86cf49f70'
+    - 'Detalhe do Card (Fiel)— 562213e7b0e04d87958d9583dd0de32d'
+    - 'Coletar Aprovação (Fiel)— 9551c1d6e45544c9a0bcf99f7c0d930a'
+  created: '2026-03-10'
+  updated: '2026-03-10'

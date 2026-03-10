@@ -21,7 +21,7 @@ export function Breadcrumb({ items, className = '' }: BreadcrumbProps) {
         <li className={cn(items.length > 0 && 'hidden sm:flex')}>
           <Link
             href="/"
-            className="flex items-center text-neutral-500 transition-colors hover:text-neutral-700"
+            className="flex items-center text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-secondary)]"
             aria-label="Página inicial"
           >
             <Home className="h-4 w-4" />
@@ -35,11 +35,11 @@ export function Breadcrumb({ items, className = '' }: BreadcrumbProps) {
               index < items.length - 1 ? 'hidden sm:flex' : 'flex'
             )}
           >
-            <ChevronRight className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+            <ChevronRight className="h-4 w-4 text-[color:var(--text-muted)]" aria-hidden="true" />
             {item.href && !item.current ? (
               <Link
                 href={item.href}
-                className="truncate text-neutral-500 transition-colors hover:text-neutral-700"
+                className="truncate text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-secondary)]"
               >
                 {item.compactLabel || item.label}
               </Link>

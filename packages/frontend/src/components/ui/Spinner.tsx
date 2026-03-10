@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 export interface SpinnerProps {
     size?: 'sm' | 'md' | 'lg';
@@ -14,7 +15,11 @@ export function Spinner({ size = 'md', className = '' }: SpinnerProps) {
 
     return (
         <div
-            className={`animate-spin rounded-full border-neutral-200 border-t-primary-600 ${sizeClasses[size]} ${className}`}
+            className={cn(
+                'animate-spin rounded-full border-[color:var(--border-default)] border-t-[color:var(--text-accent)]',
+                sizeClasses[size],
+                className
+            )}
             role="status"
             aria-label="Carregando"
         />

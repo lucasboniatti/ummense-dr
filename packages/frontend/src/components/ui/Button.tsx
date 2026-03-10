@@ -8,19 +8,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'border-transparent bg-primary-600 text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.95)] hover:bg-primary-700 hover:shadow-[0_20px_30px_-20px_rgba(37,99,235,0.98)] active:bg-primary-800',
+          'border-transparent bg-primary text-white shadow-primary hover:bg-primary-600 hover:shadow-primary active:bg-primary-700',
         default:
-          'border-transparent bg-primary-600 text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.95)] hover:bg-primary-700 hover:shadow-[0_20px_30px_-20px_rgba(37,99,235,0.98)] active:bg-primary-800',
+          'border-transparent bg-primary text-white shadow-primary hover:bg-primary-600 hover:shadow-primary active:bg-primary-700',
         secondary:
-          'border-transparent bg-secondary-600 text-white shadow-[0_16px_28px_-18px_rgba(8,145,178,0.78)] hover:bg-secondary-700 active:bg-secondary-800',
+          'border-[color:var(--border-default)] bg-[color:var(--surface-muted)] text-[color:var(--text-secondary)] shadow-none hover:bg-[color:var(--surface-emphasis)] hover:text-[color:var(--text-strong)]',
         destructive:
-          'border-transparent bg-error-600 text-white shadow-[0_16px_28px_-18px_rgba(220,38,38,0.68)] hover:bg-error-700 active:bg-error-800',
+          'border-transparent bg-error-600 text-white shadow-[0_18px_30px_-20px_rgba(220,38,38,0.42)] hover:bg-error-700 active:bg-error-700',
         outline:
-          'border-transparent bg-white/95 text-neutral-800 hover:bg-neutral-100 hover:text-neutral-900',
-        ghost: 'border-transparent bg-transparent shadow-none hover:bg-white/72 hover:text-neutral-900',
-        link: 'link-underline border-transparent bg-transparent px-0 text-primary-700 shadow-none underline-offset-4',
+          'border-[color:var(--border-default)] bg-[color:var(--surface-raised)] text-[color:var(--text-strong)] shadow-none hover:bg-[color:var(--surface-emphasis)]',
+        ghost: 'border-transparent bg-transparent text-[color:var(--text-secondary)] shadow-none hover:bg-[color:var(--surface-emphasis)] hover:text-[color:var(--text-strong)]',
+        link: 'link-underline border-transparent bg-transparent px-0 text-[color:var(--text-accent)] shadow-none underline-offset-4 hover:text-primary-600',
         success:
-          'border-transparent bg-success-600 text-white shadow-[0_16px_28px_-18px_rgba(22,163,74,0.7)] hover:bg-success-700 active:bg-success-800',
+          'border-transparent bg-success-600 text-white shadow-[0_18px_30px_-20px_rgba(16,185,129,0.42)] hover:bg-success-700 active:bg-success-700',
       },
       size: {
         default: 'h-11 px-4 py-2.5',

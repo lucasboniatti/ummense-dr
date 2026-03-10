@@ -30,11 +30,11 @@ interface CostCardProps {
 }
 
 export function CostCard({ summary }: CostCardProps) {
-  const trendVariant =
+  const trendTone =
     summary.trend === 'down'
       ? 'success'
       : summary.trend === 'up'
-        ? 'destructive'
+        ? 'error'
         : 'warning';
   const trendSymbol =
     summary.trend === 'down' ? '↓' : summary.trend === 'up' ? '↑' : '↔';
@@ -69,17 +69,17 @@ export function CostCard({ summary }: CostCardProps) {
         <div className="space-y-2">
           <p className="app-kicker">Analitico financeiro</p>
           <CardTitle className="text-xl font-semibold">Custo de armazenamento</CardTitle>
-          <p className="text-sm leading-6 text-neutral-600">
+          <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
             Acompanhe o ROI do arquivamento em S3 comparado ao volume mantido no banco.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={trendVariant}>
+          <Badge tone={trendTone}>
             {trendSymbol} {summary.trendLabel}
           </Badge>
-          <Badge variant="default">Precisao {summary.accuracy}%</Badge>
-          {summary.isEstimate && <Badge variant="warning">estimado</Badge>}
+          <Badge tone="info">Precisao {summary.accuracy}%</Badge>
+          {summary.isEstimate && <Badge tone="warning">estimado</Badge>}
         </div>
       </CardHeader>
 
@@ -112,10 +112,10 @@ export function CostCard({ summary }: CostCardProps) {
           <div className="app-surface-muted rounded-[22px] p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold text-neutral-900">Ritmo de arquivamento</h3>
-                <p className="text-xs text-neutral-600">Media movel de 7 dias da taxa de arquivamento</p>
+                <h3 className="text-sm font-semibold text-[color:var(--text-strong)]">Ritmo de arquivamento</h3>
+                <p className="text-xs text-[color:var(--text-secondary)]">Media movel de 7 dias da taxa de arquivamento</p>
               </div>
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-[color:var(--text-muted)]">
                 {summary.lastUpdatedAt
                   ? `Atualizado em ${new Date(summary.lastUpdatedAt).toLocaleString('pt-BR')}`
                   : 'Snapshot ao vivo'}
@@ -140,7 +140,7 @@ export function CostCard({ summary }: CostCardProps) {
                   <Line
                     type="monotone"
                     dataKey="archivalRateGbPerDay"
-                    stroke="#0f766e"
+                    stroke="var(--color-primary)"
                     strokeWidth={3}
                     dot={{ r: 3 }}
                     activeDot={{ r: 5 }}
@@ -152,9 +152,9 @@ export function CostCard({ summary }: CostCardProps) {
 
           <div className="app-section-card">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-neutral-900">Quebra de volume</h3>
+              <h3 className="text-sm font-semibold text-[color:var(--text-strong)]">Quebra de volume</h3>
               <span
-                className="cursor-help text-xs text-neutral-500 underline decoration-dotted"
+                className="cursor-help text-xs text-[color:var(--text-muted)] underline decoration-dotted"
                 title={breakdownLabel}
                 aria-label={breakdownLabel}
               >
@@ -176,7 +176,7 @@ export function CostCard({ summary }: CostCardProps) {
               <BreakdownRow label="Accuracy" value={`${summary.accuracy}%`} />
             </dl>
 
-            <p className="mt-4 text-xs text-neutral-500">
+            <p className="mt-4 text-xs text-[color:var(--text-muted)]">
               {summary.isEstimate
                 ? 'Sem volume arquivado suficiente para leitura real do bucket; exibindo custo potencial com a compressao configurada.'
                 : 'Custos de S3 calculados com base nos objetos arquivados disponiveis no bucket configurado.'}
@@ -200,16 +200,16 @@ function MetricTile({
   emphasized?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</p>
+    <div className="rounded-[18px] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-4 shadow-[var(--shadow-soft)]">
+      <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">{label}</p>
       <p
-        className={`mt-2 text-2xl font-semibold ${
-          emphasized ? 'text-success-700' : 'text-neutral-900'
+        className={`mt-2 text-2xl font-extrabold tracking-[-0.04em] ${
+          emphasized ? 'text-success-700' : 'text-[color:var(--text-strong)]'
         }`}
       >
         {value}
       </p>
-      <p className="mt-1 text-xs text-neutral-500">{hint}</p>
+      <p className="mt-1 text-xs text-[color:var(--text-secondary)]">{hint}</p>
     </div>
   );
 }
@@ -217,8 +217,8 @@ function MetricTile({
 function BreakdownRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <dt className="text-neutral-600">{label}</dt>
-      <dd className="font-medium text-neutral-900">{value}</dd>
+      <dt className="text-[color:var(--text-secondary)]">{label}</dt>
+      <dd className="font-medium text-[color:var(--text-strong)]">{value}</dd>
     </div>
   );
 }

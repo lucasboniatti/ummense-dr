@@ -14,13 +14,13 @@ interface DeliveryStatusBadgeProps {
 }
 
 export function DeliveryStatusBadge({ status }: DeliveryStatusBadgeProps) {
-  const variant = {
+  const tone = {
     success: 'success',
-    failed: 'destructive',
-    pending: 'default',
-    cancelled: 'outline',
-    dead_lettered: 'destructive',
-  }[status] as any;
+    failed: 'error',
+    pending: 'info',
+    cancelled: 'neutral',
+    dead_lettered: 'error',
+  }[status] as 'success' | 'error' | 'info' | 'neutral';
 
   const content = {
     success: {
@@ -46,7 +46,7 @@ export function DeliveryStatusBadge({ status }: DeliveryStatusBadgeProps) {
   }[status];
 
   return (
-    <Badge variant={variant}>
+    <Badge tone={tone}>
       <span className="inline-flex items-center gap-1.5">
         {content?.icon ?? <AlertTriangle className="h-4 w-4" aria-hidden="true" />}
         {content?.label ?? status}

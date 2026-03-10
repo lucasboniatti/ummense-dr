@@ -58,16 +58,21 @@ export function ForgotPasswordPage() {
     <div className="app-auth-shell">
       <div className="app-auth-card animate-fade-up">
         <div className="app-auth-brand">
-          <h1>Tasks Flow</h1>
-          <p>Solicite um link de redefinição para recuperar o acesso ao workspace.</p>
+          <span className="app-kicker">Tasks Flow</span>
+          <h1>Recupere seu acesso.</h1>
+          <p>Solicite um novo link para voltar ao painel sem perder o ritmo da operação.</p>
+          <div className="app-auth-meta">
+            <span className="app-auth-pill">Reset seguro</span>
+            <span className="app-auth-pill">Fluxo assistido</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mx-auto w-full max-w-md space-y-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">
+            <h2 className="font-display text-2xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">
               Redefinir senha
             </h2>
-            <p className="text-sm leading-6 text-neutral-500">
+            <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
               Informe seu e-mail e enviaremos um link para criar uma nova senha.
             </p>
           </div>
@@ -102,7 +107,7 @@ export function ForgotPasswordPage() {
           <div className="text-center">
             <Link
               href="/auth/login"
-              className="text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="app-link text-sm"
             >
               Voltar para login
             </Link>

@@ -1,6 +1,7 @@
 import type { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, CircleX } from 'lucide-react';
+import { Button } from '../../../components/ui/Button';
 
 interface WebhookRow {
   id: string;
@@ -183,38 +184,49 @@ export default function LocalWebhooksPage({
           <p className="app-kicker">Webhooks</p>
           <h1 className="app-page-title">Fluxo critico local</h1>
           <p className="app-page-copy">
-          Esta página valida boot local do dashboard e renderização do fluxo de
-          Webhooks com dados locais.
-        </p>
+            Esta pagina valida o boot local do dashboard e a leitura do modulo
+            de webhooks com fallback seguro para ambiente de desenvolvimento.
+          </p>
         </div>
       </section>
 
-      <section className="app-section-card space-y-2">
-        <h2 className="app-section-title">Saude do backend</h2>
-        {health === 'ok' && (
-          <p className="inline-flex items-center gap-2 text-success-700 font-semibold">
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            OK
+      <section className="app-section-card space-y-4">
+        <div className="space-y-2">
+          <h2 className="app-section-title">Saude do backend</h2>
+          <p className="text-sm text-app-secondary">
+            Base monitorada:{' '}
+            <span className="font-mono text-app-strong">{backendBase}</span>
           </p>
-        )}
-        {health === 'error' && (
-          <p className="inline-flex items-center gap-2 text-error-700 font-semibold">
-            <CircleX className="h-4 w-4" aria-hidden="true" />
-            {healthError || 'Falha ao validar health do backend.'}
-          </p>
-        )}
+        </div>
+        <div>
+          {health === 'ok' && (
+            <span className="app-status-pill app-status-pill-success">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              Backend disponivel
+            </span>
+          )}
+          {health === 'error' && (
+            <div className="app-inline-banner app-inline-banner-error">
+              <strong>Backend</strong>
+              <p className="inline-flex items-center gap-2">
+                <CircleX className="h-4 w-4" aria-hidden="true" />
+                {healthError || 'Falha ao validar o health do backend.'}
+              </p>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="app-surface space-y-4 p-5">
-        <div>
+        <div className="app-note-card space-y-3">
           <h2 className="app-section-title">Token de teste</h2>
-          <p className="text-neutral-700 text-sm">
-            Cole um JWT local para listar webhooks reais do usuário. Sem token,
-            a página usa fallback local.
+          <p className="text-sm text-app-secondary">
+            Cole um JWT local para listar webhooks reais do usuario. Sem token,
+            a pagina permanece em modo de fallback local para smoke e suporte.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="text"
             value={tokenInput}
@@ -222,47 +234,57 @@ export default function LocalWebhooksPage({
             placeholder="Cole aqui o token JWT de teste"
             className="app-control h-11 min-w-[300px] flex-1 rounded-[var(--radius-control)] px-3 text-sm"
           />
-          <button type="button" onClick={applyToken} className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700">
+          <Button type="button" onClick={applyToken}>
             Aplicar token
-          </button>
-          <button type="button" onClick={clearToken} className="app-control h-11 rounded-[var(--radius-control)] px-4 text-sm font-semibold text-neutral-900">
+          </Button>
+          <Button type="button" onClick={clearToken} variant="outline">
             Limpar token
-          </button>
+          </Button>
         </div>
 
         <div>
           <h2 className="app-section-title mb-3 mt-4">Lista de webhooks</h2>
           {flowError && (
-            <p className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-warning-700">
-              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-              {flowError}
-            </p>
+            <div className="app-inline-banner app-inline-banner-warning mb-3">
+              <strong>Ambiente local</strong>
+              <p className="inline-flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                {flowError}
+              </p>
+            </div>
           )}
           {webhooks.length === 0 ? (
-            <p className="text-neutral-600">Nenhum webhook disponível.</p>
+            <p className="text-app-secondary">Nenhum webhook disponivel.</p>
           ) : (
             <div className="app-table-shell">
               <table className="w-full">
-                <thead className="bg-neutral-100 border-b border-neutral-200">
+                <thead className="border-b border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)]">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-900">ID</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-900">URL</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-900">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-app-strong">ID</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-app-strong">URL</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-app-strong">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-200">
+                <tbody className="divide-y divide-[color:var(--border-subtle)]">
                   {webhooks.map((hook) => (
-                    <tr key={hook.id} className="hover:bg-neutral-50">
-                      <td className="px-4 py-3 text-sm font-mono text-neutral-900">{hook.id}</td>
-                      <td className="px-4 py-3 text-sm text-neutral-700">{hook.url}</td>
+                    <tr key={hook.id} className="transition hover:bg-[color:var(--surface-emphasis)]">
+                      <td className="px-4 py-3 text-sm font-mono text-app-strong">{hook.id}</td>
+                      <td className="px-4 py-3 text-sm text-app-secondary">
+                        <div className="space-y-1">
+                          <p>{hook.url}</p>
+                          {hook.description && (
+                            <p className="text-xs text-app-muted">{hook.description}</p>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <span
-                          className={`inline-flex items-center gap-1.5 ${hook.enabled ? 'text-success-700 font-semibold' : 'text-neutral-600'}`}
+                          className={`app-status-pill ${hook.enabled ? 'app-status-pill-success' : 'app-status-pill-neutral'}`}
                         >
                           {hook.enabled && (
                             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                           )}
-                          {hook.enabled ? 'ativo' : 'inativo'}
+                          {hook.enabled ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
                     </tr>

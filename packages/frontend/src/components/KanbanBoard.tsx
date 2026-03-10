@@ -154,7 +154,7 @@ export function KanbanBoard({
               onDrop={() => onDropColumn(column.id)}
             >
               {filteredCards.length === 0 ? (
-                <div className="flex min-h-[108px] items-center justify-center rounded-[22px] border border-dashed border-[color:var(--border-strong)] bg-white/65 px-4 py-5 text-center text-sm font-medium text-neutral-500">
+                <div className="flex min-h-[108px] items-center justify-center rounded-xl border border-dashed border-[color:var(--border-default)] bg-[color:var(--surface-card)] px-4 py-5 text-center text-sm font-medium text-[color:var(--text-secondary)]">
                   {emptyMessage}
                 </div>
               ) : (

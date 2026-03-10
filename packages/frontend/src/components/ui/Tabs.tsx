@@ -9,7 +9,7 @@ const tabsListVariants = cva('inline-flex items-center gap-2', {
       underline:
         'border-b border-[color:var(--border-subtle)] p-1',
       pills:
-        'rounded-[18px] border border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)] p-1',
+        'rounded-[18px] border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-1',
     },
   },
   defaultVariants: {
@@ -23,7 +23,7 @@ const tabsTriggerVariants = cva(
     variants: {
       variant: {
         underline:
-          'border-b-2 border-transparent text-[color:var(--text-muted)] hover:text-[color:var(--text-strong)] data-[state=active]:border-primary-600 data-[state=active]:text-primary-700',
+          'border-b-2 border-transparent text-[color:var(--text-muted)] hover:text-[color:var(--text-strong)] data-[state=active]:border-primary data-[state=active]:text-[color:var(--text-accent)]',
         pills:
           'text-[color:var(--text-muted)] hover:text-[color:var(--text-strong)] data-[state=active]:bg-[color:var(--surface-raised)] data-[state=active]:text-[color:var(--text-strong)] data-[state=active]:shadow-[var(--elevation-1)]',
       },

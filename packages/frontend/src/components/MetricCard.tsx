@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/CardUI';
 import { Badge } from './ui/Badge';
+import { ProgressSegments } from './ui/ProgressSegments';
 
 interface MetricCardProps {
   title: string;
   value: string | number;
   unit?: string;
   trend?: 'up' | 'down' | 'stable' | { date: string; rate?: number; duration?: number }[];
+  lowerIsBetter?: boolean;
   trendValue?: string;
   trendLabel?: string;
   icon?: React.ReactNode;
@@ -23,6 +24,7 @@ export function MetricCard({
   value,
   unit,
   trend = 'stable',
+  lowerIsBetter = false,
   trendValue,
   trendLabel,
   icon,
@@ -41,59 +43,99 @@ export function MetricCard({
             : 'down')
         : 'stable';
 
-  const trendVariant = {
-    up: 'success',
-    down: 'destructive',
-    stable: 'default',
-  }[trendDirection] as 'success' | 'destructive' | 'default';
+  const isImproving =
+    trendDirection === 'stable'
+      ? null
+      : lowerIsBetter
+        ? trendDirection === 'down'
+        : trendDirection === 'up';
+
+  const trendTone = {
+    positive: 'success',
+    negative: 'error',
+    stable: 'info',
+  }[isImproving === null ? 'stable' : isImproving ? 'positive' : 'negative'] as
+    | 'success'
+    | 'error'
+    | 'info';
 
   const trendSymbol = {
-    up: '↑',
-    down: '↓',
+    up: lowerIsBetter ? '↓' : '↑',
+    down: lowerIsBetter ? '↑' : '↓',
     stable: '→',
   }[trendDirection];
 
+  const toneClasses = {
+    positive: 'bg-success-50 text-success-700 border-success-100',
+    negative: 'bg-error-50 text-error-700 border-error-100',
+    stable: 'bg-[color:var(--surface-muted)] text-[color:var(--text-secondary)] border-[color:var(--border-default)]',
+  }[isImproving === null ? 'stable' : isImproving ? 'positive' : 'negative'];
+
   return (
-    <Card
+    <article
       onClick={onClick}
-      className={onClick ? 'cursor-pointer transition-transform hover:-translate-y-0.5' : ''}
+      className={[
+        'rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-4 shadow-[var(--shadow-soft)] transition-[transform,border-color,box-shadow] duration-200',
+        onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:border-[color:var(--border-accent)] hover:shadow-[var(--shadow-primary-day)]' : '',
+      ].join(' ')}
       data-testid={dataTestId}
       aria-label={title}
       role="article"
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <div className="space-y-2">
-          <p className="app-kicker">{title}</p>
-          <CardTitle className="text-base font-semibold">{title}</CardTitle>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+            {title}
+          </p>
+          <div className="mt-3 flex items-end gap-2">
+            <div
+              className="text-2xl font-extrabold leading-none tracking-[-0.04em] text-[color:var(--text-strong)]"
+              data-testid={dataTestId ? `${dataTestId}-value` : undefined}
+            >
+              {value}
+            </div>
+            {unit && <span className="pb-0.5 text-sm text-[color:var(--text-secondary)]">{unit}</span>}
+          </div>
         </div>
         {icon && (
-          <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-primary-50 text-xl text-primary-700">
+          <div className={`flex h-11 w-11 items-center justify-center rounded-lg border ${toneClasses}`}>
             {icon}
           </div>
         )}
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex items-baseline gap-2">
-          <div className="text-3xl font-bold tracking-[-0.04em]" data-testid={dataTestId ? `${dataTestId}-value` : undefined}>
-            {value}
-          </div>
-          {unit && <span className="text-sm text-neutral-600">{unit}</span>}
-        </div>
-        <div className="flex items-center gap-2">
+      </div>
+      <div className="mt-4">
+        <ProgressSegments
+          filled={
+            trendDirection === 'stable'
+              ? 2
+              : isImproving
+                ? 4
+                : 1
+          }
+          total={4}
+          color={
+            trendDirection === 'stable'
+              ? 'primary'
+              : isImproving
+                ? 'success'
+                : 'error'
+          }
+        />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
           {(trendValue || trendLabel) && (
-            <Badge variant={trendVariant}>
+            <Badge tone={trendTone}>
               {trendSymbol} {trendValue || trendLabel}
             </Badge>
           )}
-          {subtitle && <p className="text-xs text-neutral-600">{subtitle}</p>}
+          {subtitle && <p className="text-xs text-[color:var(--text-secondary)]">{subtitle}</p>}
           {failedExecutions && failedExecutions.length > 0 && (
-            <p className="text-xs font-medium text-neutral-600">
+            <p className="text-xs font-medium text-[color:var(--text-secondary)]">
               Top: {failedExecutions[0].automation}
             </p>
           )}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </article>
   );
 }
 

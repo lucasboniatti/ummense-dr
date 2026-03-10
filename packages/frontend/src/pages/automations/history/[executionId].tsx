@@ -79,116 +79,106 @@ export default function ExecutionDetailPage() {
         <div className="px-4 py-4">
           <button
             onClick={() => router.back()}
-            className="mb-4 inline-flex items-center gap-1.5 text-primary-600 hover:text-primary-800"
+            className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[color:var(--text-accent)] transition-colors hover:text-primary-600"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar
           </button>
           <div className="app-inline-banner app-inline-banner-error">
             <strong>Execucao</strong>
-            {error || 'Execução não encontrada'}
+            <p>{error || 'Execução não encontrada.'}</p>
           </div>
         </div>
       </div>
     );
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusMeta = (status: string) => {
     switch (status) {
-      case 'success':
-        return 'bg-success-50 border-success-200';
-      case 'failed':
-        return 'bg-error-50 border-error-200';
-      default:
-        return 'bg-neutral-50 border-neutral-200';
-    }
-  };
-
-  const getStepStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle2 className="h-4 w-4" aria-hidden="true" />;
-      case 'failed':
-        return <CircleX className="h-4 w-4" aria-hidden="true" />;
-      case 'skipped':
-        return <Minus className="h-4 w-4" aria-hidden="true" />;
-      default:
-        return <Clock3 className="h-4 w-4" aria-hidden="true" />;
-    }
-  };
-
-  const executionStatus = (() => {
-    switch (execution.status) {
       case 'success':
         return {
-          className: 'bg-success-200 text-success-800',
+          pillClass: 'app-status-pill-success',
+          tileClass: 'bg-success-100 text-success-700',
           icon: <CheckCircle2 className="h-4 w-4" aria-hidden="true" />,
           label: 'Sucesso',
         };
       case 'failed':
         return {
-          className: 'bg-error-200 text-error-800',
+          pillClass: 'app-status-pill-error',
+          tileClass: 'bg-error-100 text-error-700',
           icon: <CircleX className="h-4 w-4" aria-hidden="true" />,
           label: 'Falha',
         };
+      case 'skipped':
+        return {
+          pillClass: 'app-status-pill-warning',
+          tileClass: 'bg-warning-100 text-warning-700',
+          icon: <Minus className="h-4 w-4" aria-hidden="true" />,
+          label: 'Ignorado',
+        };
       default:
         return {
-          className: 'bg-neutral-200 text-neutral-800',
+          pillClass: 'app-status-pill-info',
+          tileClass: 'bg-primary-100 text-primary-700',
           icon: <Clock3 className="h-4 w-4" aria-hidden="true" />,
           label: 'Em andamento',
         };
     }
-  })();
+  };
+
+  const executionStatus = getStatusMeta(execution.status);
 
   return (
     <div className="app-page">
-      <section className={`app-page-hero animate-fade-up ${getStatusColor(execution.status)}`}>
+      <section className="app-page-hero animate-fade-up">
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:underline"
+            className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--text-accent)] transition-colors hover:text-primary-600"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar ao historico
+            Voltar ao histórico
           </button>
 
-          <div className="rounded-[22px] border border-white/60 bg-white/65 p-6">
-            <div className="mb-4 flex items-start justify-between">
+          <div className="app-note-card space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="app-kicker">Execucao</p>
-                <h1 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">
+                <p className="app-kicker">Execução</p>
+                <h1 className="text-2xl font-bold tracking-[-0.03em] text-app-strong">
                   {execution.automation_name}
                 </h1>
-                <p className="mt-1 text-sm font-mono text-neutral-600">{execution.id}</p>
+                <p className="mt-1 text-sm font-mono text-app-secondary">{execution.id}</p>
               </div>
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${executionStatus.className}`}
+                className={`app-status-pill ${executionStatus.pillClass}`}
               >
                 {executionStatus.icon}
                 {executionStatus.label}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-              <div>
-                <p className="text-neutral-600">Início</p>
-                <p className="font-medium">
+            <div className="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+              <div className="app-surface-muted rounded-[20px] p-4">
+                <p className="text-app-secondary">Início</p>
+                <p className="mt-1 font-medium text-app-strong">
                   {format(new Date(execution.started_at), 'dd MMM yyyy HH:mm:ss', {
                     locale: ptBR,
                   })}
                 </p>
               </div>
-              <div>
-                <p className="text-neutral-600">Gatilho</p>
-                <p className="font-medium capitalize">{execution.trigger_type}</p>
+              <div className="app-surface-muted rounded-[20px] p-4">
+                <p className="text-app-secondary">Gatilho</p>
+                <p className="mt-1 font-medium capitalize text-app-strong">{execution.trigger_type}</p>
               </div>
-              <div>
-                <p className="text-neutral-600">Duração</p>
-                <p className="font-medium">{execution.duration_ms}ms</p>
+              <div className="app-surface-muted rounded-[20px] p-4">
+                <p className="text-app-secondary">Duração</p>
+                <p className="mt-1 font-medium text-app-strong">
+                  {execution.duration_ms ? `${execution.duration_ms}ms` : 'Em andamento'}
+                </p>
               </div>
-              <div>
-                <p className="text-neutral-600">Passos</p>
-                <p className="font-medium">{steps.length}</p>
+              <div className="app-surface-muted rounded-[20px] p-4">
+                <p className="text-app-secondary">Passos</p>
+                <p className="mt-1 font-medium text-app-strong">{steps.length}</p>
               </div>
             </div>
           </div>
@@ -196,28 +186,28 @@ export default function ExecutionDetailPage() {
       </section>
 
       {execution.status === 'failed' && execution.error_context && (
-        <div className="app-inline-banner app-inline-banner-error">
+        <div className="app-inline-banner app-inline-banner-error space-y-4">
           <strong>Falha</strong>
-          <h2 className="text-lg font-semibold text-error-900">Detalhes do erro</h2>
+          <h2 className="text-lg font-semibold">Detalhes do erro</h2>
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-error-700">Mensagem</p>
-              <p className="mt-1 font-mono text-sm text-error-900">
+              <p className="text-sm font-medium opacity-80">Mensagem</p>
+              <p className="mt-1 font-mono text-sm">
                 {execution.error_context.message}
               </p>
             </div>
             {execution.error_context.stack && (
               <div>
-                <p className="text-sm font-medium text-error-700">Stack trace</p>
-                <pre className="app-code-block mt-1 max-h-32 text-error-800">
+                <p className="text-sm font-medium opacity-80">Stack trace</p>
+                <pre className="app-code-block mt-1 max-h-32">
                   {execution.error_context.stack}
                 </pre>
               </div>
             )}
             {execution.error_context.state && (
               <div>
-                <p className="text-sm font-medium text-error-700">Estado</p>
-                <pre className="app-code-block mt-1 max-h-32 text-error-800">
+                <p className="text-sm font-medium opacity-80">Estado</p>
+                <pre className="app-code-block mt-1 max-h-32">
                   {JSON.stringify(execution.error_context.state, null, 2)}
                 </pre>
               </div>
@@ -227,11 +217,11 @@ export default function ExecutionDetailPage() {
       )}
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Timeline de passos</h2>
+        <h2 className="text-lg font-semibold text-app-strong">Timeline de passos</h2>
 
         {steps.length === 0 ? (
-          <div className="app-surface-muted rounded-[22px] p-6 text-center text-neutral-500">
-            Nenhum passo registrado
+          <div className="app-surface-muted rounded-[22px] p-6 text-center text-app-secondary">
+            Nenhum passo registrado.
           </div>
         ) : (
           <div className="space-y-3">
@@ -239,39 +229,44 @@ export default function ExecutionDetailPage() {
               <div key={step.id} className="app-table-shell">
                 <button
                   onClick={() => setExpandedStep(expandedStep === step.id ? null : step.id)}
-                  className="flex w-full items-center justify-between px-6 py-4 transition hover:bg-neutral-50"
+                  className="flex w-full items-center justify-between px-6 py-4 transition hover:bg-[color:var(--surface-emphasis)]"
                 >
                   <div className="flex flex-1 items-center gap-4">
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${step.status === 'success'
-                          ? 'bg-success-100 text-success-700'
-                          : step.status === 'failed'
-                            ? 'bg-error-100 text-error-700'
-                            : 'bg-neutral-100 text-neutral-700'
-                        }`}
-                    >
-                      {getStepStatusIcon(step.status)}
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium text-neutral-900">Passo {index + 1}: {step.step_id}</p>
-                      <p className="text-sm text-neutral-600">
-                        {step.duration_ms}ms
-                        {step.error_message && ` • ${step.error_message}`}
-                      </p>
-                    </div>
+                    {(() => {
+                      const stepStatus = getStatusMeta(step.status);
+
+                      return (
+                        <>
+                          <div
+                            className={`flex h-9 w-9 items-center justify-center rounded-full ${stepStatus.tileClass}`}
+                          >
+                            {stepStatus.icon}
+                          </div>
+                          <div className="text-left">
+                            <p className="font-medium text-app-strong">
+                              Passo {index + 1}: {step.step_id}
+                            </p>
+                            <p className="text-sm text-app-secondary">
+                              {step.duration_ms ? `${step.duration_ms}ms` : 'Sem duracao registrada'}
+                              {step.error_message && ` • ${step.error_message}`}
+                            </p>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                   {expandedStep === step.id ? (
-                    <ChevronDown className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                    <ChevronDown className="h-4 w-4 text-app-muted" aria-hidden="true" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                    <ChevronRight className="h-4 w-4 text-app-muted" aria-hidden="true" />
                   )}
                 </button>
 
                 {expandedStep === step.id && (
-                  <div className="space-y-4 border-t border-[color:var(--border-subtle)] bg-neutral-50/85 px-6 py-4">
+                  <div className="space-y-4 border-t border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)] px-6 py-4">
                     {step.input && (
                       <div>
-                        <p className="mb-2 text-sm font-medium text-neutral-700">Input</p>
+                        <p className="mb-2 text-sm font-medium text-app-secondary">Input</p>
                         <pre className="app-code-block max-h-32">
                           {JSON.stringify(step.input, null, 2)}
                         </pre>
@@ -279,7 +274,7 @@ export default function ExecutionDetailPage() {
                     )}
                     {step.output && (
                       <div>
-                        <p className="mb-2 text-sm font-medium text-neutral-700">Output</p>
+                        <p className="mb-2 text-sm font-medium text-app-secondary">Output</p>
                         <pre className="app-code-block max-h-32">
                           {JSON.stringify(step.output, null, 2)}
                         </pre>

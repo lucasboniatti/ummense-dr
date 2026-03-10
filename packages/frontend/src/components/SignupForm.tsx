@@ -56,8 +56,8 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mx-auto w-full max-w-md space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">Criar conta</h2>
-        <p className="text-sm leading-6 text-neutral-500">
+        <h2 className="font-display text-2xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">Criar conta</h2>
+        <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
           Configure seus dados iniciais para entrar no workspace.
         </p>
       </div>
@@ -101,7 +101,7 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
       <div className="mt-4 text-center">
         <Link
           href="/auth/login"
-          className="text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="app-link text-sm"
         >
           Já tem uma conta? Entrar
         </Link>

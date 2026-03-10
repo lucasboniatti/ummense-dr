@@ -16,12 +16,23 @@ import {
 } from 'lucide-react';
 import TaskModal from '../../components/TaskModal';
 import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
+import { Breadcrumb } from '../../components/ui/Breadcrumb';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Input } from '../../components/ui/Input';
+import { ProgressSegments } from '../../components/ui/ProgressSegments';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/Select';
+import { TaskItem as UiTaskItem } from '../../components/ui/TaskItem';
 import { api } from '../../services/api';
 import { CardDetails, CardTimelineEvent, cardsService } from '../../services/cards.service';
 import { FlowTag } from '../../services/flows.service';
-import { TaskItem, tasksService } from '../../services/tasks.service';
+import { TaskItem as CardTaskItem, tasksService } from '../../services/tasks.service';
 
 type JsonValue = Record<string, unknown> | unknown[];
 
@@ -105,31 +116,12 @@ function statusLabel(status: string): string {
   return 'Ativo';
 }
 
-function statusTone(status: string): string {
-  if (status === 'completed') return 'bg-success-50 text-success-700';
-  if (status === 'blocked') return 'bg-error-50 text-error-700';
-  return 'bg-primary-50 text-primary-700';
-}
-
-function priorityTone(priority: string): string {
-  if (priority === 'P1') return 'bg-error-50 text-error-700';
-  if (priority === 'P2') return 'bg-warning-50 text-warning-700';
-  return 'bg-primary-50 text-primary-700';
-}
-
 function taskStatusLabel(status: string): string {
   if (status === 'completed') return 'Concluída';
   if (status === 'in_progress') return 'Em andamento';
   if (status === 'todo') return 'A iniciar';
   if (status === 'blocked') return 'Bloqueada';
   return 'Aberta';
-}
-
-function taskStatusTone(status: string): string {
-  if (status === 'completed') return 'bg-success-50 text-success-700';
-  if (status === 'in_progress') return 'bg-primary-50 text-primary-700';
-  if (status === 'blocked') return 'bg-error-50 text-error-700';
-  return 'bg-neutral-100 text-neutral-700';
 }
 
 function timelineActionLabel(action: string): string {
@@ -261,6 +253,7 @@ function formatDueDate(value: string | null): string {
 
 export default function CardWorkspacePage() {
   const router = useRouter();
+  const supportModeEnabled = router.query.support === '1';
 
   const cardId = useMemo(() => {
     const raw = router.query.cardId;
@@ -288,12 +281,12 @@ export default function CardWorkspacePage() {
   const [submittingNote, setSubmittingNote] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(
-    'Dados reais do card dependem de autenticação. O acesso técnico fica em uma superfície secundária.'
+    'Preparando a leitura detalhada da conta.'
   );
   const [technicalModeOpen, setTechnicalModeOpen] = useState(false);
 
   const [card, setCard] = useState<CardDetails | null>(null);
-  const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [tasks, setTasks] = useState<CardTaskItem[]>([]);
   const [timeline, setTimeline] = useState<CardTimelineEvent[]>([]);
   const [availableTags, setAvailableTags] = useState<FlowTag[]>([]);
   const [form, setForm] = useState<CardFormState>({
@@ -306,9 +299,9 @@ export default function CardWorkspacePage() {
   const [newNote, setNewNote] = useState('');
   const [selectedTagId, setSelectedTagId] = useState('');
   const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState('#2563eb');
+  const [newTagColor, setNewTagColor] = useState('#0d60b8');
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [activeTask, setActiveTask] = useState<TaskItem | null>(null);
+  const [activeTask, setActiveTask] = useState<CardTaskItem | null>(null);
 
   const loadWorkspace = useCallback(async () => {
     if (!cardId) {
@@ -324,7 +317,7 @@ export default function CardWorkspacePage() {
       setTimeline([]);
       setError(null);
       setHint(
-        'Sem token JWT. A jornada principal permanece limpa; abra o modo técnico apenas se precisar autenticar a sessão.'
+        'Os dados detalhados desta conta ainda não ficaram disponíveis nesta sessão. Reabra o card a partir do fluxo principal ou atualize o painel.'
       );
       return;
     }
@@ -550,7 +543,7 @@ export default function CardWorkspacePage() {
     setTaskModalOpen(true);
   };
 
-  const onOpenTask = (task: TaskItem) => {
+  const onOpenTask = (task: CardTaskItem) => {
     setActiveTask(task);
     setTaskModalOpen(true);
   };
@@ -589,14 +582,23 @@ export default function CardWorkspacePage() {
     () => tasks.filter((task) => task.status === 'completed').length,
     [tasks]
   );
+  const taskProgressFilled = tasks.length > 0 ? Math.max(1, Math.round((completedTasks / tasks.length) * 4)) : 0;
 
   const mainEmptyState = !loading && !card;
 
   return (
     <div data-testid="card-workspace" className="space-y-4">
-      <section className="app-surface p-5 md:p-6">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div className="space-y-3">
+      <section className="app-surface p-4 sm:p-5 md:p-6">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-4">
+            <Breadcrumb
+              items={[
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Cards', href: '/dashboard/automations' },
+                { label: card ? form.title || card.title : `Card #${cardId || '-'}`, current: true },
+              ]}
+            />
+
             <Button
               type="button"
               variant="ghost"
@@ -610,90 +612,130 @@ export default function CardWorkspacePage() {
 
             <div>
               <p className="app-kicker">Workspace colaborativo</p>
-              <h1 className="mt-2 text-[1.9rem] font-bold tracking-[-0.04em] text-neutral-900">
+              <h1 className="font-display mt-2 text-[1.7rem] font-bold tracking-[-0.04em] text-[color:var(--text-strong)] sm:text-[1.9rem]">
                 {card ? form.title || card.title : 'Card Workspace 2.0'}
               </h1>
-              <p className="mt-2 text-sm leading-6 text-neutral-600">
+              <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
                 Card #{cardId || '-'} com contexto, tarefas e timeline em uma superfície de produto, sem expor controles técnicos na jornada principal.
               </p>
             </div>
 
             {card && (
               <div className="flex flex-wrap gap-2">
-                <span
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusTone(
-                    form.status || card.status
-                  )}`}
-                >
+                <Badge tone={form.status === 'blocked' ? 'error' : form.status === 'completed' ? 'success' : 'info'}>
                   {statusLabel(form.status || card.status)}
-                </span>
-                <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                </Badge>
+                <Badge tone="neutral" className="hidden sm:inline-flex">
                   Líder: {leadershipSnapshot.leader}
-                </span>
-                <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                </Badge>
+                <Badge tone="neutral" className="hidden md:inline-flex">
                   Equipe: {leadershipSnapshot.teamCount}
-                </span>
-                <span className="rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700">
+                </Badge>
+                <Badge tone="info">
                   {completedTasks}/{tasks.length} tarefas concluídas
-                </span>
-                <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                </Badge>
+                <Badge tone="neutral" className="hidden lg:inline-flex">
                   Atualizado {formatDate(card.updatedAt)}
-                </span>
+                </Badge>
               </div>
             )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void loadWorkspace()}
+                disabled={loading}
+                className="h-11"
+              >
+                <RefreshCw size={14} className="mr-2" />
+                Recarregar
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={onOpenNewTask}
+                disabled={!devToken}
+                className="h-11"
+              >
+                <Plus size={14} className="mr-2" />
+                Nova tarefa
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void onSaveCard()}
+                disabled={!card || savingCard || !devToken}
+                className="h-11"
+              >
+                <Save size={14} className="mr-2" />
+                {savingCard ? 'Salvando...' : 'Salvar card'}
+              </Button>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void loadWorkspace()}
-              disabled={loading}
-              className="h-11"
-            >
-              <RefreshCw size={14} className="mr-2" />
-              Recarregar
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={onOpenNewTask}
-              disabled={!devToken}
-              className="h-11"
-            >
-              <Plus size={14} className="mr-2" />
-              Nova tarefa
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => void onSaveCard()}
-              disabled={!card || savingCard || !devToken}
-              className="h-11"
-            >
-              <Save size={14} className="mr-2" />
-              {savingCard ? 'Salvando...' : 'Salvar card'}
-            </Button>
+          <div className="space-y-3">
+            <div className="app-note-card">
+              <div className="mb-2 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                <span>Ritmo do card</span>
+                <span>{card ? `${card.progress.percent}%` : '--'}</span>
+              </div>
+              <ProgressSegments
+                filled={
+                  card ? Math.max(1, Math.round(card.progress.percent / 25)) : 1
+                }
+                total={4}
+                color={
+                  !card
+                    ? 'primary'
+                    : form.status === 'completed'
+                      ? 'success'
+                      : form.status === 'blocked'
+                        ? 'error'
+                        : 'primary'
+                }
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Badge tone="info">{completedTasks}/{tasks.length} tarefas</Badge>
+                <Badge tone="neutral">{leadershipSnapshot.teamCount} pessoas</Badge>
+                <Badge tone={devToken ? 'success' : 'warning'}>
+                  {devToken ? 'dados ao vivo' : 'sincronização pendente'}
+                </Badge>
+              </div>
+            </div>
+            <div className="app-note-card flex gap-3">
+              <Sparkles className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
+              <div>
+                <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">
+                  Leitura executiva
+                </h3>
+                <p className="text-sm text-[color:var(--text-secondary)]">
+                  {card
+                    ? `${card.progress.completed} entregas foram concluídas e ${card.progress.total - card.progress.completed} ainda seguem em curso nesta frente.`
+                    : 'Este card fica pronto para leitura premium assim que a sessão autenticada carregar os dados reais.'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {hint && (
-        <section className="rounded-[22px] border border-warning-200 bg-warning-50 px-4 py-3 text-sm font-semibold text-warning-800">
+        <section className="app-inline-banner app-inline-banner-warning">
           {hint}
         </section>
       )}
 
       {error && (
-        <section className="rounded-[22px] border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-800">
+        <section className="app-inline-banner app-inline-banner-error">
           {error}
         </section>
       )}
 
       {loading && (
-        <section className="app-surface-muted px-4 py-4 text-sm font-medium text-neutral-700">
+        <section className="app-surface-muted px-4 py-4 text-sm font-medium text-[color:var(--text-secondary)]">
           Carregando contexto, tarefas e timeline do card...
         </section>
       )}
@@ -702,32 +744,32 @@ export default function CardWorkspacePage() {
         <section className="app-surface p-6">
           <EmptyState
             icon={<Sparkles size={48} />}
-            title="Workspace pronto para operar"
-            description="Para carregar dados reais deste card, abra o modo técnico e autentique a sessão. A jornada principal permanece limpa para o operador."
+            title="Detalhe da conta indisponível no momento"
+            description="A leitura detalhada deste card não ficou disponível agora. Volte ao fluxo principal e tente novamente em seguida."
             variant="compact"
           />
         </section>
       )}
 
       {!loading && card && (
-        <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.18fr_0.82fr]">
+        <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-4">
-            <article data-testid="card-primary-details" className="app-surface p-5">
+            <article data-testid="card-primary-details" className="app-surface p-4 sm:p-5">
               <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="app-kicker">Detalhes do card</p>
-                  <h2 className="mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-neutral-900">
+                  <h2 className="font-display mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-[color:var(--text-strong)]">
                     Contexto principal
                   </h2>
                 </div>
-                <div className="rounded-[18px] bg-neutral-50/90 px-3 py-2 text-xs font-medium text-neutral-600">
+                <div className="app-status-pill app-status-pill-neutral normal-case tracking-normal">
                   Card #{card.id}
                 </div>
               </header>
 
               <div className="grid gap-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                     Título
                   </label>
                   <Input
@@ -741,7 +783,7 @@ export default function CardWorkspacePage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                     Descrição
                   </label>
                   <textarea
@@ -756,34 +798,37 @@ export default function CardWorkspacePage() {
 
                 <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                       Status
                     </label>
-                    <select
+                    <Select
                       value={form.status}
-                      onChange={(event) =>
-                        setForm((previous) => ({ ...previous, status: event.target.value }))
+                      onValueChange={(status) =>
+                        setForm((previous) => ({ ...previous, status }))
                       }
-                      className="app-control h-11 w-full bg-white px-3.5 text-sm text-neutral-900"
                     >
-                      <option value="active">Ativo</option>
-                      <option value="completed">Concluído</option>
-                      <option value="blocked">Bloqueado</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Ativo</SelectItem>
+                        <SelectItem value="completed">Concluído</SelectItem>
+                        <SelectItem value="blocked">Bloqueado</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="app-surface-muted p-4">
-                    <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                    <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
                       <span>Progresso do card</span>
                       <span>{card.progress.percent}%</span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
-                      <div
-                        className="h-2 rounded-full bg-primary-600 transition-all"
-                        style={{ width: `${card.progress.percent}%` }}
-                      />
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-neutral-600">
+                    <ProgressSegments
+                      filled={Math.max(1, Math.round(card.progress.percent / 25))}
+                      total={4}
+                      color={card.status === 'completed' ? 'success' : card.status === 'blocked' ? 'error' : 'primary'}
+                    />
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-[color:var(--text-secondary)]">
                       <span>{card.progress.completed} entregas concluídas</span>
                       <span>de {card.progress.total} previstas</span>
                     </div>
@@ -792,19 +837,19 @@ export default function CardWorkspacePage() {
               </div>
             </article>
 
-            <article data-testid="card-team-context" className="app-surface p-5">
+            <article data-testid="card-team-context" className="app-surface p-4 sm:p-5">
               <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="app-kicker">Equipe e contexto</p>
-                  <h2 className="mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-neutral-900">
+                  <h2 className="font-display mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-[color:var(--text-strong)]">
                     Pessoas e sinais do card
                   </h2>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700">
+                  <span className="app-status-pill app-status-pill-info">
                     Líder {leadershipSnapshot.leader}
                   </span>
-                  <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                  <span className="app-status-pill app-status-pill-neutral">
                     {leadershipSnapshot.teamCount} pessoas no contexto
                   </span>
                 </div>
@@ -812,8 +857,8 @@ export default function CardWorkspacePage() {
 
               <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                 <section className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-                    <UserRound size={16} className="text-primary-700" />
+                  <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--text-strong)]">
+                    <UserRound size={16} className="text-primary" />
                     Contatos e equipe
                   </div>
 
@@ -822,15 +867,15 @@ export default function CardWorkspacePage() {
                       {contacts.map((contact, index) => (
                         <div
                           key={`${contact.name}-${contact.email || 'sem-email'}-${index}`}
-                          className="rounded-[18px] border border-[color:var(--border-subtle)] bg-white/85 px-3 py-3"
+                          className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] px-3 py-3"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 font-bold text-primary-700">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-bold text-[color:var(--accent-strong)]">
                               {initials(contact.name)}
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-neutral-900">{contact.name}</p>
-                              <p className="text-xs text-neutral-500">
+                              <p className="text-sm font-semibold text-[color:var(--text-strong)]">{contact.name}</p>
+                              <p className="text-xs text-[color:var(--text-muted)]">
                                 {contact.role || contact.email || 'Contato relacionado ao card'}
                               </p>
                             </div>
@@ -839,7 +884,7 @@ export default function CardWorkspacePage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-[18px] border border-dashed border-[color:var(--border-strong)] bg-white/65 px-4 py-5 text-sm text-neutral-500">
+                    <div className="rounded-[18px] border border-dashed border-[color:var(--border-strong)] bg-[color:var(--surface-raised)]/65 px-4 py-5 text-sm text-[color:var(--text-muted)]">
                       Nenhum contato estruturado disponível neste card.
                     </div>
                   )}
@@ -849,7 +894,7 @@ export default function CardWorkspacePage() {
                       {leadershipSnapshot.teamNames.map((name) => (
                         <span
                           key={name}
-                          className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700"
+                          className="app-status-pill app-status-pill-neutral"
                         >
                           {name}
                         </span>
@@ -859,8 +904,8 @@ export default function CardWorkspacePage() {
                 </section>
 
                 <section className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-                    <Layers3 size={16} className="text-primary-700" />
+                  <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--text-strong)]">
+                    <Layers3 size={16} className="text-primary" />
                     Campos customizados
                   </div>
 
@@ -869,17 +914,17 @@ export default function CardWorkspacePage() {
                       {customFieldEntries.map(([key, value]) => (
                         <div
                           key={key}
-                          className="rounded-[18px] border border-[color:var(--border-subtle)] bg-white/85 px-3 py-3"
+                          className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] px-3 py-3"
                         >
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
                             {key}
                           </p>
-                          <p className="mt-1 text-sm text-neutral-800">{formatCompactValue(value)}</p>
+                          <p className="mt-1 text-sm text-[color:var(--text-strong)]">{formatCompactValue(value)}</p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-[18px] border border-dashed border-[color:var(--border-strong)] bg-white/65 px-4 py-5 text-sm text-neutral-500">
+                    <div className="rounded-[18px] border border-dashed border-[color:var(--border-strong)] bg-[color:var(--surface-raised)]/65 px-4 py-5 text-sm text-[color:var(--text-muted)]">
                       Nenhum campo customizado foi preenchido ainda.
                     </div>
                   )}
@@ -887,57 +932,57 @@ export default function CardWorkspacePage() {
               </div>
             </article>
 
-            <article data-testid="card-tags-panel" className="app-surface p-5">
+            <article data-testid="card-tags-panel" className="app-surface p-4 sm:p-5">
               <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="app-kicker">Taxonomia</p>
-                  <h2 className="mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-neutral-900">
+                  <h2 className="font-display mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-[color:var(--text-strong)]">
                     Tags do card
                   </h2>
                 </div>
-                <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                <span className="app-status-pill app-status-pill-neutral">
                   {card.tags.length} vinculadas
                 </span>
               </header>
 
               <div className="flex flex-wrap gap-2">
                 {card.tags.map((tag) => (
-                  <span
+                  <button
+                    type="button"
                     key={tag.id}
-                    className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-white"
-                    style={{ backgroundColor: tag.color }}
+                    onClick={() => void onRemoveTagFromCard(tag.id)}
+                    className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-default)] px-3 py-1.5 text-xs font-semibold transition hover:border-[color:var(--border-accent)]"
+                    style={{
+                      backgroundColor: tag.color ? `${tag.color}16` : undefined,
+                      color: tag.color || 'var(--text-secondary)',
+                    }}
                   >
                     <TagIcon size={12} />
                     {tag.name}
-                    <button
-                      type="button"
-                      onClick={() => void onRemoveTagFromCard(tag.id)}
-                      className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px]"
-                      aria-label={`Remover tag ${tag.name}`}
-                    >
-                      x
-                    </button>
-                  </span>
+                  </button>
                 ))}
 
                 {card.tags.length === 0 && (
-                  <span className="text-sm text-neutral-500">Sem tags vinculadas neste card.</span>
+                  <span className="text-sm text-[color:var(--text-muted)]">Sem tags vinculadas neste card.</span>
                 )}
               </div>
 
               <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto]">
-                <select
+                <Select
                   value={selectedTagId}
-                  onChange={(event) => setSelectedTagId(event.target.value)}
-                  className="app-control h-11 bg-white px-3.5 text-sm text-neutral-900"
+                  onValueChange={setSelectedTagId}
                 >
-                  <option value="">Selecionar tag existente</option>
-                  {availableTags.map((tag) => (
-                    <option key={tag.id} value={tag.id}>
-                      {tag.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar tag existente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTags.map((tag) => (
+                      <SelectItem key={tag.id} value={String(tag.id)}>
+                        {tag.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   type="button"
                   variant="outline"
@@ -976,11 +1021,11 @@ export default function CardWorkspacePage() {
               </div>
             </article>
 
-            <article data-testid="card-tasks-panel" className="app-surface p-5">
+            <article data-testid="card-tasks-panel" className="app-surface p-4 sm:p-5">
               <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="app-kicker">Execução</p>
-                  <h2 className="mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-neutral-900">
+                  <h2 className="font-display mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-[color:var(--text-strong)]">
                     Tarefas do card
                   </h2>
                 </div>
@@ -998,17 +1043,16 @@ export default function CardWorkspacePage() {
               </header>
 
               <div className="app-surface-muted mb-4 p-4">
-                <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
                   <span>Progresso integrado</span>
                   <span>{card.progress.percent}%</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
-                  <div
-                    className="h-2 rounded-full bg-primary-600 transition-all"
-                    style={{ width: `${card.progress.percent}%` }}
-                  />
-                </div>
-                <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium text-neutral-600">
+                <ProgressSegments
+                  filled={taskProgressFilled}
+                  total={4}
+                  color={completedTasks === tasks.length && tasks.length > 0 ? 'success' : completedTasks > 0 ? 'primary' : 'warning'}
+                />
+                <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium text-[color:var(--text-secondary)]">
                   <span>{completedTasks} concluídas</span>
                   <span>{tasks.length} totais</span>
                   <span>
@@ -1019,47 +1063,46 @@ export default function CardWorkspacePage() {
 
               <div className="space-y-3">
                 {tasks.map((task) => (
-                  <button
+                  <div
                     key={task.id}
-                    type="button"
                     onClick={() => onOpenTask(task)}
-                    className="group w-full rounded-[22px] border border-[color:var(--border-subtle)] bg-white/94 p-4 text-left shadow-[0_20px_34px_-30px_rgba(15,23,42,0.5)] transition hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]"
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        onOpenTask(task);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className="group w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-3 text-left shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:border-[color:var(--border-accent)] hover:shadow-[var(--shadow-primary-day)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--focus-ring)]"
                   >
-                    <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                      <div>
-                        <p className="text-[0.98rem] font-semibold text-neutral-900">{task.title}</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${taskStatusTone(
-                              task.status
-                            )}`}
-                          >
-                            {taskStatusLabel(task.status)}
-                          </span>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${priorityTone(
-                              task.priority
-                            )}`}
-                          >
-                            {task.priority}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 text-xs font-medium text-neutral-600">
-                        <span className="rounded-full bg-neutral-100 px-2.5 py-1.5">
+                    <div className="space-y-3">
+                      <UiTaskItem
+                        title={task.title}
+                        category={`Card #${task.cardId}`}
+                        date={formatDueDate(task.dueDate)}
+                        isUrgent={task.priority === 'P1'}
+                        isCompleted={task.status === 'completed'}
+                        priority={task.priority === 'P1' ? 'urgent' : task.priority === 'P2' ? 'high' : 'none'}
+                        assigneeFallback={task.assignedTo ? initials(task.assignedTo) : undefined}
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <Badge tone={task.status === 'completed' ? 'success' : task.status === 'blocked' ? 'error' : task.status === 'in_progress' ? 'info' : 'neutral'}>
+                          {taskStatusLabel(task.status)}
+                        </Badge>
+                        <Badge tone={task.priority === 'P1' ? 'error' : task.priority === 'P2' ? 'warning' : 'info'}>
+                          {task.priority}
+                        </Badge>
+                        <Badge tone="neutral">
                           {task.assignedTo || 'Sem responsável'}
-                        </span>
-                        <span className="rounded-full bg-neutral-100 px-2.5 py-1.5">
-                          Prazo {formatDueDate(task.dueDate)}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
 
                 {tasks.length === 0 && (
-                  <div className="rounded-[22px] border border-dashed border-[color:var(--border-strong)] bg-white/65 px-4 py-6 text-sm text-neutral-500">
+                  <div className="rounded-[22px] border border-dashed border-[color:var(--border-strong)] bg-[color:var(--surface-raised)]/65 px-4 py-6 text-sm text-[color:var(--text-muted)]">
                     Nenhuma tarefa foi vinculada a este card ainda.
                   </div>
                 )}
@@ -1067,20 +1110,20 @@ export default function CardWorkspacePage() {
             </article>
           </div>
 
-          <aside className="space-y-4">
-            <article data-testid="card-timeline-panel" className="app-surface p-5">
+          <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start xl:border-l xl:border-[color:var(--border-default)] xl:pl-4">
+            <article data-testid="card-timeline-panel" className="app-surface p-4 sm:p-5">
               <header className="mb-4">
                 <p className="app-kicker">Timeline</p>
-                <h2 className="mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-neutral-900">
+                <h2 className="font-display mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-[color:var(--text-strong)]">
                   Histórico colaborativo
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-neutral-600">
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
                   Adicione notas e acompanhe os eventos vinculados ao card em uma trilha cronológica legível.
                 </p>
               </header>
 
-              <div className="rounded-[22px] border border-[color:var(--border-subtle)] bg-white/88 p-4">
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+              <div className="rounded-[22px] border border-[color:var(--border-subtle)] bg-[color:var(--surface-raised)]/88 p-4">
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                   Nova nota
                 </label>
                 <textarea
@@ -1110,25 +1153,25 @@ export default function CardWorkspacePage() {
                   return (
                     <article
                       key={event.id}
-                      className="relative rounded-[22px] border border-[color:var(--border-subtle)] bg-white/94 p-4 shadow-[0_18px_32px_-30px_rgba(15,23,42,0.42)]"
+                      className="relative rounded-[22px] border border-[color:var(--border-subtle)] bg-[color:var(--surface-raised)]/94 p-4 shadow-[var(--shadow-soft)]"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700">
+                        <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]">
                           <Clock3 size={16} />
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-neutral-900">
+                            <p className="text-sm font-semibold text-[color:var(--text-strong)]">
                               {timelineActionLabel(event.action)}
                             </p>
-                            <span className="text-xs font-medium text-neutral-500">
+                            <span className="text-xs font-medium text-[color:var(--text-muted)]">
                               {formatDateTime(event.created_at)}
                             </span>
                           </div>
 
                           {description && (
-                            <p className="mt-2 text-sm leading-6 text-neutral-700">
+                            <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
                               {description}
                             </p>
                           )}
@@ -1138,7 +1181,7 @@ export default function CardWorkspacePage() {
                               {meta.map((item, index) => (
                                 <span
                                   key={`${item}-${index}`}
-                                  className="rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-semibold text-neutral-700"
+                                  className="app-status-pill app-status-pill-neutral"
                                 >
                                   {item}
                                 </span>
@@ -1152,36 +1195,48 @@ export default function CardWorkspacePage() {
                 })}
 
                 {timeline.length === 0 && (
-                  <div className="rounded-[22px] border border-dashed border-[color:var(--border-strong)] bg-white/65 px-4 py-6 text-sm text-neutral-500">
+                  <div className="rounded-[22px] border border-dashed border-[color:var(--border-strong)] bg-[color:var(--surface-raised)]/65 px-4 py-6 text-sm text-[color:var(--text-muted)]">
                     Nenhum evento registrado ainda. Use o composer acima para abrir o histórico deste card.
                   </div>
                 )}
               </div>
             </article>
 
-            <article className="app-surface p-5">
+            <article className="app-surface p-4 sm:p-5">
               <header className="mb-4">
                 <p className="app-kicker">Resumo operacional</p>
-                <h2 className="mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-neutral-900">
+                <h2 className="font-display mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-[color:var(--text-strong)]">
                   Visão rápida
                 </h2>
               </header>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <div className="rounded-[20px] border border-[color:var(--border-subtle)] bg-neutral-50/85 p-4">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
-                    <CalendarDays size={15} className="text-primary-700" />
+              <div className="grid gap-3">
+                <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--text-strong)]">
+                    <CalendarDays size={15} className="text-primary" />
                     Criado em
                   </div>
-                  <p className="mt-2 text-sm text-neutral-700">{formatDate(card.createdAt)}</p>
+                  <p className="mt-2 text-sm text-[color:var(--text-secondary)]">{formatDate(card.createdAt)}</p>
                 </div>
-                <div className="rounded-[20px] border border-[color:var(--border-subtle)] bg-neutral-50/85 p-4">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
-                    <Database size={15} className="text-primary-700" />
+                <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--text-strong)]">
+                    <Database size={15} className="text-primary" />
                     Dados disponíveis
                   </div>
-                  <p className="mt-2 text-sm text-neutral-700">
+                  <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
                     {contacts.length} contatos · {customFieldEntries.length} campos customizados
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--text-strong)]">
+                    <UserRound size={15} className="text-primary" />
+                    Liderança e equipe
+                  </div>
+                  <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                    {leadershipSnapshot.leader}
+                  </p>
+                  <p className="mt-1 text-xs text-[color:var(--text-muted)]">
+                    {leadershipSnapshot.teamNames.join(' • ') || 'Sem pessoas vinculadas'}
                   </p>
                 </div>
               </div>
@@ -1190,6 +1245,7 @@ export default function CardWorkspacePage() {
         </section>
       )}
 
+      {supportModeEnabled && (
       <details
         data-testid="technical-mode"
         className="app-surface-muted overflow-hidden"
@@ -1201,17 +1257,17 @@ export default function CardWorkspacePage() {
         <summary className="cursor-pointer list-none px-5 py-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-white text-primary-700 shadow-sm">
+              <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[color:var(--surface-raised)] text-primary shadow-sm">
                 <KeyRound size={17} />
               </span>
               <div>
-                <p className="text-sm font-semibold text-neutral-900">Modo técnico</p>
-                <p className="text-xs text-neutral-500">
-                  JWT, contatos em JSON e campos customizados ficam isolados aqui.
+                <p className="text-sm font-semibold text-[color:var(--text-strong)]">Painel de suporte</p>
+                <p className="text-xs text-[color:var(--text-muted)]">
+                  Token, contatos em JSON e campos customizados ficam isolados aqui.
                 </p>
               </div>
             </div>
-            <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-neutral-600">
+            <span className="app-status-pill app-status-pill-neutral">
               {technicalModeOpen ? 'Ocultar' : 'Abrir'}
             </span>
           </div>
@@ -1220,14 +1276,14 @@ export default function CardWorkspacePage() {
         <div className="border-t border-[color:var(--border-subtle)] px-5 py-5">
           <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
             <div className="space-y-3">
-              <label className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
-                Token JWT
+              <label className="text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
+                Token de suporte
               </label>
               <Input
                 type="text"
                 value={tokenInput}
                 onChange={(event) => setTokenInput(event.target.value)}
-                placeholder="Cole o token JWT de suporte"
+                placeholder="Cole o token de suporte"
               />
               <div className="flex flex-wrap gap-2">
                 <Button type="button" size="sm" onClick={onApplyToken} className="h-10">
@@ -1245,14 +1301,14 @@ export default function CardWorkspacePage() {
               </div>
             </div>
 
-            <div className="rounded-[18px] border border-[color:var(--border-subtle)] bg-white/85 p-4 text-sm leading-6 text-neutral-600">
+            <div className="rounded-[18px] border border-[color:var(--border-subtle)] bg-[color:var(--surface-raised)]/85 p-4 text-sm leading-6 text-[color:var(--text-secondary)]">
               Use esta superfície apenas para autenticação de suporte e edição avançada de payloads. Ela fica fechada por padrão e fora da primeira leitura do operador.
             </div>
           </div>
 
           <div className="mt-4 grid gap-4 xl:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                 Contatos (JSON)
               </label>
               <textarea
@@ -1265,7 +1321,7 @@ export default function CardWorkspacePage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                 Campos customizados (JSON)
               </label>
               <textarea
@@ -1279,6 +1335,7 @@ export default function CardWorkspacePage() {
           </div>
         </div>
       </details>
+      )}
 
       <TaskModal
         open={taskModalOpen}

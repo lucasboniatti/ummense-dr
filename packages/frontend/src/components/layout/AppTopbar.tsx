@@ -41,7 +41,10 @@ export default function AppTopbar({
   onQuickAction,
 }: AppTopbarProps) {
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const quickActionsRef = useRef<HTMLDivElement | null>(null);
+  const hasActivePageFilters = Boolean(searchValue.trim()) || priorityValue !== 'all';
+  const activeFiltersCount = (searchValue.trim() ? 1 : 0) + (priorityValue !== 'all' ? 1 : 0);
 
   const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -76,50 +79,128 @@ export default function AppTopbar({
   }, [isQuickActionsOpen]);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[color:var(--border-subtle)] bg-white/72 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-4 py-3 md:px-6 lg:flex-row lg:items-center lg:justify-between xl:px-8">
-        <div className="flex min-w-0 items-center gap-3 lg:max-w-[18rem]">
-          <Button
-            type="button"
-            onClick={onOpenMobileMenu}
-            variant="outline"
-            size="icon"
-            className={isSidebarVisible ? 'lg:hidden' : ''}
-            aria-label="Abrir menu"
-          >
-            <Menu size={18} />
-          </Button>
+    <header className="sticky top-0 z-30 border-b border-[color:var(--border-default)] bg-[color:var(--surface-header)] backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-3.5 px-3 py-3.5 sm:px-4 md:px-6 xl:px-8">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-3 lg:max-w-[24rem]">
+            <Button
+              type="button"
+              onClick={onOpenMobileMenu}
+              variant="outline"
+              size="icon"
+              className={isSidebarVisible ? 'lg:hidden' : ''}
+              aria-label="Abrir menu"
+            >
+              <Menu size={18} />
+            </Button>
 
-          <div className="min-w-0">
-            <Breadcrumb items={breadcrumbs} className="mb-1" />
-            <p className="app-kicker">Workspace operacional</p>
-            <h2 className="truncate text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-[1.35rem]">
-              {pageTitle}
-            </h2>
+            <div className="min-w-0">
+              <div className="hidden sm:block">
+                <Breadcrumb items={breadcrumbs} className="mb-1" />
+              </div>
+              <p className="app-kicker">Operação em foco</p>
+              <h2 className="truncate font-display text-lg font-bold tracking-[-0.03em] text-[color:var(--text-strong)] sm:text-[1.2rem] md:text-[1.35rem]">
+                {pageTitle}
+              </h2>
+            </div>
+          </div>
+          <div
+            className="flex items-center gap-2 self-start lg:self-auto"
+            ref={quickActionsRef}
+          >
+            <div className="relative">
+              <Button
+                type="button"
+                onClick={() => setIsQuickActionsOpen((previous) => !previous)}
+                variant="primary"
+                className="gap-2"
+                aria-haspopup="menu"
+                aria-expanded={isQuickActionsOpen}
+              >
+                <Plus size={16} />
+                <span className="hidden sm:inline">Criar</span>
+                <ChevronDown size={15} />
+              </Button>
+
+              {isQuickActionsOpen && (
+                <div className="app-surface elevation-2 absolute right-0 top-[calc(100%+0.75rem)] z-20 w-56 p-2 motion-scale-in">
+                  <button
+                    type="button"
+                    className="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-[color:var(--text-secondary)] transition-colors hover:bg-[color:var(--surface-emphasis)] hover:text-[color:var(--text-strong)]"
+                    onClick={() => {
+                      onQuickAction('new-task');
+                      setIsQuickActionsOpen(false);
+                    }}
+                  >
+                    Nova tarefa
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-[color:var(--text-secondary)] transition-colors hover:bg-[color:var(--surface-emphasis)] hover:text-[color:var(--text-strong)]"
+                    onClick={() => {
+                      onQuickAction('new-flow');
+                      setIsQuickActionsOpen(false);
+                    }}
+                  >
+                    Ir para automações
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-[color:var(--text-secondary)] transition-colors hover:bg-[color:var(--surface-emphasis)] hover:text-[color:var(--text-strong)]"
+                    onClick={() => {
+                      onQuickAction('open-webhooks');
+                      setIsQuickActionsOpen(false);
+                    }}
+                  >
+                    Ir para webhooks
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <Button type="button" variant="outline" size="icon" aria-label="Notificações">
+              <Bell size={18} />
+            </Button>
           </div>
         </div>
 
-        <div className="order-3 flex w-full flex-col gap-2 lg:order-2 lg:min-w-0 lg:flex-1 lg:px-4">
-          <div className="app-toolbar flex w-full flex-col gap-2 p-2 md:flex-row md:items-center">
-            <Button
-              type="button"
-              onClick={onOpenGlobalSearch}
-              variant="outline"
-              className="justify-between gap-3 md:min-w-[18rem]"
-            >
-              <span className="flex items-center gap-2">
-                <Search size={16} />
-                Buscar em todo o workspace
+        <div className="flex gap-2 lg:hidden">
+          <Button
+            type="button"
+            onClick={onOpenGlobalSearch}
+            variant="outline"
+            className="min-w-0 flex-1 justify-between gap-2"
+          >
+            <span className="flex items-center gap-2 truncate">
+              <Search size={16} />
+              Busca global
+            </span>
+            <span className="app-status-pill app-status-pill-neutral px-2 py-1 text-[11px]">
+              Cmd/Ctrl+K
+            </span>
+          </Button>
+          <Button
+            type="button"
+            onClick={() => setIsMobileFiltersOpen((previous) => !previous)}
+            variant={isMobileFiltersOpen || hasActivePageFilters ? 'primary' : 'outline'}
+            className="gap-2"
+          >
+            <Filter size={15} />
+            Filtros
+            {activeFiltersCount > 0 && (
+              <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold">
+                {activeFiltersCount}
               </span>
-              <span className="rounded-full bg-neutral-100 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-500">
-                Cmd/Ctrl+K
-              </span>
-            </Button>
+            )}
+          </Button>
+        </div>
 
-            <label className="relative min-w-0 flex-1">
+        {isMobileFiltersOpen && (
+          <div className="app-toolbar flex flex-col gap-2 p-3 lg:hidden">
+            <label className="relative min-w-0">
               <Search
                 size={16}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]"
                 aria-hidden="true"
               />
               <Input
@@ -129,23 +210,20 @@ export default function AppTopbar({
                 onKeyDown={handleSearchKeyDown}
                 placeholder="Filtrar por palavra"
                 aria-label="Filtrar por palavra"
-                className="h-11 bg-white pl-10"
+                className="h-11 bg-[color:var(--surface-card)] pl-10"
               />
             </label>
 
-            <div className="relative min-w-[11rem]">
+            <div className="relative min-w-0">
               <Filter
                 size={15}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]"
                 aria-hidden="true"
               />
-              <Select
-                value={priorityValue}
-                onValueChange={onPriorityChange}
-              >
+              <Select value={priorityValue} onValueChange={onPriorityChange}>
                 <SelectTrigger
                   aria-label="Filtrar por prioridade"
-                  className="pl-10 pr-8 text-sm font-medium text-neutral-700"
+                  className="pl-10 pr-8 text-sm font-medium text-[color:var(--text-secondary)]"
                 >
                   <SelectValue placeholder="Todas prioridades" />
                 </SelectTrigger>
@@ -158,7 +236,93 @@ export default function AppTopbar({
               </Select>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  onApplyFilters();
+                  setIsMobileFiltersOpen(false);
+                }}
+                variant="primary"
+                className="flex-1"
+              >
+                Filtrar
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  onClearFilters();
+                  setIsMobileFiltersOpen(false);
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                Limpar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="hidden lg:block">
+          <div className="app-toolbar flex w-full flex-col gap-2 p-2 xl:flex-row xl:items-center">
+            <Button
+              type="button"
+              onClick={onOpenGlobalSearch}
+              variant="outline"
+              className="justify-between gap-3 xl:min-w-[16rem] 2xl:min-w-[18rem]"
+            >
+              <span className="flex items-center gap-2">
+                <Search size={16} />
+                Busca global no workspace
+              </span>
+              <span className="app-status-pill app-status-pill-neutral px-2 py-1 text-[11px]">
+                Cmd/Ctrl+K
+              </span>
+            </Button>
+
+            <label className="relative min-w-0 flex-1">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]"
+                aria-hidden="true"
+              />
+              <Input
+                type="text"
+                value={searchValue}
+                onChange={(event) => onSearchChange(event.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Filtrar por palavra"
+                aria-label="Filtrar por palavra"
+                className="h-11 bg-[color:var(--surface-card)] pl-10"
+              />
+            </label>
+
+            <div className="relative xl:min-w-[11rem] 2xl:min-w-[12rem]">
+              <Filter
+                size={15}
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]"
+                aria-hidden="true"
+              />
+              <Select
+                value={priorityValue}
+                onValueChange={onPriorityChange}
+              >
+                <SelectTrigger
+                  aria-label="Filtrar por prioridade"
+                  className="pl-10 pr-8 text-sm font-medium text-[color:var(--text-secondary)]"
+                >
+                  <SelectValue placeholder="Todas prioridades" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas prioridades</SelectItem>
+                  <SelectItem value="P1">P1</SelectItem>
+                  <SelectItem value="P2">P2</SelectItem>
+                  <SelectItem value="P3">P3</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 xl:flex-nowrap">
               <Button type="button" onClick={onApplyFilters} variant="primary">
                 Filtrar
               </Button>
@@ -167,65 +331,6 @@ export default function AppTopbar({
               </Button>
             </div>
           </div>
-        </div>
-
-        <div
-          className="order-2 flex items-center gap-2 self-start lg:order-3 lg:self-auto"
-          ref={quickActionsRef}
-        >
-          <div className="relative">
-            <Button
-              type="button"
-              onClick={() => setIsQuickActionsOpen((previous) => !previous)}
-              variant="primary"
-              className="gap-2"
-              aria-haspopup="menu"
-              aria-expanded={isQuickActionsOpen}
-            >
-              <Plus size={16} />
-              Adicionar
-              <ChevronDown size={15} />
-            </Button>
-
-            {isQuickActionsOpen && (
-              <div className="app-surface elevation-2 absolute right-0 top-[calc(100%+0.75rem)] z-20 w-56 p-2 motion-scale-in">
-                <button
-                  type="button"
-                  className="app-sidebar-link w-full rounded-[16px] px-3 py-2 text-left text-sm"
-                  onClick={() => {
-                    onQuickAction('new-task');
-                    setIsQuickActionsOpen(false);
-                  }}
-                >
-                  Nova tarefa
-                </button>
-                <button
-                  type="button"
-                  className="app-sidebar-link w-full rounded-[16px] px-3 py-2 text-left text-sm"
-                  onClick={() => {
-                    onQuickAction('new-flow');
-                    setIsQuickActionsOpen(false);
-                  }}
-                >
-                  Abrir fluxos
-                </button>
-                <button
-                  type="button"
-                  className="app-sidebar-link w-full rounded-[16px] px-3 py-2 text-left text-sm"
-                  onClick={() => {
-                    onQuickAction('open-webhooks');
-                    setIsQuickActionsOpen(false);
-                  }}
-                >
-                  Abrir webhooks
-                </button>
-              </div>
-            )}
-          </div>
-
-          <Button type="button" variant="outline" size="icon" aria-label="Notificações">
-            <Bell size={18} />
-          </Button>
         </div>
       </div>
     </header>

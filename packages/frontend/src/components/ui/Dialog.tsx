@@ -113,7 +113,7 @@ export function DialogContent({ className, children, ...props }: DialogContentPr
       <button
         onClick={() => onOpenChange(false)}
         aria-label="Fechar diálogo"
-        className="app-control absolute right-4 top-4 h-10 w-10 rounded-full p-0 text-neutral-400 hover:text-neutral-700"
+        className="app-control absolute right-4 top-4 h-10 w-10 rounded-full p-0 text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)]"
       >
         <X size={16} />
       </button>
@@ -131,14 +131,14 @@ interface DialogTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
 
 export function DialogTitle({ className, ...props }: DialogTitleProps) {
   const { titleId } = useDialog()
-  return <h2 id={titleId} className={cn('text-xl font-semibold tracking-[-0.02em] text-neutral-900', className)} {...props} />
+  return <h2 id={titleId} className={cn('font-display text-xl font-semibold tracking-[-0.02em] text-[color:var(--text-strong)]', className)} {...props} />
 }
 
 interface DialogDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
 
 export function DialogDescription({ className, ...props }: DialogDescriptionProps) {
   const { descriptionId } = useDialog()
-  return <p id={descriptionId} className={cn('mt-1 text-sm leading-6 text-neutral-600', className)} {...props} />
+  return <p id={descriptionId} className={cn('mt-1 text-sm leading-6 text-[color:var(--text-secondary)]', className)} {...props} />
 }
 
 interface DialogBodyProps extends React.HTMLAttributes<HTMLDivElement> {}

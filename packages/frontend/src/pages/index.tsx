@@ -1,8 +1,10 @@
-import { ListTodo, SquareKanban, CalendarClock, ShieldCheck } from 'lucide-react';
+import { Activity, ListTodo, Sparkles, SquareKanban, CalendarClock, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CalendarPanel, { CalendarEvent } from '../components/panel/CalendarPanel';
 import TasksPanel, { PanelTask, TaskTag } from '../components/panel/TasksPanel';
+import { Badge } from '../components/ui/Badge';
+import { ProgressSegments, type ProgressSegmentColor } from '../components/ui/ProgressSegments';
 import { eventsService } from '../services/events.service';
 import { apiClient } from '../services/api.client';
 
@@ -419,6 +421,16 @@ export default function HomePage() {
     return merged;
   }, [events, filteredTasks]);
 
+  const completedTasks = useMemo(
+    () => filteredTasks.filter((task) => task.status === 'completed').length,
+    [filteredTasks]
+  );
+  const completionRate = filteredTasks.length > 0 ? Math.round((completedTasks / filteredTasks.length) * 100) : 0;
+  const operationalFocus =
+    summary.dueTodayTasksCount > 0
+      ? `${summary.dueTodayTasksCount} itens vencem hoje e merecem prioridade imediata.`
+      : 'Sem vencimentos urgentes no momento; bom espaço para evoluir tarefas estruturais.';
+
   const handleCreateEvent = useCallback(
     async (payload: {
       title: string;
@@ -429,7 +441,7 @@ export default function HomePage() {
       taskId: number | null;
     }) => {
       if (!devToken) {
-        setEventsError('Token JWT ausente. Não foi possível criar evento real.');
+        setEventsError('Sua sessão precisa ser reconhecida para criar um evento real.');
         return;
       }
 
@@ -465,7 +477,7 @@ export default function HomePage() {
       }
     ) => {
       if (!devToken) {
-        setEventsError('Token JWT ausente. Não foi possível editar evento real.');
+        setEventsError('Sua sessão precisa ser reconhecida para editar um evento real.');
         return;
       }
 
@@ -491,7 +503,7 @@ export default function HomePage() {
   const handleDeleteEvent = useCallback(
     async (eventId: string) => {
       if (!devToken) {
-        setEventsError('Token JWT ausente. Não foi possível remover evento real.');
+        setEventsError('Sua sessão precisa ser reconhecida para remover um evento real.');
         return;
       }
 
@@ -514,33 +526,44 @@ export default function HomePage() {
     [devToken]
   );
 
-  const summaryCards = [
+  const summaryCards: Array<{
+    label: string;
+    value: number;
+    icon: typeof SquareKanban;
+    color: string;
+    progressColor: ProgressSegmentColor;
+    note: string;
+  }> = [
     {
       label: 'Fluxos ativos',
       value: summary.flowsCount,
       icon: SquareKanban,
-      color: 'bg-primary-50 text-primary-700 border-primary-200',
+      color: 'bg-primary-50 text-primary-700 border-primary-100',
+      progressColor: 'primary',
       note: 'visão em andamento',
     },
     {
       label: 'Cards em operação',
       value: summary.cardsCount,
       icon: ShieldCheck,
-      color: 'bg-success-50 text-success-700 border-success-200',
+      color: 'bg-success-50 text-success-700 border-success-100',
+      progressColor: 'success',
       note: 'pipeline ativo',
     },
     {
       label: 'Tarefas abertas',
       value: summary.openTasksCount,
       icon: ListTodo,
-      color: 'bg-warning-50 text-warning-700 border-warning-200',
+      color: 'bg-warning-50 text-warning-700 border-warning-100',
+      progressColor: 'warning',
       note: 'trabalho pendente',
     },
     {
       label: 'Vencendo hoje',
       value: summary.dueTodayTasksCount,
       icon: CalendarClock,
-      color: 'bg-error-50 text-error-700 border-error-200',
+      color: 'bg-error-50 text-error-700 border-error-100',
+      progressColor: 'error',
       note: 'atenção imediata',
     },
   ];
@@ -552,63 +575,111 @@ export default function HomePage() {
 
   return (
     <div className="space-y-5">
-      <section className="app-surface overflow-hidden p-5 md:p-6">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      <section className="app-surface overflow-hidden p-4 sm:p-5 md:p-6">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(22rem,0.88fr)]">
           <div className="max-w-3xl">
             <p className="app-kicker">Painel operacional</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <h1 className="text-3xl font-bold tracking-[-0.03em] text-neutral-900">
+              <h1 className="font-display text-[1.85rem] font-bold tracking-[-0.03em] text-[color:var(--text-strong)] sm:text-3xl">
                 Painel Consolidado de Operações
               </h1>
-              <span className="rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-700">
-                {todayLabel}
-              </span>
+              <Badge tone="info">{todayLabel}</Badge>
             </div>
-            <p className="mt-3 max-w-3xl text-sm text-neutral-600">
-              Visualize tarefas, progresso diário e agenda em uma única superfície. Use os filtros na topbar para
-              refinar por palavra-chave e prioridade sem perder o contexto do dia.
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[color:var(--text-secondary)]">
+              Acompanhe o que vence hoje, o pulso do pipeline e a agenda operacional em uma única leitura. Use os filtros da topbar para refinar prioridades sem perder o contexto do dia.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {activeFilters.length > 0 ? (
                 activeFilters.map((filter) => (
-                  <span
-                    key={filter}
-                    className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-neutral-700 shadow-[0_10px_18px_-16px_rgba(15,23,42,0.45)]"
-                  >
+                  <Badge key={filter} tone="neutral" className="normal-case tracking-normal">
                     {filter}
-                  </span>
+                  </Badge>
                 ))
               ) : (
-                <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-neutral-700 shadow-[0_10px_18px_-16px_rgba(15,23,42,0.45)]">
+                <Badge tone="neutral" className="hidden normal-case tracking-normal sm:inline-flex">
                   Sem filtros adicionais ativos
-                </span>
+                </Badge>
               )}
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="app-note-card flex gap-3">
+                <Sparkles className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
+                <div>
+                  <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">
+                    Foco do dia
+                  </h3>
+                  <p className="text-sm text-[color:var(--text-secondary)]">{operationalFocus}</p>
+                </div>
+              </div>
+              <div className="app-note-card flex gap-3">
+                <Activity className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
+                <div>
+                  <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">
+                    Cadência atual
+                  </h3>
+                  <p className="text-sm text-[color:var(--text-secondary)]">
+                    {completionRate}% das tarefas filtradas já foram concluídas e {calendarEvents.length} eventos sustentam a agenda ativa.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:max-w-[42rem] xl:grid-cols-4">
-            {summaryCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <article
-                  key={card.label}
-                  className={`rounded-[22px] border p-4 shadow-[0_18px_32px_-28px_rgba(15,23,42,0.42)] ${card.color}`}
-                >
-                  <div className="mb-3 flex items-start justify-between gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-white/70">
-                      <Icon size={18} />
+          <div className="space-y-3">
+            <div className="app-note-card">
+              <div className="mb-2 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                <span>Ritmo da operação</span>
+                <span>{completionRate}%</span>
+              </div>
+              <ProgressSegments
+                filled={
+                  completionRate >= 75 ? 4 : completionRate >= 50 ? 3 : completionRate >= 25 ? 2 : 1
+                }
+                total={4}
+                color={completionRate >= 75 ? 'success' : completionRate >= 50 ? 'primary' : 'warning'}
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Badge tone={summary.dueTodayTasksCount > 0 ? 'warning' : 'success'}>
+                  {summary.dueTodayTasksCount} vencem hoje
+                </Badge>
+                <Badge tone="info">{summary.openTasksCount} abertas</Badge>
+                <Badge tone="neutral">{events.length} eventos reais</Badge>
+              </div>
+            </div>
+
+            <div className="grid w-full grid-cols-2 gap-3">
+              {summaryCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <article
+                    key={card.label}
+                    className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-3.5 shadow-[var(--shadow-soft)] sm:p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-lg border ${card.color} sm:h-10 sm:w-10`}>
+                        <Icon size={17} />
+                      </div>
                     </div>
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em]">
-                      Live
-                    </span>
-                  </div>
-                  <p className="text-3xl font-bold leading-none">{card.value}</p>
-                  <p className="mt-2 text-sm font-semibold">{card.label}</p>
-                  <p className="mt-1 text-xs font-medium opacity-80">{card.note}</p>
-                </article>
-              );
-            })}
+                    <p className="mt-3 text-[9px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)] sm:mt-4 sm:text-[10px]">
+                      {card.label}
+                    </p>
+                    <p className="mt-2 text-[1.75rem] font-extrabold leading-none tracking-[-0.04em] text-[color:var(--text-strong)] sm:mt-3 sm:text-3xl">
+                      {card.value}
+                    </p>
+                    <div className="mt-2 sm:mt-3">
+                      <ProgressSegments
+                        filled={card.value > 0 ? 4 : 1}
+                        total={4}
+                        color={card.progressColor}
+                      />
+                    </div>
+                    <p className="mt-2 text-[11px] font-medium text-[color:var(--text-secondary)] sm:mt-3 sm:text-xs">{card.note}</p>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>

@@ -5,6 +5,9 @@ import { AlertTriangle, CheckCircle2, Clock3, Database } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import MetricCard from './MetricCard';
 import { CostCard, type CostCardSummary } from './CostCard';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
+import { ProgressSegments } from './ui/ProgressSegments';
 
 interface MetricsResponse {
   successRate: number;
@@ -38,7 +41,7 @@ const emptyCostSummary: CostCardSummary = {
   archivedStorageGb: 0,
   compressionRatio: 3.5,
   trend: 'stable',
-  trendLabel: 'Aguardando serie historica',
+  trendLabel: 'Aguardando série histórica',
   lastUpdatedAt: null,
   isEstimate: true,
 };
@@ -49,6 +52,14 @@ export default function DashboardContainer() {
   const [costSummary, setCostSummary] = useState<CostCardSummary>(emptyCostSummary);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const criticalFailures = metrics.failedExecutions.reduce((acc, current) => acc + current.count, 0);
+  const totalStorage = costSummary.dbStorageGb + costSummary.s3StorageGb;
+  const healthTone =
+    metrics.successRate >= 95 ? 'success' : metrics.successRate >= 80 ? 'info' : 'warning';
+  const healthCopy =
+    criticalFailures > 0
+      ? 'Existem automações exigindo atenção prioritária nesta janela.'
+      : 'Sem anomalias críticas detectadas no snapshot atual.';
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -81,7 +92,7 @@ export default function DashboardContainer() {
       setError(null);
     } catch (err) {
       console.error('[Dashboard] Failed to fetch dashboard data:', err);
-      setError('Nao foi possivel carregar o dashboard. Exibindo os ultimos valores conhecidos.');
+      setError('Não foi possível carregar o dashboard. Exibindo os últimos valores conhecidos.');
     } finally {
       setIsLoading(false);
     }
@@ -152,47 +163,123 @@ export default function DashboardContainer() {
               <p className="app-kicker">Analytics</p>
               <h1 className="app-page-title">Indicadores operacionais</h1>
               <p className="app-page-copy">
-                Monitore saude de execucao, custo de armazenamento e comportamento do sistema em uma leitura compacta.
+                Monitore saúde de execução, custo de armazenamento e comportamento do sistema em uma leitura compacta.
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Badge tone={isConnected ? 'success' : 'neutral'}>
+                  {isConnected ? 'Tempo real ativo' : 'Atualização periódica'}
+                </Badge>
+                <Badge tone="info">Taxa de sucesso {metrics.successRate.toFixed(1)}%</Badge>
+                <Badge tone={metrics.failedExecutions.length > 0 ? 'warning' : 'success'}>
+                  {metrics.failedExecutions.length} falhas críticas
+                </Badge>
+              </div>
             </div>
 
             <div className="app-toolbar-cluster">
-              <div className="app-control flex items-center gap-2 rounded-full px-3 py-2">
-                <div
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    isConnected ? 'bg-success-500' : 'bg-neutral-400'
-                  }`}
+              <div className="app-note-card min-w-[280px]">
+                <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                  <span>Saúde geral</span>
+                  <span data-testid="websocket-status">{isConnected ? 'Online' : 'Fallback'}</span>
+                </div>
+                <ProgressSegments
+                  filled={metrics.successRate >= 95 ? 4 : metrics.successRate >= 75 ? 3 : metrics.successRate >= 50 ? 2 : 1}
+                  total={4}
+                  color={metrics.successRate >= 95 ? 'success' : metrics.successRate >= 75 ? 'primary' : 'warning'}
                 />
-                <span
-                  className="text-sm font-medium text-neutral-700"
-                  data-testid="websocket-status"
-                >
-                  {isConnected ? 'Tempo real ativo' : 'Modo polling'}
-                </span>
+                <p className="mt-3 text-sm text-[color:var(--text-secondary)]">
+                  {healthCopy}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge tone={healthTone}>saúde {metrics.successRate.toFixed(1)}%</Badge>
+                  <Badge tone={criticalFailures > 0 ? 'warning' : 'success'}>
+                    {criticalFailures} alertas
+                  </Badge>
+                </div>
               </div>
 
-              <button
+              <Button
                 onClick={handleExportCSV}
-                className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+                variant="primary"
                 aria-label="Export dashboard data as CSV"
               >
                 Exportar CSV
-              </button>
+              </Button>
             </div>
           </div>
 
           {error && (
-            <div className="app-inline-banner app-inline-banner-warning">
+            <div className="app-inline-banner app-inline-banner-warning rounded-xl">
               <strong>Analytics</strong>
               {error}
             </div>
           )}
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="app-surface rounded-[20px] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Saúde de execução
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <p className="text-3xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                  {metrics.successRate.toFixed(1)}%
+                </p>
+                <Badge tone={healthTone}>ao vivo</Badge>
+              </div>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                taxa de sucesso consolidada na vista atual
+              </p>
+            </div>
+            <div className="app-surface rounded-[20px] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Duração média
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <p className="text-3xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                  {metrics.avgDuration.toFixed(0)}
+                </p>
+                <Badge tone="info">ms</Badge>
+              </div>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                tempo médio para concluir as execuções
+              </p>
+            </div>
+            <div className="app-surface rounded-[20px] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Custo evitado
+              </p>
+              <p className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                {new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                  maximumFractionDigits: 0,
+                }).format(costSummary.monthlySavings)}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                economia mensal estimada com a estratégia atual
+              </p>
+            </div>
+            <div className="app-surface rounded-[20px] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Volume observado
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <p className="text-3xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                  {totalStorage.toFixed(1)}
+                </p>
+                <Badge tone="neutral">GB</Badge>
+              </div>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                base combinada entre banco e S3
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-64" data-testid="dashboard-loading">
-          <div className="text-neutral-600">Carregando metricas...</div>
+        <div className="app-surface-muted flex h-64 items-center justify-center rounded-xl" data-testid="dashboard-loading">
+          <div className="text-[color:var(--text-secondary)]">Carregando métricas...</div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -213,6 +300,7 @@ export default function DashboardContainer() {
               title="Duracao media"
               value={`${metrics.avgDuration.toFixed(0)}ms`}
               trend={metrics.durationTrend}
+              lowerIsBetter
               trendLabel="performance"
               icon={<Clock3 className="h-5 w-5" aria-hidden="true" />}
               dataTestId="metric-avg-duration"

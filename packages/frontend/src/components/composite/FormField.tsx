@@ -54,10 +54,10 @@ const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
     return (
       <div ref={ref} className={cn('space-y-2', className)} {...props}>
         {label && (
-          <label htmlFor={fieldId} className="block text-sm font-medium text-neutral-700">
+          <label htmlFor={fieldId} className="block text-sm font-medium text-[color:var(--text-secondary)]">
             {label}
             {required && (
-              <span className="text-error-600 ml-1" aria-hidden="true">
+              <span className="ml-1 text-error-600" aria-hidden="true">
                 *
               </span>
             )}
@@ -65,7 +65,7 @@ const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
         )}
         {enhancedChild}
         {hint && !error && (
-          <p id={hintId} className="text-sm text-neutral-500">
+          <p id={hintId} className="text-sm text-[color:var(--text-muted)]">
             {hint}
           </p>
         )}

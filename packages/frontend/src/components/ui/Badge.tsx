@@ -7,13 +7,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-transparent bg-primary-100 text-primary-800',
-        secondary: 'border-transparent bg-secondary-100 text-secondary-800',
-        error: 'border-transparent bg-error-100 text-error-800',
-        destructive: 'border-transparent bg-error-100 text-error-800',
-        outline: 'border-neutral-300 bg-white text-neutral-700',
-        success: 'border-transparent bg-success-100 text-success-800',
-        warning: 'border-transparent bg-warning-100 text-warning-800',
+        default: 'border-transparent bg-[color:var(--tone-info-bg)] text-[color:var(--tone-info-text)]',
+        secondary: 'border-transparent bg-[color:var(--tone-neutral-bg)] text-[color:var(--tone-neutral-text)]',
+        error: 'border-transparent bg-[color:var(--tone-error-bg)] text-[color:var(--tone-error-text)]',
+        destructive: 'border-transparent bg-[color:var(--tone-error-bg)] text-[color:var(--tone-error-text)]',
+        outline: 'border-[color:var(--border-default)] bg-[color:var(--surface-raised)] text-[color:var(--text-secondary)]',
+        success: 'border-transparent bg-[color:var(--tone-success-bg)] text-[color:var(--tone-success-text)]',
+        warning: 'border-transparent bg-[color:var(--tone-warning-bg)] text-[color:var(--tone-warning-text)]',
+        pro: 'border-transparent bg-[color:var(--color-pro)]/15 text-[#0a7c44]',
       },
     },
     defaultVariants: {
@@ -22,13 +23,27 @@ const badgeVariants = cva(
   }
 )
 
+type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'pro'
+
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  tone?: BadgeTone
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
+const toneToVariant: Record<BadgeTone, NonNullable<BadgeProps['variant']>> = {
+  neutral: 'secondary',
+  info: 'default',
+  success: 'success',
+  warning: 'warning',
+  error: 'error',
+  pro: 'pro',
+}
+
+function Badge({ className, variant, tone, ...props }: BadgeProps) {
+  const resolvedVariant = tone ? toneToVariant[tone] : variant
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div className={cn(badgeVariants({ variant: resolvedVariant }), className)} {...props} />
   )
 }
 

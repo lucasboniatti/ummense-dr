@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Clock3, Tag as TagIcon, Trash2, UserRound, X } from 'lucide-react';
+import { CalendarDays, Clock3, Tag as TagIcon, Trash2, UserRound } from 'lucide-react';
 import { FlowTag } from '../services/flows.service';
 import { TaskHistoryItem, TaskItem, TaskTag, tasksService } from '../services/tasks.service';
 import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 import { ConfirmDialog } from './ui/ConfirmDialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/Dialog';
 import { Input } from './ui/Input';
+import { ProgressSegments } from './ui/ProgressSegments';
 import {
   Select,
   SelectContent,
@@ -79,17 +82,17 @@ function statusLabel(status: string): string {
   return 'Aberta';
 }
 
-function statusTone(status: string): string {
-  if (status === 'completed') return 'bg-success-50 text-success-700';
-  if (status === 'in_progress') return 'bg-primary-50 text-primary-700';
-  if (status === 'blocked') return 'bg-error-50 text-error-700';
-  return 'bg-neutral-100 text-neutral-700';
+function statusTone(status: string): 'success' | 'info' | 'error' | 'neutral' {
+  if (status === 'completed') return 'success';
+  if (status === 'in_progress') return 'info';
+  if (status === 'blocked') return 'error';
+  return 'neutral';
 }
 
-function priorityTone(priority: string): string {
-  if (priority === 'P1') return 'bg-error-50 text-error-700';
-  if (priority === 'P2') return 'bg-warning-50 text-warning-700';
-  return 'bg-primary-50 text-primary-700';
+function priorityTone(priority: string): 'error' | 'warning' | 'info' {
+  if (priority === 'P1') return 'error';
+  if (priority === 'P2') return 'warning';
+  return 'info';
 }
 
 function historyLabel(action: string): string {
@@ -115,7 +118,7 @@ export default function TaskModal({
   const [error, setError] = useState<string | null>(null);
   const [taskTags, setTaskTags] = useState<TaskTag[]>([]);
   const [selectedTagId, setSelectedTagId] = useState('');
-  const { success, error: toastError } = useToast();
+  const { success } = useToast();
 
   const isEditMode = Boolean(task?.id);
   const modalTitle = isEditMode ? 'Editar tarefa' : 'Nova tarefa';
@@ -173,6 +176,13 @@ export default function TaskModal({
   }, [open, task?.id, token]);
 
   const canSubmit = useMemo(() => form.title.trim().length > 2, [form.title]);
+  const progressFilled = useMemo(() => {
+    if (form.status === 'completed') return 4;
+    if (form.status === 'in_progress') return 3;
+    if (form.status === 'todo') return 2;
+    if (form.status === 'blocked') return 1;
+    return 1;
+  }, [form.status]);
 
   if (!open) {
     return null;
@@ -298,57 +308,36 @@ export default function TaskModal({
   };
 
   return (
-    <div
-      data-testid="task-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label={modalTitle}
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm"
-    >
-      <div className="app-surface max-h-[94vh] w-full max-w-5xl overflow-hidden">
-        <header className="border-b border-[color:var(--border-subtle)] px-5 py-4 md:px-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="app-kicker">Workspace de tarefa</p>
-              <h2 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.03em] text-neutral-900">
-                {modalTitle}
-              </h2>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
-                  Card #{cardId}
-                </span>
-                {isEditMode && task && (
-                  <>
-                    <span
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusTone(
-                        task.status
-                      )}`}
-                    >
-                      {statusLabel(task.status)}
-                    </span>
-                    <span
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold ${priorityTone(
-                        task.priority
-                      )}`}
-                    >
-                      {task.priority}
-                    </span>
-                  </>
-                )}
-              </div>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogContent
+        data-testid="task-modal"
+        className="max-h-[94vh] max-w-6xl overflow-hidden rounded-[var(--radius-2xl)] bg-[color:var(--surface-card)] shadow-[0_24px_64px_rgba(6,18,36,0.25)]"
+      >
+        <DialogHeader className="px-5 py-4 md:px-6">
+          <div className="pr-10">
+            <p className="app-kicker">Workspace de tarefa</p>
+            <DialogTitle className="mt-2 text-[1.45rem]">
+              {modalTitle}
+            </DialogTitle>
+            <DialogDescription className="mt-2">
+              Ajuste responsáveis, status, prazo e contexto sem sair da superfície operacional do card.
+            </DialogDescription>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Badge tone="neutral">Card #{cardId}</Badge>
+              {isEditMode && task && (
+                <>
+                  <Badge tone={statusTone(task.status)}>{statusLabel(task.status)}</Badge>
+                  <Badge tone={priorityTone(task.priority)}>{task.priority}</Badge>
+                </>
+              )}
             </div>
-
-            <Button type="button" variant="ghost" size="sm" onClick={onClose} className="h-10">
-              <X size={16} className="mr-2" />
-              Fechar
-            </Button>
           </div>
-        </header>
+        </DialogHeader>
 
-        <div className="grid max-h-[calc(94vh-104px)] grid-cols-1 overflow-y-auto lg:grid-cols-[1.18fr_0.82fr]">
+        <div className="grid max-h-[calc(94vh-132px)] grid-cols-1 overflow-y-auto lg:grid-cols-[1.12fr_0.88fr]">
           <section className="space-y-4 border-b border-[color:var(--border-subtle)] p-5 lg:border-b-0 lg:border-r lg:p-6">
             {error && (
-              <div className="rounded-[18px] border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-800">
+              <div className="rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-800">
                 {error}
               </div>
             )}
@@ -358,7 +347,7 @@ export default function TaskModal({
                 <div>
                   <label
                     htmlFor={`${fieldIdPrefix}-title`}
-                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]"
                   >
                     Título
                   </label>
@@ -376,7 +365,7 @@ export default function TaskModal({
                 <div>
                   <label
                     htmlFor={`${fieldIdPrefix}-description`}
-                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]"
                   >
                     Descrição
                   </label>
@@ -396,7 +385,7 @@ export default function TaskModal({
             <article className="app-surface p-4">
               <header className="mb-4">
                 <p className="app-kicker">Operação</p>
-                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-neutral-900">
+                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[color:var(--text-strong)]">
                   Propriedades da tarefa
                 </h3>
               </header>
@@ -405,7 +394,7 @@ export default function TaskModal({
                 <div>
                   <label
                     htmlFor={`${fieldIdPrefix}-priority`}
-                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]"
                   >
                     Prioridade
                   </label>
@@ -429,7 +418,7 @@ export default function TaskModal({
                 <div>
                   <label
                     htmlFor={`${fieldIdPrefix}-status`}
-                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]"
                   >
                     Status
                   </label>
@@ -455,14 +444,14 @@ export default function TaskModal({
                 <div>
                   <label
                     htmlFor={`${fieldIdPrefix}-assigned-to`}
-                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]"
                   >
                     Responsável
                   </label>
                   <div className="relative">
                     <UserRound
                       size={14}
-                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]"
                     />
                     <Input
                       id={`${fieldIdPrefix}-assigned-to`}
@@ -480,14 +469,14 @@ export default function TaskModal({
                 <div>
                   <label
                     htmlFor={`${fieldIdPrefix}-due-date`}
-                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-neutral-500"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--text-muted)]"
                   >
                     Prazo
                   </label>
                   <div className="relative">
                     <CalendarDays
                       size={14}
-                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]"
                     />
                     <Input
                       id={`${fieldIdPrefix}-due-date`}
@@ -506,33 +495,31 @@ export default function TaskModal({
             <article className="app-surface p-4">
               <header className="mb-4">
                 <p className="app-kicker">Tags</p>
-                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-neutral-900">
+                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[color:var(--text-strong)]">
                   Classificação da tarefa
                 </h3>
               </header>
 
               <div className="flex flex-wrap gap-2">
                 {taskTags.map((tag) => (
-                  <span
+                  <button
+                    type="button"
                     key={tag.id}
-                    className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-white"
-                    style={{ backgroundColor: tag.color }}
+                    onClick={() => onRemoveTag(Number(tag.id))}
+                    className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-default)] px-3 py-1.5 text-xs font-semibold transition hover:border-[color:var(--border-accent)]"
+                    style={{
+                      backgroundColor: tag.color ? `${tag.color}16` : undefined,
+                      color: tag.color || 'var(--text-secondary)',
+                    }}
+                    aria-label={`Remover tag ${tag.name}`}
                   >
                     <TagIcon size={12} />
                     {tag.name}
-                    <button
-                      type="button"
-                      onClick={() => onRemoveTag(Number(tag.id))}
-                      className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px]"
-                      aria-label={`Remover tag ${tag.name}`}
-                    >
-                      x
-                    </button>
-                  </span>
+                  </button>
                 ))}
 
                 {taskTags.length === 0 && (
-                  <span className="text-sm text-neutral-500">Sem tags vinculadas.</span>
+                  <span className="text-sm text-[color:var(--text-muted)]">Sem tags vinculadas.</span>
                 )}
               </div>
 
@@ -584,39 +571,39 @@ export default function TaskModal({
             </div>
           </section>
 
-          <aside className="space-y-4 p-5 lg:p-6">
+          <aside className="space-y-4 bg-[color:var(--surface-muted)]/45 p-5 lg:p-6">
             <article className="app-surface-muted p-4">
               <header>
                 <p className="app-kicker">Resumo</p>
-                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-neutral-900">
+                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[color:var(--text-strong)]">
                   Estado atual
                 </h3>
               </header>
 
+              <div className="mt-4 rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-3">
+                <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                  <span>Andamento</span>
+                  <span>{progressFilled}/4</span>
+                </div>
+                <ProgressSegments
+                  filled={progressFilled}
+                  total={4}
+                  color={form.status === 'completed' ? 'success' : form.status === 'blocked' ? 'error' : form.priority === 'P1' ? 'warning' : 'primary'}
+                />
+              </div>
+
               <div className="mt-4 flex flex-wrap gap-2">
-                <span
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusTone(
-                    form.status
-                  )}`}
-                >
-                  {statusLabel(form.status)}
-                </span>
-                <span
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${priorityTone(
-                    form.priority
-                  )}`}
-                >
-                  {form.priority}
-                </span>
+                <Badge tone={statusTone(form.status)}>{statusLabel(form.status)}</Badge>
+                <Badge tone={priorityTone(form.priority)}>{form.priority}</Badge>
                 {form.assignedTo.trim() && (
-                  <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                  <Badge tone="neutral">
                     {form.assignedTo.trim()}
-                  </span>
+                  </Badge>
                 )}
                 {form.dueDate && (
-                  <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                  <Badge tone="neutral">
                     {form.dueDate}
-                  </span>
+                  </Badge>
                 )}
               </div>
             </article>
@@ -624,17 +611,17 @@ export default function TaskModal({
             <article className="app-surface p-4">
               <header className="mb-4">
                 <p className="app-kicker">Histórico</p>
-                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-neutral-900">
+                <h3 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[color:var(--text-strong)]">
                   Timeline da tarefa
                 </h3>
               </header>
 
               {loadingHistory && (
-                <p className="text-sm text-neutral-600">Carregando histórico...</p>
+                <p className="text-sm text-[color:var(--text-secondary)]">Carregando histórico...</p>
               )}
 
               {!loadingHistory && history.length === 0 && (
-                <div className="rounded-[18px] border border-dashed border-[color:var(--border-strong)] bg-white/65 px-4 py-5 text-sm text-neutral-500">
+                <div className="rounded-xl border border-dashed border-[color:var(--border-strong)] bg-[color:var(--surface-muted)] px-4 py-5 text-sm text-[color:var(--text-muted)]">
                   Sem histórico disponível para esta tarefa.
                 </div>
               )}
@@ -643,17 +630,17 @@ export default function TaskModal({
                 {history.map((item) => (
                   <article
                     key={item.id}
-                    className="rounded-[20px] border border-[color:var(--border-subtle)] bg-white/94 p-4"
+                    className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-4"
                   >
                     <div className="flex items-start gap-3">
                       <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700">
                         <Clock3 size={15} />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-neutral-900">
+                        <p className="text-sm font-semibold text-[color:var(--text-strong)]">
                           {historyLabel(item.action)}
                         </p>
-                        <p className="mt-1 text-xs text-neutral-500">
+                        <p className="mt-1 text-xs text-[color:var(--text-muted)]">
                           {formatHistoryDate(item.created_at)}
                         </p>
                       </div>
@@ -664,7 +651,7 @@ export default function TaskModal({
             </article>
           </aside>
         </div>
-      </div>
+      </DialogContent>
       <ConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
@@ -676,6 +663,6 @@ export default function TaskModal({
         loading={deleting}
         onConfirm={onDelete}
       />
-    </div>
+    </Dialog>
   );
 }

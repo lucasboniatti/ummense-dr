@@ -19,24 +19,25 @@ export function EmptyState({
     variant = 'default',
 }: EmptyStateProps) {
     const containerClasses = variant === 'compact'
-        ? 'rounded-[22px] border border-dashed border-[color:var(--border-strong)] bg-white/72 px-5 py-9'
-        : 'app-surface min-h-[320px] justify-center px-6 py-16';
+        ? 'rounded-[24px] border border-[color:var(--border-default)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-raised)_96%,transparent)_0%,color-mix(in_srgb,var(--surface-card)_98%,transparent)_100%)] px-6 py-10 shadow-[var(--shadow-soft)]'
+        : 'app-surface min-h-[340px] justify-center px-8 py-14';
 
     return (
-        <div className={`flex flex-col items-center text-center max-w-md mx-auto ${containerClasses}`}>
+        <div className={`mx-auto flex max-w-lg flex-col items-center text-center ${containerClasses}`}>
             {icon && (
-                <div className="mb-4 rounded-full bg-[var(--accent-soft)] p-4 text-primary-600">
+                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-[color:var(--border-accent)] bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)] shadow-[var(--shadow-primary-day)]">
                     {icon}
                 </div>
             )}
-            <h3 className="text-lg font-semibold text-neutral-800">{title}</h3>
+            <p className="app-kicker mb-2">Sem itens nesta etapa</p>
+            <h3 className="text-xl font-semibold tracking-[-0.02em] text-[color:var(--text-strong)]">{title}</h3>
             {description && (
-                <p className="mt-2 text-sm font-medium leading-relaxed text-neutral-500">
+                <p className="mt-3 max-w-md text-sm font-medium leading-relaxed text-[color:var(--text-secondary)]">
                     {description}
                 </p>
             )}
             {actionLabel && onAction && (
-                <Button variant="primary" onClick={onAction} className="mt-6">
+                <Button variant="primary" onClick={onAction} className="mt-7">
                     {actionLabel}
                 </Button>
             )}

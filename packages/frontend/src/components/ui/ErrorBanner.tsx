@@ -28,7 +28,7 @@ export function ErrorBanner({
       {...props}
     >
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-full bg-error-100 p-2 text-error-600">
+        <div className="mt-0.5 rounded-full bg-[color:var(--tone-error-bg)] p-2 text-[color:var(--tone-error-text)]">
           <AlertCircle size={16} aria-hidden="true" />
         </div>
         <div className="space-y-1">

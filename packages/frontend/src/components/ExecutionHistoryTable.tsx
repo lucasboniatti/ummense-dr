@@ -15,8 +15,17 @@ import { Badge } from './ui/Badge';
 import { EmptyState } from './ui/EmptyState';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 import { FileSearch } from 'lucide-react';
+import { Input } from './ui/Input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/Select';
 import SavePresetDialog from './SavePresetDialog';
 import type { SavedFilterDefinition, SavedFilterPreset } from '@/services/history.service';
+import type { BadgeProps } from './ui/Badge';
 
 interface ExecutionRecord {
   id: string;
@@ -106,17 +115,23 @@ export function ExecutionHistoryTable({
     () => sanitizeVisibleFilters({ ...currentFilters, searchTerm }),
     [currentFilters, searchTerm]
   );
+  const activeFilterCount = [
+    currentFilters?.automationId,
+    currentFilters?.status,
+    currentFilters?.searchTerm || searchTerm,
+    currentFilters?.dateRange && currentFilters.dateRange !== '7d' ? currentFilters.dateRange : '',
+  ].filter(Boolean).length;
 
-  const getStatusVariant = (status: string) => {
+  const getStatusTone = (status: string): NonNullable<BadgeProps['tone']> => {
     switch (status) {
       case 'success':
         return 'success';
       case 'failed':
-        return 'destructive';
+        return 'error';
       case 'skipped':
-        return 'default';
+        return 'neutral';
       default:
-        return 'default';
+        return 'info';
     }
   };
 
@@ -204,99 +219,122 @@ export function ExecutionHistoryTable({
 
   return (
     <div className="space-y-4">
-      <div className="app-toolbar space-y-3 p-3">
-        <div className="relative">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Buscar por erro, automacao ou mensagem..."
-                value={searchTerm}
-                onChange={(e) => {
-                  void handleSearch(e.target.value);
-                }}
-                onFocus={() => searchTerm && setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="app-control h-11 w-full rounded-[var(--radius-control)] px-4 text-sm"
-              />
-              {searchTime !== undefined && (
-                <span className="absolute right-3 top-2.5 text-xs text-neutral-500">
-                  {searchTime}ms
-                </span>
-              )}
-
-              {showSuggestions && searchSuggestions.length > 0 && (
-                <div className="app-surface absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-[18px]">
-                  {searchSuggestions.map((suggestion, idx) => (
-                    <div
-                      key={`${suggestion}-${idx}`}
-                      onClick={() => {
-                        void handleSearch(suggestion);
-                        setShowSuggestions(false);
-                      }}
-                      className="cursor-pointer px-4 py-2 text-sm text-neutral-700 transition hover:bg-neutral-50"
-                    >
-                      {suggestion}
-                    </div>
-                  ))}
-                </div>
-              )}
+      <div className="app-toolbar space-y-4 p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <p className="app-kicker">Pesquisa operacional</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-display text-xl font-semibold tracking-[-0.03em] text-[color:var(--text-strong)]">
+                Filtros, presets e busca contextual
+              </h3>
+              <Badge tone={activeFilterCount > 0 ? 'info' : 'neutral'}>
+                {activeFilterCount > 0 ? `${activeFilterCount} filtros ativos` : 'Vista base'}
+              </Badge>
             </div>
+          </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
-              <select
-                value={selectedPresetId}
-                onChange={(e) => onApplyPreset?.(e.target.value)}
-                disabled={savedFiltersLoading || presetActionPending}
-                className="app-control min-w-56 rounded-[var(--radius-control)] px-3 text-sm"
-              >
-                <option value="">
-                  {savedFiltersLoading ? 'Carregando presets...' : 'Carregar preset...'}
-                </option>
-                {savedFilters.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.is_default ? `Padrao: ${preset.name}` : preset.name}
-                  </option>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowSavePresetDialog(true)}
+              disabled={presetActionPending}
+            >
+              Salvar preset
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDeletePreset}
+              disabled={
+                !selectedPresetId ||
+                !selectedPreset ||
+                selectedPreset.is_default ||
+                presetActionPending ||
+                isDeletingPreset
+              }
+              title={
+                selectedPreset?.is_default
+                  ? 'Presets padrao nao podem ser removidos'
+                  : 'Excluir preset selecionado'
+              }
+            >
+              {isDeletingPreset ? 'Excluindo...' : 'Excluir preset'}
+            </Button>
+            <Button
+              size="sm"
+              variant={showAdvancedFilters ? 'primary' : 'outline'}
+              onClick={() => setShowAdvancedFilters((current) => !current)}
+              title="Filtros avancados"
+            >
+              Filtros
+            </Button>
+          </div>
+        </div>
+
+        <div className="relative flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative flex-1">
+            <Input
+              type="text"
+              placeholder="Buscar por erro, automacao ou mensagem"
+              value={searchTerm}
+              onChange={(e) => {
+                void handleSearch(e.target.value);
+              }}
+              onFocus={() => searchTerm && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              className="h-11 pr-16"
+            />
+            {searchTime !== undefined && (
+              <span className="absolute right-3 top-2.5 text-xs text-neutral-500">
+                {searchTime}ms
+              </span>
+            )}
+
+            {showSuggestions && searchSuggestions.length > 0 && (
+              <div className="app-surface absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-[18px]">
+                {searchSuggestions.map((suggestion, idx) => (
+                  <div
+                    key={`${suggestion}-${idx}`}
+                    onClick={() => {
+                      void handleSearch(suggestion);
+                      setShowSuggestions(false);
+                    }}
+                    className="cursor-pointer px-4 py-2 text-sm text-neutral-700 transition hover:bg-neutral-50"
+                  >
+                    {suggestion}
+                  </div>
                 ))}
-              </select>
+              </div>
+            )}
+          </div>
 
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowSavePresetDialog(true)}
-                disabled={presetActionPending}
-              >
-                Salvar preset
-              </Button>
+          <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[30rem]">
+            <Select
+              value={selectedPresetId || '__none__'}
+              onValueChange={(value) => onApplyPreset?.(value === '__none__' ? '' : value)}
+              disabled={savedFiltersLoading || presetActionPending}
+            >
+              <SelectTrigger className="min-w-0">
+                <SelectValue placeholder={savedFiltersLoading ? 'Carregando presets...' : 'Carregar preset'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Sem preset</SelectItem>
+                {savedFilters.map((preset) => (
+                  <SelectItem key={preset.id} value={preset.id}>
+                    {preset.is_default ? `Padrao: ${preset.name}` : preset.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleDeletePreset}
-                disabled={
-                  !selectedPresetId ||
-                  !selectedPreset ||
-                  selectedPreset.is_default ||
-                  presetActionPending ||
-                  isDeletingPreset
-                }
-                title={
-                  selectedPreset?.is_default
-                    ? 'Presets padrao nao podem ser removidos'
-                    : 'Excluir preset selecionado'
-                }
-              >
-                {isDeletingPreset ? 'Excluindo...' : 'Excluir preset'}
-              </Button>
-
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowAdvancedFilters((current) => !current)}
-                title="Filtros avancados"
-              >
-                Filtros
-              </Button>
+            <div className="rounded-[18px] border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                Janela atual
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[color:var(--text-strong)]">
+                {total} execucoes encontradas
+              </p>
             </div>
           </div>
         </div>
@@ -316,34 +354,44 @@ export function ExecutionHistoryTable({
         {showAdvancedFilters && (
           <div className="app-surface-muted grid grid-cols-1 gap-3 rounded-[20px] p-4 md:grid-cols-3">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">Status</label>
-              <select
-                value={currentFilters?.status || ''}
-                onChange={(e) => onFilterChange?.({ status: normalizeStatus(e.target.value) })}
-                className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-sm"
+              <label className="mb-1 block text-xs font-semibold text-neutral-700">Status</label>
+              <Select
+                value={currentFilters?.status || '__all__'}
+                onValueChange={(value) =>
+                  onFilterChange?.({ status: normalizeStatus(value === '__all__' ? '' : value) })
+                }
               >
-                <option value="">Todos</option>
-                <option value="success">Sucesso</option>
-                <option value="failed">Falha</option>
-                <option value="skipped">Ignorado</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos</SelectItem>
+                  <SelectItem value="success">Sucesso</SelectItem>
+                  <SelectItem value="failed">Falha</SelectItem>
+                  <SelectItem value="skipped">Ignorado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">Periodo</label>
-              <select
+              <label className="mb-1 block text-xs font-semibold text-neutral-700">Periodo</label>
+              <Select
                 value={currentFilters?.dateRange || '7d'}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   onFilterChange?.({
-                    dateRange: normalizeDateRange(e.target.value),
+                    dateRange: normalizeDateRange(value),
                   })
                 }
-                className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-sm"
               >
-                <option value="24h">Ultimas 24h</option>
-                <option value="7d">Ultimos 7 dias</option>
-                <option value="30d">Ultimos 30 dias</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Ultimos 7 dias" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="24h">Ultimas 24h</SelectItem>
+                  <SelectItem value="7d">Ultimos 7 dias</SelectItem>
+                  <SelectItem value="30d">Ultimos 30 dias</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -419,14 +467,18 @@ export function ExecutionHistoryTable({
                 </TableCell>
                 <TableCell className="text-sm">{execution.automation_name || 'N/A'}</TableCell>
                 <TableCell>
-                  <Badge variant={getStatusVariant(execution.status)}>
+                  <Badge tone={getStatusTone(execution.status)}>
                     <span className="inline-flex items-center gap-1.5">
                       {getStatusIcon(execution.status)}
                       {getStatusLabel(execution.status)}
                     </span>
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm capitalize">{execution.trigger_type}</TableCell>
+                <TableCell>
+                  <Badge tone="neutral" className="capitalize">
+                    {execution.trigger_type}
+                  </Badge>
+                </TableCell>
                 <TableCell className="text-sm">
                   {execution.duration_ms ? `${execution.duration_ms}ms` : '-'}
                 </TableCell>

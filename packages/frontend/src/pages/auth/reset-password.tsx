@@ -102,16 +102,21 @@ export function ResetPasswordPage() {
     <div className="app-auth-shell">
       <div className="app-auth-card animate-fade-up">
         <div className="app-auth-brand">
-          <h1>Tasks Flow</h1>
-          <p>Defina uma nova senha para recuperar o acesso à sua conta.</p>
+          <span className="app-kicker">Tasks Flow</span>
+          <h1>Defina sua nova senha.</h1>
+          <p>Finalize a recuperação e volte ao workspace com uma credencial atualizada.</p>
+          <div className="app-auth-meta">
+            <span className="app-auth-pill">Acesso renovado</span>
+            <span className="app-auth-pill">Proteção ativa</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mx-auto w-full max-w-md space-y-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">
+            <h2 className="font-display text-2xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">
               Nova senha
             </h2>
-            <p className="text-sm leading-6 text-neutral-500">
+            <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
               Sua nova senha precisa ter pelo menos 8 caracteres, com letra e número.
             </p>
           </div>
@@ -168,7 +173,7 @@ export function ResetPasswordPage() {
           <div className="text-center">
             <Link
               href={invalidRecoveryLink ? '/auth/forgot-password' : '/auth/login'}
-              className="text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="app-link text-sm"
             >
               {invalidRecoveryLink ? 'Solicitar novo link' : 'Voltar para login'}
             </Link>

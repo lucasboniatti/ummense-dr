@@ -10,27 +10,19 @@ interface ToastProps {
 const typeConfig = {
     success: {
         icon: <CheckCircle className="text-success-600 w-5 h-5 flex-shrink-0 mt-0.5" />,
-        bg: 'bg-white',
         border: 'border-success-200',
-        text: 'text-neutral-900',
     },
     error: {
         icon: <AlertCircle className="text-error-600 w-5 h-5 flex-shrink-0 mt-0.5" />,
-        bg: 'bg-white',
         border: 'border-error-200',
-        text: 'text-neutral-900',
     },
     info: {
         icon: <Info className="text-primary-600 w-5 h-5 flex-shrink-0 mt-0.5" />,
-        bg: 'bg-white',
         border: 'border-primary-200',
-        text: 'text-neutral-900',
     },
     warning: {
         icon: <AlertTriangle className="text-warning-600 w-5 h-5 flex-shrink-0 mt-0.5" />,
-        bg: 'bg-white',
         border: 'border-warning-200',
-        text: 'text-neutral-900',
     },
 };
 
@@ -39,17 +31,17 @@ export function Toast({ toast, onClose }: ToastProps) {
 
     return (
         <div
-            className={`${config.bg} ${config.border} elevation-4 motion-slide-in-right rounded-[20px] border p-4 max-w-sm w-full pointer-events-auto flex items-start gap-3 transition-all duration-300`}
+            className={`${config.border} elevation-4 motion-slide-in-right w-full max-w-sm pointer-events-auto flex items-start gap-3 rounded-[20px] border bg-[color:var(--surface-raised)] p-4 text-[color:var(--text-strong)] transition-all duration-300`}
             role="alert"
         >
             {config.icon}
 
             <div className="flex-1 min-w-0 pr-2">
-                <h4 className={`text-sm font-semibold ${config.text} break-words leading-tight`}>
+                <h4 className="break-words text-sm font-semibold leading-tight">
                     {toast.title}
                 </h4>
                 {toast.description && (
-                    <p className="mt-1 text-sm text-neutral-500 break-words leading-snug">
+                    <p className="mt-1 break-words text-sm leading-snug text-[color:var(--text-secondary)]">
                         {toast.description}
                     </p>
                 )}
@@ -57,7 +49,7 @@ export function Toast({ toast, onClose }: ToastProps) {
 
             <button
                 onClick={onClose}
-                className="app-control h-8 w-8 rounded-full p-0 text-neutral-400 hover:text-neutral-600 transition-colors flex-shrink-0"
+                className="app-control h-8 w-8 flex-shrink-0 rounded-full p-0 text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-strong)]"
                 aria-label="Close"
             >
                 <X size={16} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Checkbox } from './ui/Checkbox';
+import { TaskItem } from './ui/TaskItem';
 
 interface Task {
   id: number;
@@ -17,12 +17,6 @@ interface TaskListProps {
 }
 
 export function TaskList({ tasks, onTaskClick, onTaskComplete }: TaskListProps) {
-  const priorityColors: Record<string, string> = {
-    P1: 'bg-error-100 text-error-800',
-    P2: 'bg-warning-100 text-warning-800',
-    P3: 'bg-primary-100 text-primary-800',
-  };
-
   const sortedTasks = [...tasks].sort((a, b) => {
     const priorityOrder = { P1: 0, P2: 1, P3: 2 };
     const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -30,32 +24,27 @@ export function TaskList({ tasks, onTaskClick, onTaskComplete }: TaskListProps) 
     return (a.dueDate || '').localeCompare(b.dueDate || '');
   });
 
+  const mapPriority = (priority: Task['priority']) => {
+    if (priority === 'P1') return 'urgent';
+    if (priority === 'P2') return 'high';
+    return 'none';
+  };
+
   return (
     <div className="space-y-2">
-      {sortedTasks.map(task => (
-        <div
+      {sortedTasks.map((task) => (
+        <TaskItem
           key={task.id}
-          className="flex items-center p-3 bg-white rounded-lg border border-neutral-200 hover:border-neutral-400 cursor-pointer"
+          title={task.title}
+          category={task.priority}
+          date={task.dueDate}
+          isUrgent={task.priority === 'P1'}
+          isCompleted={task.status === 'completed'}
+          priority={mapPriority(task.priority)}
+          assigneeFallback={`C${task.cardId}`}
+          onToggle={() => onTaskComplete?.(task.id)}
           onClick={() => onTaskClick?.(task)}
-        >
-          <Checkbox
-            checked={task.status === 'completed'}
-            onClick={(event) => event.stopPropagation()}
-            onCheckedChange={() => {
-              onTaskComplete?.(task.id);
-            }}
-            className="mr-3"
-          />
-          <span className={`${priorityColors[task.priority]} px-2 py-1 rounded text-xs font-semibold mr-3`}>
-            {task.priority}
-          </span>
-          <span className={task.status === 'completed' ? 'line-through text-neutral-500' : ''}>
-            {task.title}
-          </span>
-          {task.dueDate && (
-            <span className="ml-auto text-sm text-neutral-600">{task.dueDate}</span>
-          )}
-        </div>
+        />
       ))}
     </div>
   );

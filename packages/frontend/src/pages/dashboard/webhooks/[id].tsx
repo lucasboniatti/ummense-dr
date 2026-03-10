@@ -62,7 +62,7 @@ export default function WebhookDetailPage() {
         </div>
         <Link
           href="/dashboard/webhooks"
-          className="mt-4 inline-flex items-center gap-2 font-medium text-primary-600 hover:underline"
+          className="app-link mt-4 inline-flex items-center gap-2 font-medium"
         >
           <ArrowLeft size={18} />
           Voltar para Webhooks
@@ -76,7 +76,7 @@ export default function WebhookDetailPage() {
       <section className="app-page-hero animate-fade-up">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="app-page-heading">
-            <Link href="/dashboard/webhooks" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:underline">
+            <Link href="/dashboard/webhooks" className="app-link inline-flex items-center gap-2 text-sm font-semibold">
               <ArrowLeft size={16} />
               Voltar para webhooks
             </Link>
@@ -90,13 +90,10 @@ export default function WebhookDetailPage() {
               <PencilLine size={16} className="mr-2" />
               Editar webhook
             </Button>
-            <button
-              onClick={() => setShowTestModal(true)}
-              className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
-            >
+            <Button onClick={() => setShowTestModal(true)} variant="primary">
               <RefreshCw size={16} className="mr-2" />
               Testar webhook
-            </button>
+            </Button>
           </div>
         </div>
       </section>
@@ -104,27 +101,27 @@ export default function WebhookDetailPage() {
       <div className="app-surface p-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <label className="text-sm font-semibold text-neutral-700">URL</label>
-            <p className="mt-1 text-neutral-900">{webhook.url}</p>
+            <label className="text-sm font-semibold text-[color:var(--text-secondary)]">URL</label>
+            <p className="mt-1 text-[color:var(--text-strong)]">{webhook.url}</p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-neutral-700">API Key (Últimos 4 caracteres)</label>
-            <p className="mt-1 text-neutral-900 font-mono">{webhook.apiKeyPreview}</p>
+            <label className="text-sm font-semibold text-[color:var(--text-secondary)]">API Key (Últimos 4 caracteres)</label>
+            <p className="mt-1 font-mono text-[color:var(--text-strong)]">{webhook.apiKeyPreview}</p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-neutral-700">Status</label>
+            <label className="text-sm font-semibold text-[color:var(--text-secondary)]">Status</label>
             <p className="mt-1">
-              <span className={`px-3 py-1 rounded-full text-sm font-bold ${webhook.enabled
-                  ? 'bg-success-100 text-success-700'
-                  : 'bg-neutral-100 text-neutral-700'
+              <span className={`app-status-pill ${webhook.enabled
+                  ? 'app-status-pill-success'
+                  : 'app-status-pill-neutral'
                 }`}>
                 {webhook.enabled ? 'Ativo' : 'Inativo'}
               </span>
             </p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-neutral-700">Criado em</label>
-            <p className="mt-1 text-neutral-900">
+            <label className="text-sm font-semibold text-[color:var(--text-secondary)]">Criado em</label>
+            <p className="mt-1 text-[color:var(--text-strong)]">
               {new Date(webhook.createdAt).toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: 'short',
@@ -136,7 +133,7 @@ export default function WebhookDetailPage() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">Historico de entregas</h2>
+        <h2 className="font-display text-2xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">Histórico de entregas</h2>
         <DeliveryHistory webhookId={webhook.id} />
       </div>
       {showTestModal && (
@@ -153,7 +150,7 @@ export default function WebhookDetailPage() {
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 backdrop-blur-sm">
           <div className="app-surface w-full max-w-md rounded-[26px] p-6">
-            <h2 className="mb-4 text-xl font-bold tracking-[-0.02em] text-neutral-900">
+            <h2 className="mb-4 font-display text-xl font-bold tracking-[-0.02em] text-[color:var(--text-strong)]">
               Editar webhook
             </h2>
             <WebhookForm

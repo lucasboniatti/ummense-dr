@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { CheckCircle2, CircleX } from 'lucide-react';
 import { integrationService } from '../../services/integration.service';
+import { Button } from '../../components/ui/Button';
 
 export default function IntegrationCallbackPage() {
   const router = useRouter();
@@ -99,9 +100,9 @@ export default function IntegrationCallbackPage() {
         {status === 'loading' && (
           <>
             <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
-            <p className="app-kicker">Integracao</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-[-0.03em] text-neutral-900">Processando...</h1>
-            <p className="mt-2 text-neutral-600">{message}</p>
+            <p className="app-kicker">Integração</p>
+            <h1 className="font-display mt-2 text-2xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">Processando...</h1>
+            <p className="mt-2 text-[color:var(--text-secondary)]">{message}</p>
           </>
         )}
 
@@ -110,10 +111,10 @@ export default function IntegrationCallbackPage() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success-100 text-success-700">
               <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
             </div>
-            <p className="app-kicker">Integracao</p>
+            <p className="app-kicker">Integração</p>
             <h1 className="mb-2 mt-2 text-2xl font-bold tracking-[-0.03em] text-success-600">Sucesso</h1>
-            <p className="mb-4 text-neutral-600">{message}</p>
-            <p className="text-sm text-neutral-500">Redirecionando para integrações...</p>
+            <p className="mb-4 text-[color:var(--text-secondary)]">{message}</p>
+            <p className="text-sm text-[color:var(--text-muted)]">Redirecionando para integrações...</p>
           </>
         )}
 
@@ -122,15 +123,16 @@ export default function IntegrationCallbackPage() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-error-100 text-error-700">
               <CircleX className="h-8 w-8" aria-hidden="true" />
             </div>
-            <p className="app-kicker">Integracao</p>
+            <p className="app-kicker">Integração</p>
             <h1 className="mb-2 mt-2 text-2xl font-bold tracking-[-0.03em] text-error-600">Erro</h1>
-            <p className="mb-6 text-neutral-600">{message}</p>
-            <button
+            <p className="mb-6 text-[color:var(--text-secondary)]">{message}</p>
+            <Button
               onClick={() => router.push('/dashboard/integrations')}
-              className="app-control h-11 w-full rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+              variant="primary"
+              className="w-full"
             >
               Voltar para Integrações
-            </button>
+            </Button>
           </>
         )}
       </div>

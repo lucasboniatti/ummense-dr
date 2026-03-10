@@ -12,8 +12,13 @@ export function LoginPage() {
     <div className="app-auth-shell">
       <div className="app-auth-card animate-fade-up">
         <div className="app-auth-brand">
-          <h1>Tasks Flow</h1>
-          <p>Entre no workspace e gerencie suas tarefas com eficiência.</p>
+          <span className="app-kicker">Tasks Flow</span>
+          <h1>Entre no seu workspace.</h1>
+          <p>Centralize rotinas, webhooks e automações com uma interface mais clara e vendável.</p>
+          <div className="app-auth-meta">
+            <span className="app-auth-pill">Operação central</span>
+            <span className="app-auth-pill">UX tokenizada</span>
+          </div>
         </div>
         <LoginForm onSuccess={handleSuccess} />
       </div>

@@ -1,4 +1,5 @@
 import type { AppProps } from 'next/app';
+import { Public_Sans } from 'next/font/google';
 import { useRouter } from 'next/router';
 import AppShell from '../components/layout/AppShell';
 import { AuthProvider } from '../contexts/AuthContext';
@@ -8,6 +9,13 @@ import { ToastProvider } from '../contexts/ToastContext';
 import { ToastContainer } from '../components/ui/ToastContainer';
 import '../styles/animations.css';
 import '../styles/globals.css';
+
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-public-sans',
+  display: 'swap',
+});
 
 function shouldUseShell(pathname: string): boolean {
   if (pathname.startsWith('/auth')) {
@@ -22,29 +30,33 @@ export default function App({ Component, pageProps }: AppProps) {
 
   if (!shouldUseShell(router.pathname)) {
     return (
-      <AuthProvider>
-        <ToastProvider>
-          <ErrorBoundary>
-            <Component {...pageProps} />
-          </ErrorBoundary>
-          <ToastContainer />
-        </ToastProvider>
-      </AuthProvider>
+      <div className={publicSans.variable}>
+        <AuthProvider>
+          <ToastProvider>
+            <ErrorBoundary>
+              <Component {...pageProps} />
+            </ErrorBoundary>
+            <ToastContainer />
+          </ToastProvider>
+        </AuthProvider>
+      </div>
     );
   }
 
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <ErrorBoundary>
-          <AuthGuard>
-            <AppShell>
-              <Component {...pageProps} />
-            </AppShell>
-          </AuthGuard>
-        </ErrorBoundary>
-        <ToastContainer />
-      </ToastProvider>
-    </AuthProvider>
+    <div className={publicSans.variable}>
+      <AuthProvider>
+        <ToastProvider>
+          <ErrorBoundary>
+            <AuthGuard>
+              <AppShell>
+                <Component {...pageProps} />
+              </AppShell>
+            </AuthGuard>
+          </ErrorBoundary>
+          <ToastContainer />
+        </ToastProvider>
+      </AuthProvider>
+    </div>
   );
 }

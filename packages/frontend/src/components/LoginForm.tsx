@@ -55,9 +55,9 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md mx-auto space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">Entrar</h2>
-        <p className="text-sm leading-6 text-neutral-500">
-          Use seu e-mail e senha para abrir o painel central da operacao.
+        <h2 className="font-display text-2xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">Entrar</h2>
+        <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
+          Use seu e-mail e senha para abrir o painel central da operação.
         </p>
       </div>
 
@@ -98,13 +98,13 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
       <div className="mt-4 text-center">
         <Link
           href="/auth/forgot-password"
-          className="block text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="app-link block text-sm"
         >
           Esqueci minha senha
         </Link>
         <Link
           href="/auth/signup"
-          className="mt-3 block text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="app-link mt-3 block text-sm"
         >
           Não tem uma conta? Criar conta
         </Link>
