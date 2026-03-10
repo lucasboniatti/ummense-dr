@@ -4,7 +4,7 @@ import { getRequiredEnvVar } from '../config/env';
 
 export interface AuthRequest extends Request {
   user?: {
-    id: string | number;
+    id?: string | number;
     email?: string;
     [key: string]: unknown;
   };
