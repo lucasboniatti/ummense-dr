@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: [['list']],
   webServer: {
     command:
-      'PORT=3012 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3001 npm run dev --workspace @ummense/frontend',
+      'PORT=3012 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3001 npm run dev --workspace @tasksflow/frontend',
     url: 'http://127.0.0.1:3012',
     reuseExistingServer: false,
     timeout: 120_000,

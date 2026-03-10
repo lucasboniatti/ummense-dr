@@ -10,7 +10,7 @@
     "dev": "npm run dev:split",
     "dev:split": "node -e \"console.log('Split-run strategy: run npm run dev:backend and npm run dev:frontend in separate terminals.')\"",
     "dev:backend": "npm run env:check:backend && npm run dev --workspace @ummense/backend",
-    "dev:frontend": "npm run env:check:frontend && npm run dev --workspace @ummense/frontend",
+    "dev:frontend": "npm run env:check:frontend && npm run dev --workspace @tasksflow/frontend",
     "infra:up": "bash ./scripts/local-infra.sh up",
     "infra:down": "bash ./scripts/local-infra.sh down",
     "infra:reset": "bash ./scripts/local-infra.sh reset",
