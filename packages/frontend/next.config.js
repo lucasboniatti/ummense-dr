@@ -2,7 +2,8 @@ const path = require('path');
 
 const nextConfig = {
   reactStrictMode: true,
-  outputFileTracingRoot: path.join(__dirname, '../..'),
+  // Only set outputFileTracingRoot in local development (not on Vercel)
+  ...(process.env.VERCEL ? {} : { outputFileTracingRoot: path.join(__dirname, '../..') }),
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
 
   // Bundle optimization
