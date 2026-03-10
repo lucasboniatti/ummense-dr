@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { type WebhookFormData, webhookSchema } from '@/schemas';
 import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
-
-interface WebhookFormData {
-  url: string;
-  description?: string;
-  enabled: boolean;
-}
+import { CheckboxField } from './ui/Checkbox';
 
 interface WebhookFormProps {
   onSubmit: (webhook: WebhookFormData) => Promise<void>;
@@ -15,78 +13,74 @@ interface WebhookFormProps {
 }
 
 export function WebhookForm({ onSubmit, onCancel, initialData }: WebhookFormProps) {
-  const [formData, setFormData] = useState<WebhookFormData>(
-    initialData || { url: '', description: '', enabled: true }
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    control,
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<WebhookFormData>({
+    resolver: zodResolver(webhookSchema),
+    mode: 'onBlur',
+    defaultValues: initialData || { url: '', description: '', enabled: true },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    // Basic URL validation
+  const handleFormSubmit = async (data: WebhookFormData) => {
     try {
-      new URL(formData.url);
-    } catch {
-      setError('A URL deve ter um formato válido (ex: https://dominio.com/webhook)');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await onSubmit(formData);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
+      await onSubmit(data);
+    } catch (error) {
+      setError('root', {
+        message: error instanceof Error ? error.message : 'Falha ao salvar o webhook.',
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      {errors.root && (
+        <div className="app-inline-banner app-inline-banner-error" role="alert">
+          <strong>Webhook</strong>
+          {errors.root.message}
         </div>
       )}
 
       <FormInput
-        label="URL do Webhook *"
+        label="URL do webhook"
         type="url"
-        value={formData.url}
-        onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
         placeholder="https://api.empresa.com/webhooks"
         required
+        error={errors.url?.message}
+        {...register('url')}
       />
 
       <FormInput
         label="Descrição"
         type="text"
-        value={formData.description || ''}
-        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
         placeholder="Para que serve este webhook?"
+        error={errors.description?.message}
+        {...register('description')}
       />
 
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="enabled"
-          checked={formData.enabled}
-          onChange={(e) => setFormData(prev => ({ ...prev, enabled: e.target.checked }))}
-          className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600"
-        />
-        <label htmlFor="enabled" className="text-sm font-medium text-neutral-900">
-          Webhook Ativo
-        </label>
-      </div>
+      <Controller
+        name="enabled"
+        control={control}
+        render={({ field }) => (
+          <CheckboxField
+            checked={field.value}
+            onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+            label="Webhook ativo"
+            hint="Mantém o endpoint habilitado para novos disparos."
+            error={errors.enabled?.message}
+          />
+        )}
+      />
 
-      <div className="flex gap-3 pt-4 border-t border-neutral-100 justify-end">
-        <Button variant="ghost" onClick={onCancel} type="button" disabled={loading}>
+      <div className="flex justify-end gap-3 border-t border-[color:var(--border-subtle)] pt-4">
+        <Button variant="ghost" onClick={onCancel} type="button" disabled={isSubmitting}>
           Cancelar
         </Button>
-        <Button variant="primary" type="submit" disabled={loading}>
-          {loading ? 'Salvando...' : 'Salvar'}
+        <Button variant="primary" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Salvando...' : 'Salvar'}
         </Button>
       </div>
     </form>

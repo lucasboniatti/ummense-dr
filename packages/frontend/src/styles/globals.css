@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    --font-sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
     --app-canvas: #eef4fb;
     --surface-panel: rgba(255, 255, 255, 0.92);
     --surface-raised: rgba(255, 255, 255, 0.98);
@@ -19,6 +20,9 @@
     --shadow-soft: 0 24px 48px -34px rgba(15, 23, 42, 0.32);
     --shadow-shell: 0 30px 60px -38px rgba(15, 23, 42, 0.4);
     --shadow-floating: 0 20px 38px -28px rgba(15, 23, 42, 0.36);
+    --motion-fast: 150ms;
+    --motion-normal: 250ms;
+    --motion-slow: 400ms;
     --radius-panel: 24px;
     --radius-control: 14px;
     --radius-chip: 999px;
@@ -62,13 +66,12 @@ body {
     radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 28%),
     linear-gradient(180deg, #f8fbff 0%, var(--app-canvas) 100%);
   color: var(--text-strong);
-  font-family:
-    "Avenir Next",
-    Avenir,
-    "Segoe UI",
-    sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color var(--motion-normal) ease,
+    color var(--motion-normal) ease;
 }
 
 /* Dark theme body background */
@@ -90,35 +93,38 @@ a {
     border-radius: var(--radius-panel);
     box-shadow: var(--shadow-soft);
     backdrop-filter: blur(18px);
+    color: var(--text-strong);
   }
 
   .app-surface-muted {
-    border: 1px solid rgba(191, 204, 223, 0.9);
+    border: 1px solid var(--border-subtle);
     background: var(--surface-muted);
     border-radius: calc(var(--radius-panel) - 6px);
+    color: var(--text-strong);
   }
 
   .app-toolbar {
-    border: 1px solid rgba(191, 204, 223, 0.72);
-    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid var(--border-subtle);
+    background: color-mix(in srgb, var(--surface-raised) 82%, transparent);
     border-radius: calc(var(--radius-panel) - 6px);
-    box-shadow: 0 18px 34px -28px rgba(15, 23, 42, 0.3);
+    box-shadow: var(--shadow-floating);
     backdrop-filter: blur(18px);
+    color: var(--text-strong);
   }
 
   .app-control {
     border: 1px solid var(--border-subtle);
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--surface-raised);
     color: var(--text-strong);
     border-radius: var(--radius-control);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.92),
-      0 1px 2px rgba(15, 23, 42, 0.06);
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      0 1px 2px rgba(15, 23, 42, 0.12);
     transition:
-      border-color 0.18s ease,
-      box-shadow 0.18s ease,
-      background-color 0.18s ease,
-      color 0.18s ease;
+      border-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease,
+      background-color var(--motion-fast) ease,
+      color var(--motion-fast) ease;
   }
 
   .app-control:hover {
@@ -139,7 +145,7 @@ a {
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: #64748b;
+    color: var(--text-muted);
   }
 
   .app-sidebar-link {
@@ -152,25 +158,25 @@ a {
     padding: 0.625rem 0.875rem;
     font-size: 0.92rem;
     font-weight: 600;
-    color: #4b5b70;
+    color: var(--text-muted);
     transition:
-      background-color 0.18s ease,
-      box-shadow 0.18s ease,
-      color 0.18s ease,
-      transform 0.18s ease;
+      background-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease,
+      color var(--motion-fast) ease,
+      transform var(--motion-fast) ease;
   }
 
   .app-sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.74);
+    background: color-mix(in srgb, var(--surface-muted) 84%, transparent);
     color: var(--text-strong);
   }
 
   .app-sidebar-link-active {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(255, 255, 255, 0.92));
+    background: linear-gradient(135deg, var(--accent-soft), color-mix(in srgb, var(--surface-raised) 88%, transparent));
     color: var(--accent-strong);
     box-shadow:
-      inset 0 0 0 1px rgba(37, 99, 235, 0.14),
-      0 16px 28px -24px rgba(37, 99, 235, 0.58);
+      inset 0 0 0 1px color-mix(in srgb, var(--accent-strong) 18%, transparent),
+      0 16px 28px -24px color-mix(in srgb, var(--accent-strong) 48%, transparent);
   }
 
   .app-sidebar-link-indicator {
@@ -187,18 +193,23 @@ a {
     align-items: center;
     justify-content: center;
     border-radius: 12px;
-    background: rgba(226, 232, 240, 0.72);
-    color: #64748b;
+    background: color-mix(in srgb, var(--surface-muted) 92%, transparent);
+    color: var(--text-muted);
     transition:
-      background-color 0.18s ease,
-      color 0.18s ease,
-      box-shadow 0.18s ease;
+      background-color var(--motion-fast) ease,
+      color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease;
+  }
+
+  .app-sidebar-link:hover .app-sidebar-icon {
+    background: var(--surface-emphasis);
+    color: var(--text-strong);
   }
 
   .app-sidebar-link-active .app-sidebar-icon {
-    background: rgba(37, 99, 235, 0.12);
+    background: var(--accent-soft);
     color: var(--accent-strong);
-    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-strong) 16%, transparent);
   }
 
   .app-page {
@@ -208,9 +219,9 @@ a {
   }
 
   .app-page-hero {
-    border: 1px solid rgba(191, 204, 223, 0.78);
+    border: 1px solid var(--border-subtle);
     background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.9)),
+      linear-gradient(135deg, color-mix(in srgb, var(--surface-raised) 98%, transparent), color-mix(in srgb, var(--surface-emphasis) 90%, transparent)),
       var(--surface-panel);
     border-radius: var(--radius-panel);
     box-shadow: var(--shadow-soft);

@@ -3,13 +3,24 @@
  * Story 3.2: Webhook Reliability & Retry Logic
  */
 
-import React, { useState, useEffect } from 'react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './composite/Table';
-import { Button } from './ui/Button';
-import { Badge } from './ui/Badge';
-import { PageLoader, EmptyState } from './ui';
+import React, { useEffect, useState } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './composite/Table';
+import {
+  Button,
+  Checkbox,
+  ConfirmDialog,
+  EmptyState,
+  ErrorBanner,
+  Input,
+  PageLoader,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui';
 import { MailX } from 'lucide-react';
-import { DLQService, DLQItem, DLQQueryResult } from '../services/dlq.service';
+import { DLQService, DLQItem } from '../services/dlq.service';
 
 interface DLQTableProps {
   automationId: string;
@@ -22,7 +33,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
   automationId,
   onRetry,
   onClear,
-  onSelectItem
+  onSelectItem,
 }) => {
   const [items, setItems] = useState<DLQItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,13 +46,21 @@ export const DLQTable: React.FC<DLQTableProps> = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterError, setFilterError] = useState('');
   const [filterUrl, setFilterUrl] = useState('');
+  const [clearConfirm, setClearConfirm] = useState<{
+    open: boolean;
+    ids: string[];
+    label: string;
+  }>({
+    open: false,
+    ids: [],
+    label: '',
+  });
 
   const dlqService = new DLQService();
   const PAGE_SIZE = 20;
 
-  // Fetch DLQ items
   useEffect(() => {
-    fetchItems();
+    void fetchItems();
   }, [page, sortBy, sortOrder, filterError, filterUrl]);
 
   const fetchItems = async () => {
@@ -53,13 +72,13 @@ export const DLQTable: React.FC<DLQTableProps> = ({
         automationId,
         {
           webhookUrl: filterUrl || undefined,
-          errorContains: filterError || undefined
+          errorContains: filterError || undefined,
         },
         {
           page,
           limit: PAGE_SIZE,
           sortBy,
-          sortOrder
+          sortOrder,
         }
       );
 
@@ -67,8 +86,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       setTotal(result.total);
       setHasMore(result.hasMore);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Falha ao carregar itens da DLQ';
-      setError(message);
+      setError(err instanceof Error ? err.message : 'Falha ao carregar itens da DLQ');
     } finally {
       setLoading(false);
     }
@@ -81,29 +99,16 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       onRetry?.(dlqItemId);
       await fetchItems();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Falha ao tentar novamente';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClear = async (dlqItemId: string) => {
-    try {
-      setLoading(true);
-      await dlqService.clearDLQItem(automationId, dlqItemId);
-      onClear?.(dlqItemId);
-      await fetchItems();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Falha ao limpar';
-      setError(message);
+      setError(err instanceof Error ? err.message : 'Falha ao tentar novamente');
     } finally {
       setLoading(false);
     }
   };
 
   const handleBatchRetry = async () => {
-    if (selectedItems.size === 0) return;
+    if (selectedItems.size === 0) {
+      return;
+    }
 
     try {
       setLoading(true);
@@ -114,53 +119,65 @@ export const DLQTable: React.FC<DLQTableProps> = ({
       setSelectedItems(new Set());
       await fetchItems();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Falha no retry em lote';
-      setError(message);
+      setError(err instanceof Error ? err.message : 'Falha no retry em lote');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBatchClear = async () => {
-    if (selectedItems.size === 0) return;
+  const handleClearConfirmed = async () => {
+    const ids = clearConfirm.ids;
+    if (ids.length === 0) {
+      return;
+    }
 
     try {
       setLoading(true);
-      const result = await dlqService.batchClearDLQ(automationId, Array.from(selectedItems));
-      if (result.summary.failed > 0) {
-        setError(`Clear failed for ${result.summary.failed} items`);
+
+      if (ids.length === 1) {
+        await dlqService.clearDLQItem(automationId, ids[0]);
+        onClear?.(ids[0]);
+      } else {
+        const result = await dlqService.batchClearDLQ(automationId, ids);
+        if (result.summary.failed > 0) {
+          setError(`Clear failed for ${result.summary.failed} items`);
+        }
       }
+
       setSelectedItems(new Set());
+      setClearConfirm({ open: false, ids: [], label: '' });
       await fetchItems();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Falha na limpeza em lote';
-      setError(message);
+      setError(err instanceof Error ? err.message : 'Falha na limpeza da DLQ');
     } finally {
       setLoading(false);
     }
   };
 
+  const requestClear = (ids: string[], label: string) => {
+    setClearConfirm({ open: true, ids, label });
+  };
+
   const toggleItem = (dlqItemId: string) => {
-    const newSelected = new Set(selectedItems);
-    if (newSelected.has(dlqItemId)) {
-      newSelected.delete(dlqItemId);
+    const nextSelected = new Set(selectedItems);
+    if (nextSelected.has(dlqItemId)) {
+      nextSelected.delete(dlqItemId);
     } else {
-      newSelected.add(dlqItemId);
+      nextSelected.add(dlqItemId);
     }
-    setSelectedItems(newSelected);
+    setSelectedItems(nextSelected);
   };
 
   const toggleAllItems = () => {
     if (selectedItems.size === items.length) {
       setSelectedItems(new Set());
-    } else {
-      setSelectedItems(new Set(items.map((item) => item.id)));
+      return;
     }
+
+    setSelectedItems(new Set(items.map((item) => item.id)));
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleString('pt-BR');
 
   const formatUrl = (url: string) => {
     try {
@@ -171,139 +188,146 @@ export const DLQTable: React.FC<DLQTableProps> = ({
     }
   };
 
-  const truncateError = (error: string, maxLength: number = 100) => {
-    return error.length > maxLength ? error.substring(0, maxLength) + '...' : error;
-  };
+  const truncateError = (message: string, maxLength: number = 100) =>
+    message.length > maxLength ? `${message.substring(0, maxLength)}...` : message;
 
   return (
     <div className="space-y-4">
-      {/* Error Message */}
       {error && (
-        <div className="p-3 bg-error-100 border border-error-400 text-error-700 rounded-md text-sm flex justify-between items-center" role="alert">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-error-700 hover:text-error-900 font-semibold">
-            ×
-          </button>
-        </div>
+        <ErrorBanner
+          title="Falha na DLQ"
+          message={error}
+          actionLabel="Dispensar"
+          onAction={() => setError(null)}
+        />
       )}
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-neutral-50 p-4 rounded-lg">
+      <div className="app-surface-muted grid grid-cols-1 gap-3 rounded-[20px] p-4 md:grid-cols-4">
         <div>
-          <label htmlFor="filter-url" className="block text-sm font-semibold text-neutral-700 mb-1">Webhook URL</label>
-          <input
+          <label htmlFor="filter-url" className="mb-1 block text-sm font-semibold text-neutral-700">
+            Webhook URL
+          </label>
+          <Input
             id="filter-url"
             type="text"
             placeholder="Filtrar por URL..."
             value={filterUrl}
-            onChange={(e) => {
-              setFilterUrl(e.target.value);
+            onChange={(event) => {
+              setFilterUrl(event.target.value);
               setPage(1);
             }}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
 
         <div>
-          <label htmlFor="filter-error" className="block text-sm font-semibold text-neutral-700 mb-1">Mensagem de Erro</label>
-          <input
+          <label htmlFor="filter-error" className="mb-1 block text-sm font-semibold text-neutral-700">
+            Mensagem de erro
+          </label>
+          <Input
             id="filter-error"
             type="text"
             placeholder="Filtrar por erro..."
             value={filterError}
-            onChange={(e) => {
-              setFilterError(e.target.value);
+            onChange={(event) => {
+              setFilterError(event.target.value);
               setPage(1);
             }}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
 
         <div>
-          <label htmlFor="sort-by" className="block text-sm font-semibold text-neutral-700 mb-1">Ordenar Por</label>
-          <select
-            id="sort-by"
+          <label className="mb-1 block text-sm font-semibold text-neutral-700">Ordenar por</label>
+          <Select
             value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value as 'createdAt' | 'lastErrorAt');
+            onValueChange={(value) => {
+              setSortBy(value as 'createdAt' | 'lastErrorAt');
               setPage(1);
             }}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="createdAt">Data de Criação</option>
-            <option value="lastErrorAt">Último Erro</option>
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um campo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt">Data de criação</SelectItem>
+              <SelectItem value="lastErrorAt">Último erro</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
-          <label htmlFor="sort-order" className="block text-sm font-semibold text-neutral-700 mb-1">Ordem</label>
-          <select
-            id="sort-order"
+          <label className="mb-1 block text-sm font-semibold text-neutral-700">Ordem</label>
+          <Select
             value={sortOrder}
-            onChange={(e) => {
-              setSortOrder(e.target.value as 'asc' | 'desc');
+            onValueChange={(value) => {
+              setSortOrder(value as 'asc' | 'desc');
               setPage(1);
             }}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="desc">Mais Recentes</option>
-            <option value="asc">Mais Antigos</option>
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a ordem" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Mais recentes</SelectItem>
+              <SelectItem value="asc">Mais antigos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Batch Actions */}
       {selectedItems.size > 0 && (
-        <div className="flex items-center gap-3 p-3 bg-primary-50 border border-primary-200 rounded-lg">
-          <span className="font-semibold text-primary-900 flex-1">{selectedItems.size} itens selecionados</span>
-          <Button
-            size="sm"
-            onClick={handleBatchRetry}
-            disabled={loading}
-            variant="primary"
-          >
-            Tentar Novamente ({selectedItems.size})
+        <div className="flex items-center gap-3 rounded-lg border border-primary-200 bg-primary-50 p-3">
+          <span className="flex-1 font-semibold text-primary-900">
+            {selectedItems.size} itens selecionados
+          </span>
+          <Button size="sm" onClick={handleBatchRetry} disabled={loading} variant="primary">
+            Tentar novamente ({selectedItems.size})
           </Button>
           <Button
             size="sm"
-            onClick={handleBatchClear}
+            onClick={() =>
+              requestClear(
+                Array.from(selectedItems),
+                `${selectedItems.size} item(ns) serão removidos da DLQ.`
+              )
+            }
             disabled={loading}
-            variant="secondary"
+            variant="destructive"
           >
             Limpar ({selectedItems.size})
           </Button>
         </div>
       )}
 
-      {/* Table */}
       {loading && items.length === 0 ? (
         <PageLoader message="Carregando itens da DLQ..." />
       ) : items.length === 0 ? (
         <EmptyState
           icon={<MailX size={48} />}
           title="Nenhum item na DLQ"
-          description={total === 0 ? "Todos os webhooks foram entregues com sucesso!" : "Nenhum resultado encontrado para os filtros atuais."}
+          description={
+            total === 0
+              ? 'Todos os webhooks foram entregues com sucesso!'
+              : 'Nenhum resultado encontrado para os filtros atuais.'
+          }
           variant="default"
         />
       ) : (
-        <div className="border border-neutral-200 rounded-lg overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-neutral-200">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selectedItems.size === items.length && items.length > 0}
-                    onChange={toggleAllItems}
-                    aria-label="Select all items"
-                    className="cursor-pointer"
+                    onCheckedChange={toggleAllItems}
+                    aria-label="Selecionar todos os itens"
                   />
                 </TableHead>
-                <TableHead>URL Webhook</TableHead>
+                <TableHead>URL webhook</TableHead>
                 <TableHead>Erro</TableHead>
                 <TableHead className="text-center">Tentativas</TableHead>
                 <TableHead>Criado em</TableHead>
-                <TableHead>Último Erro</TableHead>
+                <TableHead>Último erro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -311,40 +335,45 @@ export const DLQTable: React.FC<DLQTableProps> = ({
               {items.map((item) => (
                 <TableRow key={item.id} className={selectedItems.has(item.id) ? 'bg-primary-50' : ''}>
                   <TableCell>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selectedItems.has(item.id)}
-                      onChange={() => toggleItem(item.id)}
-                      aria-label={`Select ${item.id}`}
-                      className="cursor-pointer"
+                      onCheckedChange={() => toggleItem(item.id)}
+                      aria-label={`Selecionar ${item.id}`}
                     />
                   </TableCell>
                   <TableCell
-                    className="font-mono text-sm max-w-xs truncate cursor-pointer text-primary-600 hover:underline"
+                    className="max-w-xs cursor-pointer truncate font-mono text-sm text-primary-600 hover:underline"
                     onClick={() => onSelectItem?.(item)}
                     title={item.webhookUrl}
                   >
                     {formatUrl(item.webhookUrl)}
                   </TableCell>
-                  <TableCell className="text-sm font-mono text-error-600 max-w-xs truncate" title={item.lastError}>
+                  <TableCell className="max-w-xs truncate font-mono text-sm text-error-600" title={item.lastError}>
                     {truncateError(item.lastError, 80)}
                   </TableCell>
-                  <TableCell className="text-center font-semibold text-warning-600">{item.retryCount}</TableCell>
+                  <TableCell className="text-center font-semibold text-warning-600">
+                    {item.retryCount}
+                  </TableCell>
                   <TableCell className="text-xs text-neutral-600">{formatDate(item.createdAt)}</TableCell>
                   <TableCell className="text-xs text-neutral-600">{formatDate(item.lastErrorAt)}</TableCell>
-                  <TableCell className="text-right space-x-1">
+                  <TableCell className="space-x-1 text-right">
                     <Button
                       size="sm"
                       onClick={() => handleRetry(item.id)}
                       disabled={loading}
                       title="Tentar entregar webhook novamente"
                     >
-                      Tentar Novamente
+                      Tentar novamente
                     </Button>
                     <Button
                       size="sm"
-                      variant="secondary"
-                      onClick={() => handleClear(item.id)}
+                      variant="destructive"
+                      onClick={() =>
+                        requestClear(
+                          [item.id],
+                          `O item ${formatUrl(item.webhookUrl)} será removido da DLQ.`
+                        )
+                      }
                       disabled={loading}
                       title="Limpar da DLQ"
                     >
@@ -366,9 +395,8 @@ export const DLQTable: React.FC<DLQTableProps> = ({
         </div>
       )}
 
-      {/* Pagination */}
       {total > PAGE_SIZE && (
-        <div className="flex justify-center items-center gap-3 mt-4">
+        <div className="mt-4 flex items-center justify-center gap-3">
           <Button
             size="sm"
             variant="outline"
@@ -377,7 +405,7 @@ export const DLQTable: React.FC<DLQTableProps> = ({
           >
             Anterior
           </Button>
-          <span className="text-sm text-neutral-600 min-w-48 text-center">
+          <span className="min-w-48 text-center text-sm text-neutral-600">
             Página {page} de {Math.ceil(total / PAGE_SIZE)} ({total} total)
           </span>
           <Button
@@ -390,6 +418,18 @@ export const DLQTable: React.FC<DLQTableProps> = ({
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={clearConfirm.open}
+        onOpenChange={(open) => setClearConfirm((previous) => ({ ...previous, open }))}
+        title={clearConfirm.ids.length > 1 ? 'Limpar itens da DLQ' : 'Limpar item da DLQ'}
+        description={clearConfirm.label}
+        confirmLabel={clearConfirm.ids.length > 1 ? 'Limpar itens' : 'Limpar item'}
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={loading}
+        onConfirm={handleClearConfirmed}
+      />
     </div>
   );
 };

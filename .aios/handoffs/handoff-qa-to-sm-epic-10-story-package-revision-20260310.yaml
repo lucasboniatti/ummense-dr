@@ -1,0 +1,30 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-10T01:11:27Z"
+  from_agent: "qa"
+  to_agent: "sm"
+  consumed: false
+
+  story_context:
+    story_id: "EPIC-10-UX-DESIGN-SYSTEM-EXCELLENCE"
+    story_path: "docs/prd/epic-10-ux-design-system-excellence.md"
+    story_status: "Needs Revision Before PM Review"
+    current_task: "SM must revise story drafts 10.1-10.20 using QA findings"
+    branch: "master"
+
+  decisions:
+    - "QA spec review decision is FAIL for the current Epic 10 story package."
+    - "Story 10.10 still treats ConfirmDialog as a net-new asset even though the component and imperative hook already exist."
+    - "Story 10.3 assumes a new token-generation pipeline without proving migration strategy or dependency availability."
+    - "Story 10.14 leaves backend search expansion insufficiently bounded."
+    - "Story 10.20 is not aligned with the repository quality contract because it omits build and references a non-existent test:e2e command."
+    - "The package remains below the self-containment and governance level of the Epic 8 story set."
+
+  files_modified:
+    - "docs/qa/gates/epic-10-story-package-qa-review.md"
+    - ".aios/handoffs/handoff-qa-to-sm-epic-10-story-package-revision-20260310.yaml"
+
+  blockers:
+    - "Do not hand off Epic 10 to PM or dev until the story package is revised and re-reviewed by QA."
+
+  next_action: "Revise stories 10.1-10.20 to reflect the current codebase, real dependencies, and real quality gates, then return the package to QA for a second-pass specification review."

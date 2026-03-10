@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { EmptyState } from '../ui/EmptyState';
 import { Button } from '../ui/Button';
+import { SkeletonList } from '../ui/Skeleton';
 
 export interface TaskTag {
   id: number;
@@ -184,18 +185,7 @@ export default function TasksPanel({
       )}
 
       {loading && (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div
-              key={index}
-              className="animate-pulse rounded-[20px] border border-neutral-200 bg-white/80 p-4"
-            >
-              <div className="mb-3 h-4 w-3/5 rounded bg-neutral-200" />
-              <div className="mb-2 h-3 w-2/5 rounded bg-neutral-100" />
-              <div className="h-2 w-full rounded bg-neutral-100" />
-            </div>
-          ))}
-        </div>
+        <SkeletonList items={4} />
       )}
 
       {!loading && error && (

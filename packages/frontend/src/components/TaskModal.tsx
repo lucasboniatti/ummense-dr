@@ -3,7 +3,15 @@ import { CalendarDays, Clock3, Tag as TagIcon, Trash2, UserRound, X } from 'luci
 import { FlowTag } from '../services/flows.service';
 import { TaskHistoryItem, TaskItem, TaskTag, tasksService } from '../services/tasks.service';
 import { Button } from './ui/Button';
+import { ConfirmDialog } from './ui/ConfirmDialog';
 import { Input } from './ui/Input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/Select';
 import { useToast } from '@/contexts/ToastContext';
 
 interface TaskModalProps {
@@ -103,6 +111,7 @@ export default function TaskModal({
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [taskTags, setTaskTags] = useState<TaskTag[]>([]);
   const [selectedTagId, setSelectedTagId] = useState('');
@@ -118,6 +127,7 @@ export default function TaskModal({
     setError(null);
     setTaskTags([]);
     setSelectedTagId('');
+    setShowDeleteConfirm(false);
   }, [task, open]);
 
   useEffect(() => {
@@ -399,18 +409,21 @@ export default function TaskModal({
                   >
                     Prioridade
                   </label>
-                  <select
-                    id={`${fieldIdPrefix}-priority`}
+                  <Select
                     value={form.priority}
-                    onChange={(event) =>
-                      setForm((previous) => ({ ...previous, priority: event.target.value }))
+                    onValueChange={(priority) =>
+                      setForm((previous) => ({ ...previous, priority }))
                     }
-                    className="app-control h-11 w-full bg-white px-3.5 text-sm text-neutral-900"
                   >
-                    <option value="P1">P1</option>
-                    <option value="P2">P2</option>
-                    <option value="P3">P3</option>
-                  </select>
+                    <SelectTrigger id={`${fieldIdPrefix}-priority`}>
+                      <SelectValue placeholder="Selecione uma prioridade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="P1">P1 · Alta</SelectItem>
+                      <SelectItem value="P2">P2 · Média</SelectItem>
+                      <SelectItem value="P3">P3 · Baixa</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -420,20 +433,23 @@ export default function TaskModal({
                   >
                     Status
                   </label>
-                  <select
-                    id={`${fieldIdPrefix}-status`}
+                  <Select
                     value={form.status}
-                    onChange={(event) =>
-                      setForm((previous) => ({ ...previous, status: event.target.value }))
+                    onValueChange={(status) =>
+                      setForm((previous) => ({ ...previous, status }))
                     }
-                    className="app-control h-11 w-full bg-white px-3.5 text-sm text-neutral-900"
                   >
-                    <option value="open">Aberta</option>
-                    <option value="todo">A iniciar</option>
-                    <option value="in_progress">Em andamento</option>
-                    <option value="completed">Concluída</option>
-                    <option value="blocked">Bloqueada</option>
-                  </select>
+                    <SelectTrigger id={`${fieldIdPrefix}-status`}>
+                      <SelectValue placeholder="Selecione um status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="open">Aberta</SelectItem>
+                      <SelectItem value="todo">A iniciar</SelectItem>
+                      <SelectItem value="in_progress">Em andamento</SelectItem>
+                      <SelectItem value="completed">Concluída</SelectItem>
+                      <SelectItem value="blocked">Bloqueada</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -524,19 +540,18 @@ export default function TaskModal({
                 <label htmlFor={`${fieldIdPrefix}-tag`} className="sr-only">
                   Selecionar tag
                 </label>
-                <select
-                  id={`${fieldIdPrefix}-tag`}
-                  value={selectedTagId}
-                  onChange={(event) => setSelectedTagId(event.target.value)}
-                  className="app-control h-11 bg-white px-3.5 text-sm text-neutral-900"
-                >
-                  <option value="">Selecionar tag</option>
-                  {availableTags.map((tag) => (
-                    <option key={tag.id} value={tag.id}>
-                      {tag.name}
-                    </option>
-                  ))}
-                </select>
+                <Select value={selectedTagId} onValueChange={setSelectedTagId}>
+                  <SelectTrigger id={`${fieldIdPrefix}-tag`}>
+                    <SelectValue placeholder="Selecionar tag" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTags.map((tag) => (
+                      <SelectItem key={tag.id} value={String(tag.id)}>
+                        {tag.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   type="button"
                   variant="outline"
@@ -558,7 +573,7 @@ export default function TaskModal({
                 <Button
                   type="button"
                   variant="destructive"
-                  onClick={() => void onDelete()}
+                  onClick={() => setShowDeleteConfirm(true)}
                   disabled={deleting}
                   className="h-11"
                 >
@@ -650,6 +665,17 @@ export default function TaskModal({
           </aside>
         </div>
       </div>
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Remover tarefa"
+        description={`Tem certeza que deseja remover a tarefa "${form.title || 'sem título'}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Remover tarefa"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={deleting}
+        onConfirm={onDelete}
+      />
     </div>
   );
 }

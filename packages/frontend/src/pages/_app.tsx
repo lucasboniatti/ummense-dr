@@ -6,6 +6,7 @@ import AuthGuard from '../components/guards/AuthGuard';
 import { ErrorBoundary } from '../components/guards/ErrorBoundary';
 import { ToastProvider } from '../contexts/ToastContext';
 import { ToastContainer } from '../components/ui/ToastContainer';
+import '../styles/animations.css';
 import '../styles/globals.css';
 
 function shouldUseShell(pathname: string): boolean {

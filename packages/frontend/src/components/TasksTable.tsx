@@ -1,4 +1,5 @@
 import React from 'react';
+import { ArrowDown, CheckCircle2 } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './composite/Table';
 import { Badge } from './ui/Badge';
 
@@ -30,7 +31,8 @@ export function TasksTable({ tasks, onSort, sortColumn }: TasksTableProps) {
     }
   };
 
-  const sortIcon = (column: string) => sortColumn === column ? ' ↓' : '';
+  const sortIcon = (column: string) =>
+    sortColumn === column ? <ArrowDown className="h-4 w-4" aria-hidden="true" /> : null;
 
   return (
     <div className="border border-neutral-200 rounded-lg overflow-hidden">
@@ -41,19 +43,28 @@ export function TasksTable({ tasks, onSort, sortColumn }: TasksTableProps) {
               className="cursor-pointer hover:bg-neutral-100"
               onClick={() => onSort?.('title')}
             >
-              Title{sortIcon('title')}
+              <span className="inline-flex items-center gap-1">
+                Titulo
+                {sortIcon('title')}
+              </span>
             </TableHead>
             <TableHead
               className="cursor-pointer hover:bg-neutral-100"
               onClick={() => onSort?.('priority')}
             >
-              Priority{sortIcon('priority')}
+              <span className="inline-flex items-center gap-1">
+                Prioridade
+                {sortIcon('priority')}
+              </span>
             </TableHead>
             <TableHead
               className="cursor-pointer hover:bg-neutral-100"
               onClick={() => onSort?.('dueDate')}
             >
-              Due Date{sortIcon('dueDate')}
+              <span className="inline-flex items-center gap-1">
+                Prazo
+                {sortIcon('dueDate')}
+              </span>
             </TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
@@ -70,7 +81,12 @@ export function TasksTable({ tasks, onSort, sortColumn }: TasksTableProps) {
               <TableCell className="text-sm text-neutral-600">{task.dueDate || '-'}</TableCell>
               <TableCell>
                 <Badge variant={task.status === 'completed' ? 'success' : 'default'}>
-                  {task.status === 'completed' ? '✓ Done' : 'Open'}
+                  <span className="inline-flex items-center gap-1.5">
+                    {task.status === 'completed' && (
+                      <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    {task.status === 'completed' ? 'Concluida' : 'Aberta'}
+                  </span>
                 </Badge>
               </TableCell>
             </TableRow>

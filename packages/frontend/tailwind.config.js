@@ -70,6 +70,7 @@ module.exports = {
           900: '#7f1d1d',
         },
         neutral: {
+          0: '#ffffff',
           50: '#f8fafc',
           100: '#f1f5f9',
           200: '#e2e8f0',
@@ -80,10 +81,25 @@ module.exports = {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
+          950: '#020617',
         },
       },
       fontFamily: {
         sans: ['Avenir Next', 'Segoe UI', 'system-ui', 'sans-serif'],
+      },
+      borderRadius: {
+        control: '14px',
+        panel: '24px',
+        chip: '9999px',
+      },
+      boxShadow: {
+        soft: '0 24px 48px -34px rgba(15, 23, 42, 0.32)',
+        shell: '0 30px 60px -38px rgba(15, 23, 42, 0.4)',
+        floating: '0 20px 38px -28px rgba(15, 23, 42, 0.36)',
+        'elevation-1': 'var(--elevation-1)',
+        'elevation-2': 'var(--elevation-2)',
+        'elevation-3': 'var(--elevation-3)',
+        'elevation-4': 'var(--elevation-4)',
       },
     },
   },

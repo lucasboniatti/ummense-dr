@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
+import { signupSchema, type SignupFormData } from '@/schemas';
 
 interface SignupFormProps {
   onSuccess?: (token: string) => void;
@@ -9,51 +12,49 @@ interface SignupFormProps {
 }
 
 export function SignupForm({ onSuccess, onError }: SignupFormProps) {
-  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', name: '' });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('As senhas nao conferem.');
-      setLoading(false);
-      return;
-    }
-
+  const onSubmit = async (data: SignupFormData) => {
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, password: formData.password, name: formData.name }),
+        body: JSON.stringify({ email: data.email, password: data.password }),
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Falha ao criar conta');
+        const responseData = await response.json();
+        const errorMessage = responseData.error || 'Falha ao criar conta';
+        setError('root', { message: errorMessage });
+        onError?.(errorMessage);
+        return;
       }
 
-      const data = await response.json();
-      onSuccess?.(data.token);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro inesperado ao criar conta';
-      setError(message);
+      const responseData = await response.json();
+      onSuccess?.(responseData.token);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro inesperado ao criar conta';
+      setError('root', { message });
       onError?.(message);
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto w-full max-w-md space-y-6">
       <div className="space-y-2">
         <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">Criar conta</h2>
         <p className="text-sm leading-6 text-neutral-500">
@@ -61,20 +62,40 @@ export function SignupForm({ onSuccess, onError }: SignupFormProps) {
         </p>
       </div>
 
-      <FormInput label="Nome" type="text" name="name" value={formData.name} onChange={handleChange} required />
-      <FormInput label="E-mail" type="email" name="email" value={formData.email} onChange={handleChange} required />
-      <FormInput label="Senha" type="password" name="password" value={formData.password} onChange={handleChange} required />
-      <FormInput label="Confirmar Senha" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
+      <FormInput
+        label="E-mail"
+        type="email"
+        placeholder="seu@email.com"
+        required
+        error={errors.email?.message}
+        {...register('email')}
+      />
+      <FormInput
+        label="Senha"
+        type="password"
+        placeholder="Crie uma senha segura"
+        required
+        error={errors.password?.message}
+        {...register('password')}
+      />
+      <FormInput
+        label="Confirmar senha"
+        type="password"
+        placeholder="Repita sua senha"
+        required
+        error={errors.confirmPassword?.message}
+        {...register('confirmPassword')}
+      />
 
-      {error && (
-        <div className="app-inline-banner app-inline-banner-error">
+      {errors.root && (
+        <div className="app-inline-banner app-inline-banner-error" role="alert">
           <strong>Cadastro</strong>
-          {error}
+          {errors.root.message}
         </div>
       )}
 
-      <Button type="submit" disabled={loading} className="w-full" variant="primary">
-        {loading ? 'Criando conta...' : 'Criar conta'}
+      <Button type="submit" disabled={isSubmitting} className="w-full" variant="primary">
+        {isSubmitting ? 'Criando conta...' : 'Criar conta'}
       </Button>
 
       <div className="mt-4 text-center">

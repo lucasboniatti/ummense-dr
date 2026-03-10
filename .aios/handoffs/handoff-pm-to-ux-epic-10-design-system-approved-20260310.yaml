@@ -1,0 +1,30 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-10T02:48:00-03:00"
+  from_agent: "pm"
+  to_agent: "ux-design-expert"
+  consumed: false
+
+  story_context:
+    story_id: "EPIC-10-UX-DESIGN-SYSTEM-EXCELLENCE"
+    story_path: "docs/prd/epic-10-ux-design-system-excellence.md"
+    story_status: "Approved for UX Specification"
+    current_task: "UX must detail the visual and interaction specification for the approved Epic 10 stories and prepare execution planning"
+    branch: "master"
+
+  decisions:
+    - "PM scope revalidation decision is APPROVED for the revised Epic 10 package."
+    - "Epic 10 remains bounded to UX, design-system, navigation, and product-polish work on the existing frontend."
+    - "Stories 10.1 and 10.3 must lead because they stabilize visible theme controls and token governance."
+    - "Stories that reuse existing assets must preserve the consolidation framing approved in the revised package and must not regress into duplicate implementations."
+    - "Story 10.20 remains reserved for final QA/UAT plus PM GO/NOGO after implementation."
+
+  files_modified:
+    - "docs/prd/epic-10-ux-design-system-excellence.md"
+    - "docs/qa/gates/epic-10-pm-scope-revalidation.md"
+    - ".aios/handoffs/handoff-pm-to-ux-epic-10-design-system-approved-20260310.yaml"
+
+  blockers:
+    - "Do not start implementation before UX details the visual and interaction blueprint for the approved stories."
+
+  next_action: "UX details the approved Epic 10 stories, preserving the validated sequencing, codebase alignment, and final release-gate expectations before handoff to development."

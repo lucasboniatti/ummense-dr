@@ -11,9 +11,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../ui/Logo';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 interface AppSidebarProps {
   isMobileOpen: boolean;
+  isDesktopVisible: boolean;
   onCloseMobile: () => void;
 }
 
@@ -60,7 +62,11 @@ const navItems: NavItem[] = [
   },
 ];
 
-export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarProps) {
+export default function AppSidebar({
+  isMobileOpen,
+  isDesktopVisible,
+  onCloseMobile,
+}: AppSidebarProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
 
@@ -77,8 +83,8 @@ export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarPr
 
       <aside
         className={[
-          'fixed left-0 top-0 z-50 h-screen w-64 border-r border-[color:var(--border-subtle)] bg-[linear-gradient(180deg,rgba(248,251,255,0.96),rgba(238,244,251,0.92))] shadow-[var(--shadow-shell)] backdrop-blur-xl transition-transform duration-200',
-          isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          'fixed left-0 top-0 z-50 h-screen w-64 border-r border-[color:var(--border-subtle)] bg-[linear-gradient(180deg,var(--surface-raised),var(--surface-panel))] shadow-[var(--shadow-shell)] backdrop-blur-xl transition-transform duration-200',
+          isMobileOpen || isDesktopVisible ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
         <div className="flex h-full flex-col">
@@ -87,16 +93,18 @@ export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarPr
               <Logo size="md" />
               <div className="min-w-0">
                 <p className="app-kicker">Tasks Flow</p>
-                <h1 className="truncate text-lg font-bold tracking-[-0.02em] text-neutral-900">
+                <h1 className="truncate text-lg font-bold tracking-[-0.02em] text-[color:var(--text-strong)]">
                   Meu Painel
                 </h1>
-                <p className="mt-1 text-xs font-medium text-neutral-500">Gestão de tarefas</p>
+                <p className="mt-1 text-xs font-medium text-[color:var(--text-muted)]">
+                  Gestao de tarefas
+                </p>
               </div>
             </div>
             <button
               type="button"
               aria-label="Fechar menu lateral"
-              className="app-control rounded-[var(--radius-control)] p-2 text-neutral-500 lg:hidden"
+              className="app-control rounded-[var(--radius-control)] p-2 text-[color:var(--text-muted)] lg:hidden"
               onClick={onCloseMobile}
             >
               <X size={18} />
@@ -133,23 +141,34 @@ export default function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarPr
           </nav>
 
           <footer className="border-t border-[color:var(--border-subtle)] px-4 py-4">
+            <div className="mb-3 flex items-center justify-between rounded-[18px] border border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)] px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                  Tema
+                </p>
+                <p className="text-xs text-[color:var(--text-muted)]">Claro ou escuro</p>
+              </div>
+              <ThemeToggle />
+            </div>
             <div className="app-surface-muted flex items-center gap-3 p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100">
-                <span className="text-sm font-bold text-primary-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent-soft)]">
+                <span className="text-sm font-bold text-[color:var(--accent-strong)]">
                   {user?.email?.[0]?.toUpperCase() || '?'}
                 </span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-neutral-800">
+                <p className="truncate text-sm font-semibold text-[color:var(--text-strong)]">
                   {user?.name || user?.email || 'Usuário'}
                 </p>
-                <p className="truncate text-xs font-medium text-neutral-500">Sessão operacional ativa</p>
+                <p className="truncate text-xs font-medium text-[color:var(--text-muted)]">
+                  Sessao operacional ativa
+                </p>
               </div>
               <button
                 type="button"
                 onClick={logout}
                 title="Sair"
-                className="app-control rounded-[var(--radius-control)] p-2 text-neutral-500 transition-colors hover:text-error-600"
+                className="app-control rounded-[var(--radius-control)] p-2 text-[color:var(--text-muted)] transition-colors hover:text-error-600"
               >
                 <LogOut size={16} />
               </button>

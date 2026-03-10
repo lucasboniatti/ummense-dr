@@ -1,13 +1,24 @@
 import { Bell, ChevronDown, Filter, Menu, Plus, Search } from 'lucide-react';
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { Button } from '../ui/Button';
+import { Breadcrumb, type BreadcrumbItem } from '../ui/Breadcrumb';
 import { Input } from '../ui/Input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/Select';
 
 interface AppTopbarProps {
+  breadcrumbs: BreadcrumbItem[];
+  isSidebarVisible: boolean;
   pageTitle: string;
   searchValue: string;
   priorityValue: string;
   onOpenMobileMenu: () => void;
+  onOpenGlobalSearch: () => void;
   onSearchChange: (value: string) => void;
   onPriorityChange: (value: string) => void;
   onApplyFilters: () => void;
@@ -16,10 +27,13 @@ interface AppTopbarProps {
 }
 
 export default function AppTopbar({
+  breadcrumbs,
+  isSidebarVisible,
   pageTitle,
   searchValue,
   priorityValue,
   onOpenMobileMenu,
+  onOpenGlobalSearch,
   onSearchChange,
   onPriorityChange,
   onApplyFilters,
@@ -70,13 +84,14 @@ export default function AppTopbar({
             onClick={onOpenMobileMenu}
             variant="outline"
             size="icon"
-            className="lg:hidden"
+            className={isSidebarVisible ? 'lg:hidden' : ''}
             aria-label="Abrir menu"
           >
             <Menu size={18} />
           </Button>
 
           <div className="min-w-0">
+            <Breadcrumb items={breadcrumbs} className="mb-1" />
             <p className="app-kicker">Workspace operacional</p>
             <h2 className="truncate text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-[1.35rem]">
               {pageTitle}
@@ -86,6 +101,21 @@ export default function AppTopbar({
 
         <div className="order-3 flex w-full flex-col gap-2 lg:order-2 lg:min-w-0 lg:flex-1 lg:px-4">
           <div className="app-toolbar flex w-full flex-col gap-2 p-2 md:flex-row md:items-center">
+            <Button
+              type="button"
+              onClick={onOpenGlobalSearch}
+              variant="outline"
+              className="justify-between gap-3 md:min-w-[18rem]"
+            >
+              <span className="flex items-center gap-2">
+                <Search size={16} />
+                Buscar em todo o workspace
+              </span>
+              <span className="rounded-full bg-neutral-100 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-500">
+                Cmd/Ctrl+K
+              </span>
+            </Button>
+
             <label className="relative min-w-0 flex-1">
               <Search
                 size={16}
@@ -109,17 +139,23 @@ export default function AppTopbar({
                 className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
                 aria-hidden="true"
               />
-              <select
+              <Select
                 value={priorityValue}
-                onChange={(event) => onPriorityChange(event.target.value)}
-                aria-label="Filtrar por prioridade"
-                className="app-control h-11 w-full appearance-none bg-white pl-10 pr-8 text-sm font-medium text-neutral-700"
+                onValueChange={onPriorityChange}
               >
-                <option value="all">Todas prioridades</option>
-                <option value="P1">P1</option>
-                <option value="P2">P2</option>
-                <option value="P3">P3</option>
-              </select>
+                <SelectTrigger
+                  aria-label="Filtrar por prioridade"
+                  className="pl-10 pr-8 text-sm font-medium text-neutral-700"
+                >
+                  <SelectValue placeholder="Todas prioridades" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas prioridades</SelectItem>
+                  <SelectItem value="P1">P1</SelectItem>
+                  <SelectItem value="P2">P2</SelectItem>
+                  <SelectItem value="P3">P3</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
@@ -152,7 +188,7 @@ export default function AppTopbar({
             </Button>
 
             {isQuickActionsOpen && (
-              <div className="app-surface absolute right-0 top-[calc(100%+0.75rem)] z-20 w-56 p-2">
+              <div className="app-surface elevation-2 absolute right-0 top-[calc(100%+0.75rem)] z-20 w-56 p-2 motion-scale-in">
                 <button
                   type="button"
                   className="app-sidebar-link w-full rounded-[16px] px-3 py-2 text-left text-sm"

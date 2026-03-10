@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { CheckCircle2, CircleX } from 'lucide-react';
 import { integrationService } from '../../services/integration.service';
 
 export default function IntegrationCallbackPage() {
@@ -106,7 +107,9 @@ export default function IntegrationCallbackPage() {
 
         {status === 'success' && (
           <>
-            <div className="text-5xl mb-4">✅</div>
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success-100 text-success-700">
+              <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
+            </div>
             <p className="app-kicker">Integracao</p>
             <h1 className="mb-2 mt-2 text-2xl font-bold tracking-[-0.03em] text-success-600">Sucesso</h1>
             <p className="mb-4 text-neutral-600">{message}</p>
@@ -116,7 +119,9 @@ export default function IntegrationCallbackPage() {
 
         {status === 'error' && (
           <>
-            <div className="text-5xl mb-4">❌</div>
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-error-100 text-error-700">
+              <CircleX className="h-8 w-8" aria-hidden="true" />
+            </div>
             <p className="app-kicker">Integracao</p>
             <h1 className="mb-2 mt-2 text-2xl font-bold tracking-[-0.03em] text-error-600">Erro</h1>
             <p className="mb-6 text-neutral-600">{message}</p>

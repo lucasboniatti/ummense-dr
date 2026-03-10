@@ -30,24 +30,24 @@ export default function ExecutionDetailPage() {
   };
 
   if (loading) {
-    return <div className="app-page"><PageLoader message="Loading execution details..." /></div>;
+    return <div className="app-page"><PageLoader message="Carregando detalhes da execução..." /></div>;
   }
 
   if (!detail) {
-    return <div className="app-inline-banner app-inline-banner-error"><strong>Execution</strong>Execution not found</div>;
+    return <div className="app-inline-banner app-inline-banner-error"><strong>Execução</strong>Execução não encontrada</div>;
   }
 
   return (
     <div className="app-page">
       <section className="app-page-hero animate-fade-up">
         <div className="app-page-heading">
-          <p className="app-kicker">Automations</p>
-          <h1 className="app-page-title">Execution details</h1>
-          <p className="app-page-copy">Rule execution trace, conditions, actions, and error details.</p>
+          <p className="app-kicker">Automacoes</p>
+          <h1 className="app-page-title">Detalhes da execução</h1>
+          <p className="app-page-copy">Rastro da execução, condições avaliadas, ações e detalhes de erro.</p>
         </div>
       </section>
 
-      {error && <div className="app-inline-banner app-inline-banner-error"><strong>Execution</strong>{error}</div>}
+      {error && <div className="app-inline-banner app-inline-banner-error"><strong>Execução</strong>{error}</div>}
 
       {detail && <ExecutionDetailModal execution={detail} onClose={() => router.back()} />}
     </div>

@@ -1,63 +1,123 @@
-import React, { useState } from 'react';
-import { FormInput } from './composite/FormField';
+import React from 'react';
+import { z } from 'zod';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { taskSchema } from '@/schemas';
+import { FormField, FormInput } from './composite/FormField';
 import { Button } from './ui/Button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/Select';
+
+const taskFormSchema = taskSchema.pick({
+  title: true,
+  description: true,
+  priority: true,
+});
+
+type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 interface TaskFormProps {
-  onSubmit?: (task: any) => void;
+  onSubmit?: (task: any) => Promise<void> | void;
   onCancel?: () => void;
   initialData?: any;
 }
 
-export function TaskForm({ onSubmit, onCancel, initialData }: TaskFormProps) {
-  const [formData, setFormData] = useState(initialData || { name: '', description: '', priority: 'medium' });
-  const [loading, setLoading] = useState(false);
+function defaultValuesFromInitialData(initialData?: any): TaskFormValues {
+  const rawPriority = initialData?.priority;
+  const priority =
+    rawPriority === 'low' ? 'P3' : rawPriority === 'medium' ? 'P2' : rawPriority === 'high' ? 'P1' : rawPriority || 'P2';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  return {
+    title: initialData?.title || initialData?.name || '',
+    description: initialData?.description || '',
+    priority,
+  };
+}
+
+export function TaskForm({ onSubmit, onCancel, initialData }: TaskFormProps) {
+  const {
+    control,
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<TaskFormValues>({
+    resolver: zodResolver(taskFormSchema),
+    mode: 'onBlur',
+    defaultValues: defaultValuesFromInitialData(initialData),
+  });
+
+  const handleFormSubmit = async (data: TaskFormValues) => {
     try {
-      onSubmit?.(formData);
-    } finally {
-      setLoading(false);
+      await onSubmit?.({
+        ...data,
+        name: data.title,
+      });
+    } catch (error) {
+      setError('root', {
+        message: error instanceof Error ? error.message : 'Falha ao salvar a tarefa.',
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="max-w-2xl space-y-6">
       <FormInput
-        label="Task Name"
+        label="Título da tarefa"
         type="text"
-        value={formData.name}
-        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+        placeholder="Ex.: Revisar estratégia de onboarding"
         required
+        error={errors.title?.message}
+        {...register('title')}
       />
 
       <FormInput
-        label="Description"
+        label="Descrição"
         type="text"
-        value={formData.description}
-        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+        placeholder="Contexto rápido da tarefa"
+        error={errors.description?.message}
+        {...register('description')}
       />
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neutral-700">Priority</label>
-        <select
-          value={formData.priority}
-          onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-      </div>
+      <FormField label="Prioridade" error={errors.priority?.message} required>
+        <div>
+          <Controller
+            name="priority"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger state={errors.priority ? 'error' : 'default'}>
+                  <SelectValue placeholder="Selecione uma prioridade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="P1">P1 · Alta</SelectItem>
+                  <SelectItem value="P2">P2 · Média</SelectItem>
+                  <SelectItem value="P3">P3 · Baixa</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+      </FormField>
 
-      <div className="flex gap-3 justify-end">
+      {errors.root && (
+        <div className="app-inline-banner app-inline-banner-error" role="alert">
+          <strong>Tarefa</strong>
+          {errors.root.message}
+        </div>
+      )}
+
+      <div className="flex justify-end gap-3">
         <Button variant="ghost" onClick={onCancel} type="button">
-          Cancel
+          Cancelar
         </Button>
-        <Button variant="primary" type="submit" disabled={loading}>
-          {loading ? 'Saving...' : 'Save Task'}
+        <Button variant="primary" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Salvando...' : 'Salvar tarefa'}
         </Button>
       </div>
     </form>

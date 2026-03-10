@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { CheckCircle2, X } from 'lucide-react';
 import DLQTable from '../../../components/DLQTable';
 import DLQDetailModal from '../../../components/DLQDetailModal';
 import { DLQService, DLQItem, DLQStats } from '../../../services/dlq.service';
@@ -104,8 +105,8 @@ export default function DLQDashboardPage({ automationId: propAutomationId }: DLQ
       {error && (
         <div className="alert alert-error">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="close-btn">
-            ×
+          <button onClick={() => setError(null)} className="close-btn" aria-label="Fechar alerta">
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -126,13 +127,17 @@ export default function DLQDashboardPage({ automationId: propAutomationId }: DLQ
           </div>
 
           <div className="stat-card">
-            <div className="stat-value">{stats.oldestItem ? '✓' : '—'}</div>
+            <div className="stat-value">
+              {stats.oldestItem ? <CheckCircle2 className="inline h-7 w-7" aria-hidden="true" /> : '—'}
+            </div>
             <div className="stat-label">Oldest Item</div>
             <div className="stat-subtext">{formatDate(stats.oldestItem)}</div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-value">{stats.newestItem ? '✓' : '—'}</div>
+            <div className="stat-value">
+              {stats.newestItem ? <CheckCircle2 className="inline h-7 w-7" aria-hidden="true" /> : '—'}
+            </div>
             <div className="stat-label">Newest Item</div>
             <div className="stat-subtext">{formatDate(stats.newestItem)}</div>
           </div>

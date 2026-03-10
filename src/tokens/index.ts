@@ -7,28 +7,28 @@
 // Color tokens
 export const colors = {
   primary: {
-    50: '#f0f9ff',
-    100: '#e0f2fe',
-    200: '#bae6fd',
-    300: '#7dd3fc',
-    400: '#38bdf8',
-    500: '#0ea5e9',
-    600: '#0284c7',
-    700: '#0369a1',
-    800: '#075985',
-    900: '#0c3d66',
+    50: '#eff6ff',
+    100: '#dbeafe',
+    200: '#bfdbfe',
+    300: '#93c5fd',
+    400: '#60a5fa',
+    500: '#3b82f6',
+    600: '#2563eb',
+    700: '#1d4ed8',
+    800: '#1e40af',
+    900: '#1e3a8a',
   },
   secondary: {
-    50: '#f5f3ff',
-    100: '#ede9fe',
-    200: '#ddd6fe',
-    300: '#c4b5fd',
-    400: '#a78bfa',
-    500: '#8b5cf6',
-    600: '#7c3aed',
-    700: '#6d28d9',
-    800: '#5b21b6',
-    900: '#4c1d95',
+    50: '#ecfeff',
+    100: '#cffafe',
+    200: '#a5f3fc',
+    300: '#67e8f9',
+    400: '#22d3ee',
+    500: '#06b6d4',
+    600: '#0891b2',
+    700: '#0e7490',
+    800: '#155e75',
+    900: '#164e63',
   },
   success: {
     50: '#f0fdf4',
@@ -40,7 +40,7 @@ export const colors = {
     600: '#16a34a',
     700: '#15803d',
     800: '#166534',
-    900: '#145231',
+    900: '#14532d',
   },
   warning: {
     50: '#fffbeb',
@@ -68,17 +68,17 @@ export const colors = {
   },
   neutral: {
     0: '#ffffff',
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
-    950: '#030712',
+    50: '#f8fafc',
+    100: '#f1f5f9',
+    200: '#e2e8f0',
+    300: '#cbd5e1',
+    400: '#94a3b8',
+    500: '#64748b',
+    600: '#475569',
+    700: '#334155',
+    800: '#1e293b',
+    900: '#0f172a',
+    950: '#020617',
   },
 } as const;
 
@@ -135,7 +135,7 @@ export const spacing = {
 // Typography tokens
 export const typography = {
   families: {
-    sans: 'system-ui, -apple-system, sans-serif',
+    sans: '"Avenir Next", "Segoe UI", system-ui, sans-serif',
     mono: '"SF Mono", Monaco, Consolas, monospace',
   },
   size: {
@@ -183,6 +183,9 @@ export const radius = {
   xl: '12px',
   '2xl': '16px',
   '3xl': '24px',
+  control: '14px',
+  panel: '24px',
+  chip: '9999px',
   full: '9999px',
 } as const;
 
@@ -195,6 +198,83 @@ export const shadow = {
   lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
   '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+  soft: '0 24px 48px -34px rgba(15, 23, 42, 0.32)',
+  floating: '0 20px 38px -28px rgba(15, 23, 42, 0.36)',
+  shell: '0 30px 60px -38px rgba(15, 23, 42, 0.4)',
+} as const;
+
+export const animation = {
+  duration: {
+    fast: '150ms',
+    normal: '250ms',
+    slow: '400ms',
+  },
+  easing: {
+    default: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    bounce: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  },
+} as const;
+
+export const elevation = {
+  1: {
+    shadow: shadow.soft,
+    description: 'Cards, panels',
+  },
+  2: {
+    shadow: shadow.floating,
+    description: 'Dropdowns, popovers',
+  },
+  3: {
+    shadow: shadow.shell,
+    description: 'Modals, dialogs',
+  },
+  4: {
+    shadow: '0 24px 44px -22px rgba(15, 23, 42, 0.42)',
+    description: 'Toasts, notifications',
+  },
+} as const;
+
+export const appTheme = {
+  light: {
+    canvas: '#eef4fb',
+    surfacePanel: 'rgba(255, 255, 255, 0.92)',
+    surfaceRaised: 'rgba(255, 255, 255, 0.98)',
+    surfaceMuted: 'rgba(244, 247, 251, 0.92)',
+    surfaceEmphasis: 'rgba(239, 246, 255, 0.88)',
+    borderSubtle: '#d8e2ef',
+    borderStrong: '#bfccdf',
+    textStrong: '#0f172a',
+    textMuted: '#58677c',
+    accentStrong: colors.primary[700],
+    accentSoft: 'rgba(37, 99, 235, 0.1)',
+    focusRing: 'rgba(59, 130, 246, 0.18)',
+    shadowSoft: shadow.soft,
+    shadowFloating: shadow.floating,
+    shadowShell: shadow.shell,
+    radiusPanel: radius.panel,
+    radiusControl: radius.control,
+    radiusChip: radius.chip,
+  },
+  dark: {
+    canvas: colors.neutral[900],
+    surfacePanel: 'rgba(30, 41, 59, 0.92)',
+    surfaceRaised: 'rgba(30, 41, 59, 0.98)',
+    surfaceMuted: 'rgba(51, 65, 85, 0.92)',
+    surfaceEmphasis: 'rgba(51, 65, 85, 0.88)',
+    borderSubtle: colors.neutral[700],
+    borderStrong: colors.neutral[600],
+    textStrong: colors.neutral[50],
+    textMuted: colors.neutral[400],
+    accentStrong: colors.primary[400],
+    accentSoft: 'rgba(96, 165, 250, 0.15)',
+    focusRing: 'rgba(59, 130, 246, 0.3)',
+    shadowSoft: '0 24px 48px -34px rgba(0, 0, 0, 0.5)',
+    shadowFloating: '0 20px 38px -28px rgba(0, 0, 0, 0.5)',
+    shadowShell: '0 30px 60px -38px rgba(0, 0, 0, 0.6)',
+    radiusPanel: radius.panel,
+    radiusControl: radius.control,
+    radiusChip: radius.chip,
+  },
 } as const;
 
 // Component tokens
@@ -207,24 +287,24 @@ export const components = {
     },
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
-    borderRadius: radius.md,
+    borderRadius: radius.control,
   },
   input: {
     padding: `${spacing[2]} ${spacing[3]}`,
     fontSize: typography.size.base,
-    borderRadius: radius.md,
+    borderRadius: radius.control,
     border: `1px solid ${colors.neutral[200]}`,
   },
   card: {
     padding: spacing[6],
-    borderRadius: radius.lg,
-    boxShadow: shadow.md,
+    borderRadius: radius.panel,
+    boxShadow: shadow.soft,
   },
   badge: {
     padding: `${spacing[1]} ${spacing[2]}`,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    borderRadius: radius.full,
+    borderRadius: radius.chip,
   },
 } as const;
 
@@ -255,6 +335,9 @@ export const tokens = {
   typography,
   radius,
   shadow,
+  animation,
+  elevation,
+  appTheme,
   components,
   darkMode,
 } as const;
@@ -265,4 +348,6 @@ export type SpacingToken = typeof spacing;
 export type TypographyToken = typeof typography;
 export type RadiusToken = typeof radius;
 export type ShadowToken = typeof shadow;
+export type AnimationToken = typeof animation;
+export type ElevationToken = typeof elevation;
 export type ComponentToken = typeof components;

@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'app-control inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-control)] text-sm font-semibold tracking-[-0.01em] transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+  'app-control pressable inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-control)] text-sm font-semibold tracking-[-0.01em] transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -18,7 +18,7 @@ const buttonVariants = cva(
         outline:
           'border-transparent bg-white/95 text-neutral-800 hover:bg-neutral-100 hover:text-neutral-900',
         ghost: 'border-transparent bg-transparent shadow-none hover:bg-white/72 hover:text-neutral-900',
-        link: 'border-transparent bg-transparent px-0 text-primary-700 shadow-none underline-offset-4 hover:underline',
+        link: 'link-underline border-transparent bg-transparent px-0 text-primary-700 shadow-none underline-offset-4',
         success:
           'border-transparent bg-success-600 text-white shadow-[0_16px_28px_-18px_rgba(22,163,74,0.7)] hover:bg-success-700 active:bg-success-800',
       },

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/CardUI';
 import { Badge } from './ui/Badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from './ui/Dialog';
@@ -92,7 +93,11 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             onClick={() => toggleSection('config')}
             className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
           >
-            <span>{expandedSections.has('config') ? '▼' : '▶'}</span>
+            {expandedSections.has('config') ? (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            )}
             <span>Configuração da Regra</span>
           </button>
           {expandedSections.has('config') && (
@@ -112,7 +117,11 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             onClick={() => toggleSection('conditions')}
             className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
           >
-            <span>{expandedSections.has('conditions') ? '▼' : '▶'}</span>
+            {expandedSections.has('conditions') ? (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            )}
             <span>Condições Avaliadas</span>
           </button>
           {expandedSections.has('conditions') && (
@@ -132,7 +141,11 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             onClick={() => toggleSection('actions')}
             className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
           >
-            <span>{expandedSections.has('actions') ? '▼' : '▶'}</span>
+            {expandedSections.has('actions') ? (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            )}
             <span>Ações Executadas</span>
           </button>
           {expandedSections.has('actions') && (
@@ -152,7 +165,11 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             onClick={() => toggleSection('error')}
             className="w-full px-4 py-2 bg-error-100 text-left font-semibold text-error-900 hover:bg-error-200 flex items-center gap-2"
           >
-            <span>{expandedSections.has('error') ? '▼' : '▶'}</span>
+            {expandedSections.has('error') ? (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            )}
             <span>Detalhes do Erro</span>
           </button>
           {expandedSections.has('error') && (
@@ -172,7 +189,11 @@ export const ExecutionDetailModal: React.FC<ExecutionDetailModalProps> = ({ exec
             onClick={() => toggleSection('retry')}
             className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
           >
-            <span>{expandedSections.has('retry') ? '▼' : '▶'}</span>
+            {expandedSections.has('retry') ? (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            )}
             <span>Histórico de Tentativas ({execution.retry_history.length})</span>
           </button>
           {expandedSections.has('retry') && (

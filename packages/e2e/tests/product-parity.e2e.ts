@@ -140,6 +140,75 @@ test.describe('Product Parity E2E', () => {
     await captureEvidence(page, '01-painel-fluxos.png');
   });
 
+  test('epic 10: tema persiste e breadcrumb aparece no shell', async ({ page }) => {
+    await prepareAuthenticatedPage(page);
+    await page.goto(withToken('/dashboard/integrations'));
+
+    await expect(page.getByLabel('Breadcrumb')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Integrações' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Ativar modo escuro' }).click();
+    await expect.poll(async () => {
+      return page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    }).toBe('dark');
+
+    await page.reload();
+    await expect.poll(async () => {
+      return page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    }).toBe('dark');
+
+    await captureEvidence(page, '08-epic10-theme-breadcrumbs.png');
+  });
+
+  test('epic 10: busca global e atalhos respondem no shell', async ({ page }) => {
+    await prepareAuthenticatedPage(page);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.goto(withToken('/dashboard'));
+    await expect(page.getByRole('button', { name: 'Buscar em todo o workspace Cmd/Ctrl+K' })).toBeVisible();
+
+    await page.evaluate(() => {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true })
+      );
+    });
+    await expect(page.getByPlaceholder('Buscar tarefas, fluxos e webhooks...')).toBeVisible();
+    await expect(page.getByText('Abrir webhooks')).toBeVisible();
+
+    await captureEvidence(page, '09-epic10-global-search.png');
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByPlaceholder('Buscar tarefas, fluxos e webhooks...')).toHaveCount(0);
+
+    await page.evaluate(() => {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true })
+      );
+    });
+    await expect(page.getByRole('heading', { level: 2, name: 'Atalhos de teclado' })).toBeVisible();
+
+    await captureEvidence(page, '10-epic10-shortcuts-help.png');
+  });
+
+  test('epic 10: tabs de integrações alternam no frontend', async ({ page }) => {
+    await prepareAuthenticatedPage(page);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.goto(withToken('/dashboard/integrations'));
+
+    const discordTab = page.getByRole('tab', { name: 'Discord', exact: true });
+    await discordTab.focus();
+    await discordTab.press('Enter');
+    await expect(discordTab).toHaveAttribute('data-state', 'active');
+    await expect(page.getByRole('heading', { level: 3, name: /^Discord$/ })).toBeVisible();
+
+    const slackTab = page.getByRole('tab', { name: 'Slack', exact: true });
+    await slackTab.focus();
+    await slackTab.press('Enter');
+    await expect(slackTab).toHaveAttribute('data-state', 'active');
+    await expect(page.getByRole('heading', { level: 3, name: /^Slack$/ })).toBeVisible();
+
+    await captureEvidence(page, '11-epic10-integrations-tabs.png');
+  });
+
   test('jornada card workspace responde 200', async ({ page }) => {
     test.skip(!hasAuthenticatedFixture(), 'Set PARITY_DEV_TOKEN, PARITY_CARD_ID and PARITY_TASK_ID');
     await prepareAuthenticatedPage(page);

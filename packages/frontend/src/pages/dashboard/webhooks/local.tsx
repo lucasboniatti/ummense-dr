@@ -1,5 +1,6 @@
 import type { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
+import { AlertTriangle, CheckCircle2, CircleX } from 'lucide-react';
 
 interface WebhookRow {
   id: string;
@@ -190,10 +191,16 @@ export default function LocalWebhooksPage({
 
       <section className="app-section-card space-y-2">
         <h2 className="app-section-title">Saude do backend</h2>
-        {health === 'ok' && <p className="text-success-700 font-semibold">✓ OK</p>}
+        {health === 'ok' && (
+          <p className="inline-flex items-center gap-2 text-success-700 font-semibold">
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+            OK
+          </p>
+        )}
         {health === 'error' && (
-          <p className="text-error-700 font-semibold">
-            ✗ {healthError || 'Falha ao validar health do backend.'}
+          <p className="inline-flex items-center gap-2 text-error-700 font-semibold">
+            <CircleX className="h-4 w-4" aria-hidden="true" />
+            {healthError || 'Falha ao validar health do backend.'}
           </p>
         )}
       </section>
@@ -225,7 +232,12 @@ export default function LocalWebhooksPage({
 
         <div>
           <h2 className="app-section-title mb-3 mt-4">Lista de webhooks</h2>
-          {flowError && <p className="mb-3 text-sm font-semibold text-warning-700">⚠ {flowError}</p>}
+          {flowError && (
+            <p className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-warning-700">
+              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+              {flowError}
+            </p>
+          )}
           {webhooks.length === 0 ? (
             <p className="text-neutral-600">Nenhum webhook disponível.</p>
           ) : (
@@ -244,8 +256,13 @@ export default function LocalWebhooksPage({
                       <td className="px-4 py-3 text-sm font-mono text-neutral-900">{hook.id}</td>
                       <td className="px-4 py-3 text-sm text-neutral-700">{hook.url}</td>
                       <td className="px-4 py-3 text-sm">
-                        <span className={hook.enabled ? 'text-success-700 font-semibold' : 'text-neutral-600'}>
-                          {hook.enabled ? '✓ ativo' : 'inativo'}
+                        <span
+                          className={`inline-flex items-center gap-1.5 ${hook.enabled ? 'text-success-700 font-semibold' : 'text-neutral-600'}`}
+                        >
+                          {hook.enabled && (
+                            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                          )}
+                          {hook.enabled ? 'ativo' : 'inativo'}
                         </span>
                       </td>
                     </tr>

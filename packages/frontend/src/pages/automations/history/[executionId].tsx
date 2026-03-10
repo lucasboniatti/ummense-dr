@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  CircleX,
+  Clock3,
+  Minus,
+} from 'lucide-react';
 import { apiClient } from '../../../services/api.client';
 import { PageLoader } from '../../../components/ui/PageLoader';
 
@@ -51,7 +60,7 @@ export default function ExecutionDetailPage() {
         setExecution(data.execution);
         setSteps(data.steps);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
       } finally {
         setLoading(false);
       }
@@ -70,9 +79,10 @@ export default function ExecutionDetailPage() {
         <div className="px-4 py-4">
           <button
             onClick={() => router.back()}
-            className="text-primary-600 hover:text-primary-800 mb-4"
+            className="mb-4 inline-flex items-center gap-1.5 text-primary-600 hover:text-primary-800"
           >
-            ← Voltar
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar
           </button>
           <div className="app-inline-banner app-inline-banner-error">
             <strong>Execucao</strong>
@@ -97,15 +107,38 @@ export default function ExecutionDetailPage() {
   const getStepStatusIcon = (status: string) => {
     switch (status) {
       case 'success':
-        return '✓';
+        return <CheckCircle2 className="h-4 w-4" aria-hidden="true" />;
       case 'failed':
-        return '✗';
+        return <CircleX className="h-4 w-4" aria-hidden="true" />;
       case 'skipped':
-        return '-';
+        return <Minus className="h-4 w-4" aria-hidden="true" />;
       default:
-        return '?';
+        return <Clock3 className="h-4 w-4" aria-hidden="true" />;
     }
   };
+
+  const executionStatus = (() => {
+    switch (execution.status) {
+      case 'success':
+        return {
+          className: 'bg-success-200 text-success-800',
+          icon: <CheckCircle2 className="h-4 w-4" aria-hidden="true" />,
+          label: 'Sucesso',
+        };
+      case 'failed':
+        return {
+          className: 'bg-error-200 text-error-800',
+          icon: <CircleX className="h-4 w-4" aria-hidden="true" />,
+          label: 'Falha',
+        };
+      default:
+        return {
+          className: 'bg-neutral-200 text-neutral-800',
+          icon: <Clock3 className="h-4 w-4" aria-hidden="true" />,
+          label: 'Em andamento',
+        };
+    }
+  })();
 
   return (
     <div className="app-page">
@@ -115,7 +148,8 @@ export default function ExecutionDetailPage() {
             onClick={() => router.back()}
             className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:underline"
           >
-            ← Voltar ao histórico
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar ao historico
           </button>
 
           <div className="rounded-[22px] border border-white/60 bg-white/65 p-6">
@@ -128,12 +162,10 @@ export default function ExecutionDetailPage() {
                 <p className="mt-1 text-sm font-mono text-neutral-600">{execution.id}</p>
               </div>
               <span
-                className={`rounded-full px-3 py-1 text-sm font-medium ${execution.status === 'success'
-                    ? 'bg-success-200 text-success-800'
-                    : 'bg-error-200 text-error-800'
-                  }`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${executionStatus.className}`}
               >
-                {execution.status === 'success' ? '✓ Sucesso' : '✗ Falha'}
+                {executionStatus.icon}
+                {executionStatus.label}
               </span>
             </div>
 
@@ -228,7 +260,11 @@ export default function ExecutionDetailPage() {
                       </p>
                     </div>
                   </div>
-                  <span className="text-neutral-400">{expandedStep === step.id ? '▼' : '▶'}</span>
+                  {expandedStep === step.id ? (
+                    <ChevronDown className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                  )}
                 </button>
 
                 {expandedStep === step.id && (

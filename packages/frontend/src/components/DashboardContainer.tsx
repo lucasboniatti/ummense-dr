@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { AlertTriangle, CheckCircle2, Clock3, Database } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import MetricCard from './MetricCard';
 import { CostCard, type CostCardSummary } from './CostCard';
@@ -204,7 +205,7 @@ export default function DashboardContainer() {
               value={`${metrics.successRate.toFixed(1)}%`}
               trend={metrics.successTrend}
               trendLabel="tendencia"
-              icon="✓"
+              icon={<CheckCircle2 className="h-5 w-5" aria-hidden="true" />}
               dataTestId="metric-success-rate"
             />
 
@@ -213,7 +214,7 @@ export default function DashboardContainer() {
               value={`${metrics.avgDuration.toFixed(0)}ms`}
               trend={metrics.durationTrend}
               trendLabel="performance"
-              icon="⏱"
+              icon={<Clock3 className="h-5 w-5" aria-hidden="true" />}
               dataTestId="metric-avg-duration"
             />
 
@@ -221,7 +222,7 @@ export default function DashboardContainer() {
               title="Falhas criticas"
               value={`${metrics.failedExecutions.length}`}
               failedExecutions={metrics.failedExecutions}
-              icon="✗"
+              icon={<AlertTriangle className="h-5 w-5" aria-hidden="true" />}
               dataTestId="metric-failed-executions"
             />
 
@@ -229,7 +230,7 @@ export default function DashboardContainer() {
               title="Volume total"
               value={`${(costSummary.dbStorageGb + costSummary.s3StorageGb).toFixed(2)}GB`}
               subtitle={costSummary.isEstimate ? 'DB + S3 estimado' : 'DB + S3'}
-              icon="💾"
+              icon={<Database className="h-5 w-5" aria-hidden="true" />}
               dataTestId="metric-storage-utilization"
             />
           </div>

@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Copy, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from './ui/Dialog';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -99,8 +100,8 @@ export const DLQDetailModal: React.FC<DLQDetailModalProps> = ({
           {error && (
             <div className="p-3 bg-error-100 border border-error-400 text-error-700 rounded-md text-sm flex justify-between items-center">
               <span>{error}</span>
-              <button onClick={() => setError(null)} className="text-error-700 hover:text-error-900">
-                ×
+              <button onClick={() => setError(null)} className="text-error-700 hover:text-error-900" aria-label="Fechar erro">
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           )}
@@ -110,13 +111,29 @@ export const DLQDetailModal: React.FC<DLQDetailModalProps> = ({
             <div>
               <p className="text-xs uppercase font-semibold text-neutral-700">URL Webhook</p>
               <p className="text-sm font-mono truncate" title={dlqItem.webhookUrl}>{dlqItem.webhookUrl}</p>
-              <button onClick={() => copyToClipboard(dlqItem.webhookUrl)} className="text-lg mt-1" title="Copiar URL">📋</button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => copyToClipboard(dlqItem.webhookUrl)}
+                className="mt-1 h-8 w-8 rounded-full text-neutral-600"
+                title="Copiar URL"
+              >
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              </Button>
             </div>
 
             <div>
               <p className="text-xs uppercase font-semibold text-neutral-700">DLQ ID</p>
               <p className="text-sm font-mono truncate" title={dlqItem.id}>{dlqItem.id}</p>
-              <button onClick={() => copyToClipboard(dlqItem.id)} className="text-lg mt-1" title="Copiar ID">📋</button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => copyToClipboard(dlqItem.id)}
+                className="mt-1 h-8 w-8 rounded-full text-neutral-600"
+                title="Copiar ID"
+              >
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              </Button>
             </div>
 
             <div>
@@ -127,7 +144,14 @@ export const DLQDetailModal: React.FC<DLQDetailModalProps> = ({
             <div>
               <p className="text-xs uppercase font-semibold text-neutral-700">Status</p>
               <Badge variant={dlqItem.clearedAt ? 'success' : 'destructive'}>
-                {dlqItem.clearedAt ? '✓ Limpo' : '⚠ Na DLQ'}
+                <span className="inline-flex items-center gap-1.5">
+                  {dlqItem.clearedAt ? (
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {dlqItem.clearedAt ? 'Limpo' : 'Na DLQ'}
+                </span>
               </Badge>
             </div>
 
@@ -148,7 +172,11 @@ export const DLQDetailModal: React.FC<DLQDetailModalProps> = ({
               onClick={() => toggleSection('error')}
               className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
             >
-              <span>{expandedSections.has('error') ? '▼' : '▶'}</span>
+              {expandedSections.has('error') ? (
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              )}
               <span>Mensagem de Erro</span>
             </button>
             {expandedSections.has('error') && (
@@ -170,7 +198,11 @@ export const DLQDetailModal: React.FC<DLQDetailModalProps> = ({
               onClick={() => toggleSection('payload')}
               className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
             >
-              <span>{expandedSections.has('payload') ? '▼' : '▶'}</span>
+              {expandedSections.has('payload') ? (
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              )}
               <span>Payload do Webhook</span>
             </button>
             {expandedSections.has('payload') && (
@@ -194,7 +226,11 @@ export const DLQDetailModal: React.FC<DLQDetailModalProps> = ({
               onClick={() => toggleSection('metadata')}
               className="w-full px-4 py-2 bg-neutral-100 text-left font-semibold text-neutral-900 hover:bg-neutral-200 flex items-center gap-2"
             >
-              <span>{expandedSections.has('metadata') ? '▼' : '▶'}</span>
+              {expandedSections.has('metadata') ? (
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              )}
               <span>Metadados</span>
             </button>
             {expandedSections.has('metadata') && (

@@ -1,0 +1,49 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-10T02:05:00-03:00"
+  from_agent: "sm"
+  to_agent: "qa"
+  consumed: false
+
+  story_context:
+    story_id: "EPIC-10-UX-DESIGN-SYSTEM-EXCELLENCE"
+    story_path: "docs/prd/epic-10-ux-design-system-excellence.md"
+    story_status: "Story Package Revised for Second-Pass QA Review"
+    current_task: "QA must re-review stories 10.1-10.20 after full SM refinement"
+    branch: "master"
+
+  decisions:
+    - "Revised stories 10.1 through 10.20 to add Dependencies, Dev Notes, QA Results, and PM Results placeholders in the Epic 8 pattern."
+    - "Reframed stories that targeted existing frontend assets so the work is integration, consolidation, rollout, and regression coverage instead of net-new reimplementation."
+    - "Bounded story 10.3 to incremental token alignment and made token-generation automation conditional on a documented migration."
+    - "Bounded story 10.14 to a frontend-first global search and removed backend search as a required deliverable."
+    - "Corrected story 10.20 to use the repository's real quality contract: lint, typecheck, test, build, and test:e2e:parity."
+
+  files_modified:
+    - "docs/prd/epic-10-ux-design-system-excellence.md"
+    - "docs/stories/10.1.story.md"
+    - "docs/stories/10.2.story.md"
+    - "docs/stories/10.3.story.md"
+    - "docs/stories/10.4.story.md"
+    - "docs/stories/10.5.story.md"
+    - "docs/stories/10.6.story.md"
+    - "docs/stories/10.7.story.md"
+    - "docs/stories/10.8.story.md"
+    - "docs/stories/10.9.story.md"
+    - "docs/stories/10.10.story.md"
+    - "docs/stories/10.11.story.md"
+    - "docs/stories/10.12.story.md"
+    - "docs/stories/10.13.story.md"
+    - "docs/stories/10.14.story.md"
+    - "docs/stories/10.15.story.md"
+    - "docs/stories/10.16.story.md"
+    - "docs/stories/10.17.story.md"
+    - "docs/stories/10.18.story.md"
+    - "docs/stories/10.19.story.md"
+    - "docs/stories/10.20.story.md"
+    - ".aios/handoffs/handoff-sm-to-qa-epic-10-story-package-revised-20260310.yaml"
+
+  blockers:
+    - "PM revalidation must wait until QA completes this second-pass story package review."
+
+  next_action: "Review the revised Epic 10 package for clarity, testability, repository alignment, and closure of the previously raised spec findings. If QA passes, hand off to @pm for formal revalidation."

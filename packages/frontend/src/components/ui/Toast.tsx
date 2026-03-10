@@ -39,7 +39,7 @@ export function Toast({ toast, onClose }: ToastProps) {
 
     return (
         <div
-            className={`${config.bg} ${config.border} border shadow-lg rounded-lg p-4 max-w-sm w-full pointer-events-auto flex items-start gap-3 transition-all duration-300 animate-in slide-in-from-right-8`}
+            className={`${config.bg} ${config.border} elevation-4 motion-slide-in-right rounded-[20px] border p-4 max-w-sm w-full pointer-events-auto flex items-start gap-3 transition-all duration-300`}
             role="alert"
         >
             {config.icon}
@@ -57,7 +57,7 @@ export function Toast({ toast, onClose }: ToastProps) {
 
             <button
                 onClick={onClose}
-                className="text-neutral-400 hover:text-neutral-600 transition-colors flex-shrink-0"
+                className="app-control h-8 w-8 rounded-full p-0 text-neutral-400 hover:text-neutral-600 transition-colors flex-shrink-0"
                 aria-label="Close"
             >
                 <X size={16} />

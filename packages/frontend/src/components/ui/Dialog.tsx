@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface DialogContextType {
@@ -70,7 +71,7 @@ export function Dialog({ open = false, onOpenChange, children }: DialogProps) {
     <DialogContext.Provider value={{ open: currentOpen, onOpenChange: handleOpenChange, titleId, descriptionId }}>
       {currentOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-neutral-950/55 backdrop-blur-sm motion-fade-in"
           onClick={() => handleOpenChange(false)}
         >
           {children}
@@ -102,8 +103,7 @@ export function DialogContent({ className, children, ...props }: DialogContentPr
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       className={cn(
-        'app-surface mx-4 w-full max-w-md overflow-hidden rounded-[26px]',
-        'animate-in fade-in-0 zoom-in-95 duration-200',
+        'app-surface elevation-3 mx-4 w-full max-w-md overflow-hidden rounded-[26px] motion-scale-in',
         className
       )}
       onClick={(e) => e.stopPropagation()}
@@ -115,7 +115,7 @@ export function DialogContent({ className, children, ...props }: DialogContentPr
         aria-label="Fechar diálogo"
         className="app-control absolute right-4 top-4 h-10 w-10 rounded-full p-0 text-neutral-400 hover:text-neutral-700"
       >
-        ✕
+        <X size={16} />
       </button>
     </div>
   )

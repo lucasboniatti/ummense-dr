@@ -20,7 +20,7 @@ export const PauseResumeControls: React.FC = () => {
 
             setMessage({ text: res?.message || 'Success', type: 'success' });
         } catch (err: any) {
-            setMessage({ text: err.message || 'Operation failed', type: 'error' });
+            setMessage({ text: err.message || 'Operacao falhou', type: 'error' });
         } finally {
             setLoadingAction(null);
             setShowClearConfirm(false);
@@ -38,7 +38,7 @@ export const PauseResumeControls: React.FC = () => {
             <div className="app-surface mt-4 p-4">
                 <div className="mb-4">
                     <p className="app-kicker">Controle</p>
-                    <h3 className="mt-2 text-lg font-semibold text-neutral-800">Queue controls</h3>
+                    <h3 className="mt-2 text-lg font-semibold text-neutral-800">Controles da fila</h3>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
@@ -47,7 +47,7 @@ export const PauseResumeControls: React.FC = () => {
                         disabled={loadingAction !== null}
                         className="app-control rounded-[var(--radius-control)] border-transparent bg-warning-500 px-4 py-2 font-medium text-white transition-colors hover:bg-warning-600 disabled:opacity-50"
                     >
-                        {loadingAction === 'pause' ? 'Pausing...' : 'Pause Queue'}
+                        {loadingAction === 'pause' ? 'Pausando...' : 'Pausar fila'}
                     </button>
 
                     <button
@@ -55,7 +55,7 @@ export const PauseResumeControls: React.FC = () => {
                         disabled={loadingAction !== null}
                         className="app-control rounded-[var(--radius-control)] border-transparent bg-success-500 px-4 py-2 font-medium text-white transition-colors hover:bg-success-600 disabled:opacity-50"
                     >
-                        {loadingAction === 'resume' ? 'Resuming...' : 'Resume Queue'}
+                        {loadingAction === 'resume' ? 'Retomando...' : 'Retomar fila'}
                     </button>
 
                     <button
@@ -63,7 +63,7 @@ export const PauseResumeControls: React.FC = () => {
                         disabled={loadingAction !== null}
                         className="app-control ml-auto rounded-[var(--radius-control)] border-transparent bg-error-500 px-4 py-2 font-medium text-white transition-colors hover:bg-error-600 disabled:opacity-50"
                     >
-                        {loadingAction === 'clear' ? 'Clearing...' : 'Clear Queue'}
+                        {loadingAction === 'clear' ? 'Limpando...' : 'Limpar fila'}
                     </button>
                 </div>
 

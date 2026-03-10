@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronRight, ShieldAlert } from 'lucide-react';
 import { apiClient } from '../../services/api.client';
 import { PageLoader, EmptyState } from '../../components/ui';
-import { ShieldAlert } from 'lucide-react';
 
 interface AuditLog {
   id: string;
@@ -121,7 +121,11 @@ export default function AuditLogPage() {
                       )}
                     </div>
                   </div>
-                  <span className="text-neutral-400">{expandedLog === log.id ? '▼' : '▶'}</span>
+                  {expandedLog === log.id ? (
+                    <ChevronDown className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                  )}
                 </button>
 
                 {expandedLog === log.id && (
@@ -174,9 +178,10 @@ export default function AuditLogPage() {
               <button
                 onClick={() => setOffset(Math.max(0, offset - limit))}
                 disabled={offset === 0}
-                className="app-control h-10 rounded-[var(--radius-control)] px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                className="app-control inline-flex h-10 items-center gap-1.5 rounded-[var(--radius-control)] px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
-                ← Anterior
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Anterior
               </button>
               <div className="text-sm text-neutral-600 flex items-center px-4">
                 Página {currentPage} de {totalPages}
@@ -184,9 +189,10 @@ export default function AuditLogPage() {
               <button
                 onClick={() => setOffset(Math.min(offset + limit, (totalPages - 1) * limit))}
                 disabled={currentPage >= totalPages}
-                className="app-control h-10 rounded-[var(--radius-control)] px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                className="app-control inline-flex h-10 items-center gap-1.5 rounded-[var(--radius-control)] px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Próxima →
+                Proxima
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>

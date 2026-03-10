@@ -1,4 +1,5 @@
 import React from 'react';
+import { Checkbox } from './ui/Checkbox';
 
 interface Task {
   id: number;
@@ -37,11 +38,10 @@ export function TaskList({ tasks, onTaskClick, onTaskComplete }: TaskListProps) 
           className="flex items-center p-3 bg-white rounded-lg border border-neutral-200 hover:border-neutral-400 cursor-pointer"
           onClick={() => onTaskClick?.(task)}
         >
-          <input
-            type="checkbox"
+          <Checkbox
             checked={task.status === 'completed'}
-            onChange={e => {
-              e.stopPropagation();
+            onClick={(event) => event.stopPropagation()}
+            onCheckedChange={() => {
               onTaskComplete?.(task.id);
             }}
             className="mr-3"

@@ -1,5 +1,9 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
+import { GlobalSearch } from '../GlobalSearch';
+import { KeyboardShortcutsHelp } from '../KeyboardShortcutsHelp';
+import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
+import { useKeyboardShortcuts, type KeyboardShortcut } from '@/hooks/useKeyboardShortcuts';
 import AppSidebar from './AppSidebar';
 import AppTopbar from './AppTopbar';
 
@@ -13,6 +17,7 @@ function resolvePageTitle(pathname: string): string {
   if (pathname.startsWith('/flows')) return 'Fluxos';
   if (pathname.startsWith('/cards')) return 'Card Workspace';
   if (pathname.startsWith('/dashboard/webhooks')) return 'Contatos & Webhooks';
+  if (pathname.startsWith('/dashboard/integrations')) return 'Integrações';
   if (pathname.startsWith('/automations/history')) return 'Arquivos de Execução';
   if (pathname.startsWith('/admin')) return 'Mais Configurações';
   return 'Tasks Flow';
@@ -21,10 +26,14 @@ function resolvePageTitle(pathname: string): string {
 export default function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isDesktopSidebarVisible, setIsDesktopSidebarVisible] = useState(true);
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
+  const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [priorityValue, setPriorityValue] = useState('all');
 
   const pageTitle = useMemo(() => resolvePageTitle(router.pathname), [router.pathname]);
+  const breadcrumbs = useBreadcrumbs();
 
   useEffect(() => {
     if (!router.isReady) {
@@ -37,6 +46,20 @@ export default function AppShell({ children }: AppShellProps) {
     setSearchValue(q);
     setPriorityValue(priority || 'all');
   }, [router.isReady, router.query.q, router.query.priority]);
+
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (router.pathname === '/cards/[cardId]' && typeof router.query.cardId === 'string') {
+      window.localStorage.setItem('tasksflow_last_card_id', router.query.cardId);
+    }
+  }, [router.pathname, router.query.cardId]);
 
   const applyFilters = async () => {
     const nextQuery = { ...router.query };
@@ -71,9 +94,22 @@ export default function AppShell({ children }: AppShellProps) {
     });
   };
 
-  const handleQuickAction = async (action: 'new-task' | 'new-flow' | 'open-webhooks') => {
+  const createTaskFromContext = useCallback(async () => {
+    if (typeof window !== 'undefined') {
+      const lastCardId = window.localStorage.getItem('tasksflow_last_card_id');
+
+      if (lastCardId) {
+        await router.push(`/cards/${lastCardId}?newTask=1`);
+        return;
+      }
+    }
+
+    await router.push('/dashboard/automations');
+  }, [router]);
+
+  const handleQuickAction = useCallback(async (action: 'new-task' | 'new-flow' | 'open-webhooks') => {
     if (action === 'new-task') {
-      await router.push('/?q=nova+tarefa');
+      await createTaskFromContext();
       return;
     }
 
@@ -83,7 +119,49 @@ export default function AppShell({ children }: AppShellProps) {
     }
 
     await router.push('/dashboard/webhooks');
-  };
+  }, [createTaskFromContext, router]);
+
+  const shortcuts = useMemo<KeyboardShortcut[]>(
+    () => [
+      {
+        key: 'k',
+        mod: true,
+        description: 'Abrir busca global',
+        action: () => setIsGlobalSearchOpen(true),
+      },
+      {
+        key: 'n',
+        mod: true,
+        description: 'Criar nova tarefa',
+        action: () => void createTaskFromContext(),
+      },
+      {
+        key: '/',
+        mod: true,
+        description: 'Alternar sidebar',
+        action: () => setIsDesktopSidebarVisible((previous) => !previous),
+      },
+      {
+        key: '?',
+        description: 'Abrir ajuda de atalhos',
+        shift: true,
+        action: () => setIsShortcutsHelpOpen(true),
+      },
+      {
+        key: 'escape',
+        description: 'Fechar modais e menus',
+        action: () => {
+          setIsGlobalSearchOpen(false);
+          setIsShortcutsHelpOpen(false);
+          setIsMobileOpen(false);
+        },
+        allowInInput: true,
+      },
+    ],
+    [createTaskFromContext]
+  );
+
+  useKeyboardShortcuts(shortcuts);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[var(--app-canvas)] text-neutral-900">
@@ -107,14 +185,21 @@ export default function AppShell({ children }: AppShellProps) {
         }}
       />
 
-      <AppSidebar isMobileOpen={isMobileOpen} onCloseMobile={() => setIsMobileOpen(false)} />
+      <AppSidebar
+        isMobileOpen={isMobileOpen}
+        isDesktopVisible={isDesktopSidebarVisible}
+        onCloseMobile={() => setIsMobileOpen(false)}
+      />
 
-      <div className="relative z-10 min-h-screen lg:pl-64">
+      <div className={`relative z-10 min-h-screen ${isDesktopSidebarVisible ? 'lg:pl-64' : 'lg:pl-0'}`}>
         <AppTopbar
+          breadcrumbs={breadcrumbs}
+          isSidebarVisible={isDesktopSidebarVisible}
           pageTitle={pageTitle}
           searchValue={searchValue}
           priorityValue={priorityValue}
           onOpenMobileMenu={() => setIsMobileOpen(true)}
+          onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)}
           onSearchChange={setSearchValue}
           onPriorityChange={setPriorityValue}
           onApplyFilters={applyFilters}
@@ -126,6 +211,17 @@ export default function AppShell({ children }: AppShellProps) {
           {children}
         </main>
       </div>
+
+      <GlobalSearch
+        open={isGlobalSearchOpen}
+        onOpenChange={setIsGlobalSearchOpen}
+        onCreateTask={() => void createTaskFromContext()}
+      />
+      <KeyboardShortcutsHelp
+        open={isShortcutsHelpOpen}
+        onOpenChange={setIsShortcutsHelpOpen}
+        shortcuts={shortcuts.filter((shortcut) => shortcut.key !== 'escape')}
+      />
     </div>
   );
 }

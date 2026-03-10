@@ -29,6 +29,8 @@ Thumbs.db
 
 # AIOS Local (AIOS)
 .aios-core/local/
+.aios/project-status.yaml
+.aios/project-status.yaml.lock
 .claude/settings.local.json
 .aios/install-log.txt
 .vercel

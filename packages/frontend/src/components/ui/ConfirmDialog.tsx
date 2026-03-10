@@ -94,7 +94,7 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[115] flex items-center justify-center bg-neutral-950/55 backdrop-blur-sm motion-fade-in"
       onClick={() => !loading && onOpenChange(false)}
     >
       <div
@@ -104,13 +104,12 @@ export function ConfirmDialog({
         aria-describedby={description ? descriptionId : undefined}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          'app-surface mx-4 w-full max-w-md overflow-hidden rounded-[26px]',
-          'animate-in fade-in-0 zoom-in-95 duration-200'
+          'app-surface elevation-3 mx-4 w-full max-w-md overflow-hidden rounded-[26px] motion-scale-in'
         )}
       >
         <div className="p-6">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-100">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[color:var(--surface-muted)]">
               {config.icon}
             </div>
             <div className="min-w-0 flex-1">

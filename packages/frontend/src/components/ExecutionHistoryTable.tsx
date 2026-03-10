@@ -1,6 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  CircleX,
+  Minus,
+} from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './composite/Table';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -115,13 +123,26 @@ export function ExecutionHistoryTable({
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'success':
-        return '✓ Sucesso';
+        return 'Sucesso';
       case 'failed':
-        return '✗ Falha';
+        return 'Falha';
       case 'skipped':
-        return '- Ignorado';
+        return 'Ignorado';
       default:
         return status;
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle2 className="h-4 w-4" aria-hidden="true" />;
+      case 'failed':
+        return <CircleX className="h-4 w-4" aria-hidden="true" />;
+      case 'skipped':
+        return <Minus className="h-4 w-4" aria-hidden="true" />;
+      default:
+        return null;
     }
   };
 
@@ -302,9 +323,9 @@ export function ExecutionHistoryTable({
                 className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-sm"
               >
                 <option value="">Todos</option>
-                <option value="success">✓ Sucesso</option>
-                <option value="failed">✗ Falha</option>
-                <option value="skipped">- Ignorado</option>
+                <option value="success">Sucesso</option>
+                <option value="failed">Falha</option>
+                <option value="skipped">Ignorado</option>
               </select>
             </div>
 
@@ -344,21 +365,30 @@ export function ExecutionHistoryTable({
                 className="cursor-pointer hover:bg-neutral-100"
                 onClick={() => onSort?.('timestamp')}
               >
-                Data/Hora {sortBy === 'timestamp' && '↓'}
+                <span className="inline-flex items-center gap-1">
+                  Data/Hora
+                  {sortBy === 'timestamp' && <ArrowDown className="h-4 w-4" aria-hidden="true" />}
+                </span>
               </TableHead>
               <TableHead>Automacao</TableHead>
               <TableHead
                 className="cursor-pointer hover:bg-neutral-100"
                 onClick={() => onSort?.('status')}
               >
-                Status {sortBy === 'status' && '↓'}
+                <span className="inline-flex items-center gap-1">
+                  Status
+                  {sortBy === 'status' && <ArrowDown className="h-4 w-4" aria-hidden="true" />}
+                </span>
               </TableHead>
               <TableHead>Tipo Gatilho</TableHead>
               <TableHead
                 className="cursor-pointer hover:bg-neutral-100"
                 onClick={() => onSort?.('duration')}
               >
-                Duracao {sortBy === 'duration' && '↓'}
+                <span className="inline-flex items-center gap-1">
+                  Duracao
+                  {sortBy === 'duration' && <ArrowDown className="h-4 w-4" aria-hidden="true" />}
+                </span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -390,7 +420,10 @@ export function ExecutionHistoryTable({
                 <TableCell className="text-sm">{execution.automation_name || 'N/A'}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(execution.status)}>
-                    {getStatusLabel(execution.status)}
+                    <span className="inline-flex items-center gap-1.5">
+                      {getStatusIcon(execution.status)}
+                      {getStatusLabel(execution.status)}
+                    </span>
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm capitalize">{execution.trigger_type}</TableCell>
@@ -416,7 +449,10 @@ export function ExecutionHistoryTable({
             onClick={() => onPageChange(Math.max(0, offset - limit))}
             disabled={offset === 0}
           >
-            ← Anterior
+            <span className="inline-flex items-center gap-1.5">
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              Anterior
+            </span>
           </Button>
           <div className="text-sm text-neutral-600 min-w-32 text-center">
             Pagina {currentPage} de {totalPages}
@@ -427,7 +463,10 @@ export function ExecutionHistoryTable({
             onClick={() => onPageChange(Math.min(offset + limit, (totalPages - 1) * limit))}
             disabled={total === 0 || currentPage >= totalPages}
           >
-            Proxima →
+            <span className="inline-flex items-center gap-1.5">
+              Proxima
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </span>
           </Button>
         </div>
       </div>

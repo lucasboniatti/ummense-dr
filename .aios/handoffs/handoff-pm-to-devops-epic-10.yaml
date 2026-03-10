@@ -1,0 +1,43 @@
+handoff:
+  from_agent: pm
+  to_agent: devops
+  timestamp: '2026-03-10T12:50:00Z'
+
+story_context:
+  story_id: '10.20'
+  story_title: QA/UAT + PM Go/No-Go
+  story_path: docs/stories/10.20.story.md
+  story_status: Done
+  epic: EPIC-10-UX-DESIGN-SYSTEM-EXCELLENCE
+
+product_gate:
+  decision: GO
+  qa_gate: docs/qa/gates/story-10.20-qa-gate.md
+  pm_validation: docs/qa/gates/story-10.20-pm-validation.md
+  readiness: release-approved
+  blockers: []
+
+evidence:
+  - docs/qa/uat-epic-10-report.md
+  - docs/qa/uat-epic-10-checklist.md
+  - docs/qa/gates/story-10.1-10.3-qa-gate-second-pass.md
+  - docs/qa/gates/story-10.4-10.19-qa-gate-second-pass.md
+  - docs/qa/evidence/epic-10/
+
+validated_checks:
+  - npm run lint => PASS
+  - npm run typecheck => PASS
+  - npm test => PASS
+  - npm run build => PASS
+  - npm run test:e2e:parity => PASS (5 passed, 15 skipped em smoke-only parity)
+
+release_guardrails:
+  - Do not push or deploy before honoring both formal gates: QA PASS and PM GO.
+  - Preserve the validated workspace state; if new functional diffs are introduced, re-run validation before deployment.
+  - Execute post-deploy smoke on /dashboard, /dashboard/automations and /dashboard/integrations.
+
+next_action: '@devops *push'
+
+notes: 'Epic 10 design-system excellence is approved for release handoff. Product scope is closed; next actor is DevOps for commit/push/deploy.'
+
+consumed: false

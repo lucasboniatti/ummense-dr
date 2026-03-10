@@ -1,0 +1,35 @@
+handoff:
+  version: "1.0"
+  timestamp: "2026-03-10T03:05:00-03:00"
+  from_agent: "ux-design-expert"
+  to_agent: "dev"
+  consumed: true
+
+  story_context:
+    story_id: "EPIC-10-UX-DESIGN-SYSTEM-EXCELLENCE"
+    story_path: "docs/prd/epic-10-ux-design-system-excellence.md"
+    story_status: "Ready for Development"
+    current_task: "Dev must implement stories 10.1-10.19 in the approved sequence using the UX specification as the source of visual and interaction guidance"
+    branch: "master"
+
+  decisions:
+    - "UX specification is complete for Epic 10 stories 10.1 through 10.19."
+    - "Epic 10 remains bounded to UX, design-system, navigation, and product-polish work on the existing frontend."
+    - "Stories 10.1, 10.2, and 10.3 must lead to stabilize visible theme controls, iconography, and token governance."
+    - "Stories 10.8, 10.9, and 10.10 must preserve the approved consolidation framing for existing assets and must not regress into duplicate implementations."
+    - "Story 10.14 must remain frontend-first unless a real blocker forces a separate backend follow-up."
+    - "Global search must coexist with the current page-level topbar filters instead of replacing or duplicating them."
+    - "Form and primitive rollout should close the remaining visible PT-BR consistency gaps in TaskForm, TriggerTypeSelector, and related operator-facing copy."
+    - "Individual story files remain in Draft status because implementation has not started yet; execution readiness is governed by the epic status, approved gates, UX specification, and this handoff."
+    - "Story 10.20 remains untouched as the final QA/UAT plus PM go/no-go gate."
+
+  files_modified:
+    - "docs/prd/epic-10-ux-design-system-excellence.md"
+    - "docs/guides/ux-design-system-excellence-spec.md"
+    - ".aios/handoffs/handoff-ux-to-dev-epic-10-design-system-spec-ready-20260310.yaml"
+
+  blockers:
+    - "Do not start stories that depend on token alignment, consolidated assets, or global search before their prerequisite stories land."
+    - "Do not remove explicit loading, empty, error, confirmation, keyboard, dark-mode, or reduced-motion behavior while applying the new visual layer."
+
+  next_action: "Dev implements stories 10.1 through 10.19 in the approved order, captures evidence on the affected surfaces, and leaves story 10.20 for the final QA/UAT plus PM decision."
