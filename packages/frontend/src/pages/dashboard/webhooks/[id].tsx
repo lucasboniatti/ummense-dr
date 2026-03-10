@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, PencilLine, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { webhookService } from '../../../services/webhook.service';
 import { DeliveryHistory } from '../../../components/DeliveryHistory';
 import { TestWebhookModal } from '../../../components/TestWebhookModal';
 import { PageLoader } from '../../../components/ui/PageLoader';
+import { WebhookForm } from '../../../components/WebhookForm';
+import { Button } from '../../../components/ui/Button';
+import { useToast } from '../../../contexts/ToastContext';
 
 interface Webhook {
   id: string;
@@ -24,6 +27,8 @@ export default function WebhookDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showTestModal, setShowTestModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const { success, error: toastError } = useToast();
 
   useEffect(() => {
     if (id) {
@@ -80,13 +85,19 @@ export default function WebhookDetailPage() {
             <p className="app-page-copy">{webhook.description || 'Sem descrição operacional cadastrada.'}</p>
           </div>
 
-          <button
-            onClick={() => setShowTestModal(true)}
-            className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
-          >
-            <RefreshCw size={16} className="mr-2" />
-            Testar webhook
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" onClick={() => setShowEditModal(true)}>
+              <PencilLine size={16} className="mr-2" />
+              Editar webhook
+            </Button>
+            <button
+              onClick={() => setShowTestModal(true)}
+              className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
+            >
+              <RefreshCw size={16} className="mr-2" />
+              Testar webhook
+            </button>
+          </div>
         </div>
       </section>
 
@@ -137,6 +148,40 @@ export default function WebhookDetailPage() {
             loadWebhookDetail();
           }}
         />
+      )}
+
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 backdrop-blur-sm">
+          <div className="app-surface w-full max-w-md rounded-[26px] p-6">
+            <h2 className="mb-4 text-xl font-bold tracking-[-0.02em] text-neutral-900">
+              Editar webhook
+            </h2>
+            <WebhookForm
+              initialData={{
+                url: webhook.url,
+                description: webhook.description || '',
+                enabled: webhook.enabled,
+              }}
+              onSubmit={async (data) => {
+                try {
+                  await webhookService.updateWebhook(webhook.id, data);
+                  success('Webhook atualizado', 'As alterações foram salvas com sucesso.');
+                  setShowEditModal(false);
+                  await loadWebhookDetail();
+                } catch (submitError) {
+                  toastError(
+                    'Erro ao atualizar',
+                    submitError instanceof Error
+                      ? submitError.message
+                      : 'Não foi possível atualizar o webhook.'
+                  );
+                  throw submitError;
+                }
+              }}
+              onCancel={() => setShowEditModal(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

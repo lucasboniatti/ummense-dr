@@ -41,13 +41,41 @@ export const loginSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>;
 
 export const signupSchema = loginSchema.extend({
-  confirmPassword: z.string().min(6, 'Confirmação de senha é obrigatória'),
+  password: z
+    .string()
+    .min(8, 'Senha deve ter no mínimo 8 caracteres')
+    .regex(/[a-zA-Z]/, 'Senha deve conter pelo menos uma letra')
+    .regex(/\d/, 'Senha deve conter pelo menos um número'),
+  confirmPassword: z.string().min(8, 'Confirmação de senha é obrigatória'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Senhas não conferem',
   path: ['confirmPassword'],
 });
 
 export type SignupFormData = z.infer<typeof signupSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email é obrigatório')
+    .email('Email inválido'),
+});
+
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(8, 'Senha deve ter no mínimo 8 caracteres')
+    .regex(/[a-zA-Z]/, 'Senha deve conter pelo menos uma letra')
+    .regex(/\d/, 'Senha deve conter pelo menos um número'),
+  confirmPassword: z.string().min(8, 'Confirmação de senha é obrigatória'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Senhas não conferem',
+  path: ['confirmPassword'],
+});
+
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 // Event schemas
 export const eventSchema = z.object({

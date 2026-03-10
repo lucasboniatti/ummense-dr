@@ -13,6 +13,14 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+function getFrontendBaseUrl(): string {
+  return (
+    process.env.FRONTEND_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    'http://127.0.0.1:3000'
+  );
+}
+
 function issueToken(id: string, email: string): string {
   return jwt.sign({ id, email }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
 }
@@ -182,4 +190,90 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 export function logout(req: AuthRequest, res: Response): void {
   res.clearCookie('token');
   res.status(200).json({ message: 'Logged out successfully' });
+}
+
+export async function requestPasswordReset(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const { email } = req.body as { email?: string };
+    const normalizedEmail = normalizeEmail(email || '');
+
+    if (!normalizedEmail) {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      res.status(400).json({ error: 'Invalid email format' });
+      return;
+    }
+
+    const { error } = await supabaseAuth.auth.resetPasswordForEmail(
+      normalizedEmail,
+      {
+        redirectTo: `${getFrontendBaseUrl()}/auth/reset-password`,
+      }
+    );
+
+    if (error) {
+      res.status(500).json({ error: getErrorMessage(error) });
+      return;
+    }
+
+    res.status(200).json({
+      message:
+        'If the email exists, we sent a password reset link.',
+    });
+  } catch {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function resetPassword(
+  req: AuthRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const { accessToken, password } = req.body as {
+      accessToken?: string;
+      password?: string;
+    };
+
+    if (!accessToken || !password) {
+      res.status(400).json({ error: 'Access token and password required' });
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      res.status(400).json({ errors: passwordValidation.errors });
+      return;
+    }
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAuth.auth.getUser(accessToken);
+
+    if (userError || !user) {
+      res.status(401).json({ error: 'Invalid or expired recovery link' });
+      return;
+    }
+
+    const { error } = await supabase.auth.admin.updateUserById(user.id, {
+      password,
+    });
+
+    if (error) {
+      res.status(500).json({ error: getErrorMessage(error) });
+      return;
+    }
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch {
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }

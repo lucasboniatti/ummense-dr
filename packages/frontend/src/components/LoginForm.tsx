@@ -97,8 +97,14 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
 
       <div className="mt-4 text-center">
         <Link
+          href="/auth/forgot-password"
+          className="block text-sm font-medium text-primary-600 hover:text-primary-700"
+        >
+          Esqueci minha senha
+        </Link>
+        <Link
           href="/auth/signup"
-          className="text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="mt-3 block text-sm font-medium text-primary-600 hover:text-primary-700"
         >
           Não tem uma conta? Criar conta
         </Link>
