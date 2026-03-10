@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { webhookService } from '../../../services/webhook.service';
 import { DeliveryHistory } from '../../../components/DeliveryHistory';
 import { TestWebhookModal } from '../../../components/TestWebhookModal';
+import { PageLoader } from '../../../components/ui/PageLoader';
 
 interface Webhook {
   id: string;
@@ -44,13 +45,14 @@ export default function WebhookDetailPage() {
   };
 
   if (loading) {
-    return <div className="p-6 text-neutral-500">Carregando webhook...</div>;
+    return <div className="app-page"><PageLoader message="Carregando webhook..." /></div>;
   }
 
   if (error || !webhook) {
     return (
-      <div className="p-6">
-        <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
+      <div className="app-page">
+        <div className="app-inline-banner app-inline-banner-error">
+          <strong>Webhook</strong>
           {error || 'Webhook não encontrado'}
         </div>
         <Link
@@ -65,21 +67,31 @@ export default function WebhookDetailPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/webhooks" className="text-primary-600 hover:text-primary-700">
-          <ArrowLeft size={24} />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">{webhook.url}</h1>
-          <p className="text-neutral-600 mt-1">{webhook.description || 'Sem descrição'}</p>
-        </div>
-      </div>
+    <div className="app-page">
+      <section className="app-page-hero animate-fade-up">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="app-page-heading">
+            <Link href="/dashboard/webhooks" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:underline">
+              <ArrowLeft size={16} />
+              Voltar para webhooks
+            </Link>
+            <p className="app-kicker">Webhook</p>
+            <h1 className="app-page-title break-all">{webhook.url}</h1>
+            <p className="app-page-copy">{webhook.description || 'Sem descrição operacional cadastrada.'}</p>
+          </div>
 
-      {/* Webhook Details Card */}
-      <div className="bg-white rounded-lg border border-neutral-200 p-6">
-        <div className="grid grid-cols-2 gap-6">
+          <button
+            onClick={() => setShowTestModal(true)}
+            className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
+          >
+            <RefreshCw size={16} className="mr-2" />
+            Testar webhook
+          </button>
+        </div>
+      </section>
+
+      <div className="app-surface p-6">
+        <div className="grid gap-6 md:grid-cols-2">
           <div>
             <label className="text-sm font-semibold text-neutral-700">URL</label>
             <p className="mt-1 text-neutral-900">{webhook.url}</p>
@@ -102,31 +114,20 @@ export default function WebhookDetailPage() {
           <div>
             <label className="text-sm font-semibold text-neutral-700">Criado em</label>
             <p className="mt-1 text-neutral-900">
-              {new Date(webhook.createdAt).toLocaleDateString('en-US', {
+              {new Date(webhook.createdAt).toLocaleDateString('pt-BR', {
+                day: '2-digit',
                 month: 'short',
-                day: 'numeric',
                 year: 'numeric',
               })}
             </p>
           </div>
         </div>
-
-        <button
-          onClick={() => setShowTestModal(true)}
-          className="mt-6 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center gap-2 font-semibold"
-        >
-          <RefreshCw size={18} />
-          Testar Webhook
-        </button>
       </div>
 
-      {/* Delivery History */}
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Histórico de Entregas</h2>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">Historico de entregas</h2>
         <DeliveryHistory webhookId={webhook.id} />
       </div>
-
-      {/* Test Modal */}
       {showTestModal && (
         <TestWebhookModal
           webhookId={webhook.id}

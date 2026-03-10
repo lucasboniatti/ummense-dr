@@ -51,10 +51,9 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-6 bg-white rounded-lg border border-neutral-200 p-6">
-      {/* Trigger Type Selection */}
+    <div className="app-surface space-y-6 p-6">
       <div>
-        <label className="block text-sm font-semibold text-neutral-900 mb-3">
+        <label className="mb-3 block text-sm font-semibold text-neutral-900">
           Trigger Type
         </label>
         <div className="flex gap-4">
@@ -83,17 +82,16 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
             <span className="text-sm font-medium text-neutral-700">Scheduled (Recurring)</span>
           </label>
         </div>
-        <p className="text-xs text-neutral-500 mt-2">
+        <p className="mt-2 text-xs text-neutral-500">
           {value.type === 'webhook'
             ? 'Automation triggers when a webhook is received'
             : 'Automation triggers on a recurring schedule using cron expressions'}
         </p>
       </div>
 
-      {/* Webhook Configuration */}
       {value.type === 'webhook' && (
         <div>
-          <label className="block text-sm font-semibold text-neutral-900 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-neutral-900">
             Webhook URL
           </label>
           <div className="space-y-2">
@@ -103,7 +101,7 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
               value={value.webhookUrl || ''}
               onChange={(e) => handleWebhookUrlChange(e.target.value)}
               disabled={disabled}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-neutral-50 disabled:text-neutral-500"
+              className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
             />
             <button
               type="button"
@@ -113,7 +111,7 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
               {showWebhookHelp ? 'Hide help' : 'Show webhook help'}
             </button>
             {showWebhookHelp && (
-              <div className="bg-primary-50 border border-primary-200 rounded-md p-3 text-xs text-neutral-700">
+              <div className="app-surface-muted rounded-[16px] p-3 text-xs text-neutral-700">
                 <p className="font-semibold mb-1">Webhook Guide:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Send POST requests to your URL to trigger automations</li>
@@ -126,18 +124,17 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
         </div>
       )}
 
-      {/* Scheduled Configuration */}
       {value.type === 'scheduled' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-neutral-900 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-neutral-900">
               Timezone
             </label>
             <select
               value={value.timezone || 'UTC'}
               onChange={(e) => handleTimezoneChange(e.target.value)}
               disabled={disabled}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-neutral-50"
+              className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-sm disabled:bg-neutral-50"
             >
               <option value="UTC">UTC</option>
               <option value="America/New_York">America/New_York (EST/EDT)</option>
@@ -152,15 +149,12 @@ export const TriggerTypeSelector: React.FC<TriggerTypeSelectorProps> = ({
             </select>
           </div>
 
-          {/* Cron Presets */}
           <div>
-            <label className="block text-sm font-semibold text-neutral-900 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-neutral-900">
               Quick Presets (Optional)
             </label>
             <CronPresets onSelect={handleCronChange} />
           </div>
-
-          {/* Cron Expression Input */}
           <CronExpressionInput
             value={value.cronExpression || ''}
             onChange={handleCronChange}

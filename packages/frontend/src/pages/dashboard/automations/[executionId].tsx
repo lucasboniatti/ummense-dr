@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { automationService } from '../../../services/automation.service';
 import { ExecutionDetailModal } from '../../../components/ExecutionDetailModal';
+import { PageLoader } from '../../../components/ui/PageLoader';
 
 export default function ExecutionDetailPage() {
   const router = useRouter();
@@ -29,21 +30,24 @@ export default function ExecutionDetailPage() {
   };
 
   if (loading) {
-    return <div className="p-6">Loading execution details...</div>;
+    return <div className="app-page"><PageLoader message="Loading execution details..." /></div>;
   }
 
   if (!detail) {
-    return <div className="p-6">Execution not found</div>;
+    return <div className="app-inline-banner app-inline-banner-error"><strong>Execution</strong>Execution not found</div>;
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">Execution Details</h1>
-        <p className="text-neutral-600 mt-1">Rule execution trace, conditions, actions, and error details</p>
-      </div>
+    <div className="app-page">
+      <section className="app-page-hero animate-fade-up">
+        <div className="app-page-heading">
+          <p className="app-kicker">Automations</p>
+          <h1 className="app-page-title">Execution details</h1>
+          <p className="app-page-copy">Rule execution trace, conditions, actions, and error details.</p>
+        </div>
+      </section>
 
-      {error && <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded">{error}</div>}
+      {error && <div className="app-inline-banner app-inline-banner-error"><strong>Execution</strong>{error}</div>}
 
       {detail && <ExecutionDetailModal execution={detail} onClose={() => router.back()} />}
     </div>

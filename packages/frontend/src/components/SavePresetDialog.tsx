@@ -77,30 +77,28 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 backdrop-blur-sm"
       data-testid="save-preset-dialog-overlay"
     >
       <div
-        className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-w-md w-full mx-4"
+        className="app-surface mx-4 w-full max-w-md overflow-hidden rounded-[26px]"
         data-testid="save-preset-dialog"
       >
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+        <div className="border-b border-[color:var(--border-subtle)] px-6 py-4">
+          <p className="app-kicker">Historico</p>
+          <h2 className="text-lg font-semibold text-neutral-900">
             Salvar preset
           </h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+          <p className="mt-1 text-sm text-neutral-600">
             Salve o estado atual dos filtros para reutilizar depois
           </p>
         </div>
 
-        {/* Body */}
         <div className="px-6 py-4 space-y-4">
-          {/* Preset Name */}
           <div>
             <label
               htmlFor="preset-name"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="mb-1 block text-sm font-medium text-neutral-700"
             >
               Nome do preset <span className="text-error-600">*</span>
             </label>
@@ -114,20 +112,19 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
               }}
               placeholder="Ex.: Falhas nas ultimas 24h"
               maxLength={100}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="app-control h-11 w-full rounded-[var(--radius-control)] px-3 text-neutral-900 placeholder:text-neutral-400"
               disabled={isSaving}
               data-testid="preset-name-input"
             />
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            <p className="mt-1 text-xs text-neutral-500">
               {name.length}/100 caracteres
             </p>
           </div>
 
-          {/* Description */}
           <div>
             <label
               htmlFor="preset-description"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="mb-1 block text-sm font-medium text-neutral-700"
             >
               Descricao <span className="text-neutral-400">(opcional)</span>
             </label>
@@ -141,21 +138,20 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
               placeholder="Ex.: Todas as automacoes com falha nas ultimas 24 horas"
               maxLength={500}
               rows={3}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              className="app-control min-h-[110px] w-full rounded-[var(--radius-control)] px-3 py-3 text-neutral-900 placeholder:text-neutral-400"
               disabled={isSaving}
               data-testid="preset-description-input"
             />
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            <p className="mt-1 text-xs text-neutral-500">
               {description.length}/500 caracteres
             </p>
           </div>
 
-          {/* Filter Summary */}
-          <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-3 border border-neutral-200 dark:border-neutral-600">
-            <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-2">
+          <div className="app-surface-muted rounded-[18px] p-3">
+            <p className="mb-2 text-xs font-semibold text-neutral-600">
               Filtros que serao salvos:
             </p>
-            <ul className="text-xs text-neutral-700 dark:text-neutral-400 space-y-1">
+            <ul className="space-y-1 text-xs text-neutral-700">
               {visibleFilters.length > 0 ? (
                 visibleFilters.map(([key, value]) => (
                   <li key={key}>
@@ -166,17 +162,16 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
                   </li>
                 ))
               ) : (
-                <li className="text-neutral-500 dark:text-neutral-500">
+                <li className="text-neutral-500">
                   Nenhum filtro ativo. O preset salvara a visualizacao padrao.
                 </li>
               )}
             </ul>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div
-              className="p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg text-sm text-error-800 dark:text-error-200"
+              className="app-inline-banner app-inline-banner-error"
               data-testid="save-preset-error"
               role="alert"
             >
@@ -185,12 +180,11 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex justify-end gap-2">
+        <div className="flex justify-end gap-2 border-t border-[color:var(--border-subtle)] px-6 py-4">
           <button
             onClick={handleCancel}
             disabled={isSaving}
-            className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="app-control h-10 rounded-[var(--radius-control)] px-4 font-medium text-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="save-preset-cancel-btn"
           >
             Cancelar
@@ -198,7 +192,7 @@ const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
           <button
             onClick={handleSave}
             disabled={isSaving || !name.trim()}
-            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="app-control h-10 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="save-preset-save-btn"
           >
             {isSaving ? 'Salvando...' : 'Salvar preset'}

@@ -25,14 +25,16 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
   const isSuccess = response.statusCode >= 200 && response.statusCode < 300;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 backdrop-blur-sm">
+      <div className="app-surface flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-[26px]">
+        <div className="flex items-center justify-between border-b border-[color:var(--border-subtle)] p-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold">Resposta do Webhook</h2>
+            <div>
+              <p className="app-kicker">Teste</p>
+              <h2 className="text-lg font-semibold">Resposta do webhook</h2>
+            </div>
             <span
-              className={`text-sm font-mono px-2 py-1 rounded ${
+              className={`rounded-full px-2 py-1 text-sm font-mono ${
                 isSuccess
                   ? 'bg-success-100 text-success-800'
                   : 'bg-error-100 text-error-800'
@@ -43,14 +45,13 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-neutral-100 rounded"
+            className="app-control h-9 w-9 rounded-full p-0 hover:bg-neutral-100"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Status & Timing */}
-        <div className="px-4 py-2 bg-neutral-50 border-b text-sm">
+        <div className="border-b border-[color:var(--border-subtle)] bg-neutral-50/90 px-4 py-2 text-sm">
           <div className="flex gap-6">
             <div>
               <span className="text-neutral-600">Status: </span>
@@ -65,13 +66,12 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-4 px-4 pt-3 border-b">
+        <div className="flex gap-3 border-b border-[color:var(--border-subtle)] px-4 pt-3">
           <button
             onClick={() => setActiveTab('body')}
-            className={`py-2 px-3 font-medium text-sm border-b-2 ${
+            className={`app-chip-toggle rounded-none border-x-0 border-t-0 px-3 py-2 text-sm ${
               activeTab === 'body'
-                ? 'border-primary-500 text-primary-600'
+                ? 'app-chip-toggle-active border-primary-500 text-white'
                 : 'border-transparent text-neutral-600 hover:text-neutral-900'
             }`}
           >
@@ -79,9 +79,9 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('headers')}
-            className={`py-2 px-3 font-medium text-sm border-b-2 ${
+            className={`app-chip-toggle rounded-none border-x-0 border-t-0 px-3 py-2 text-sm ${
               activeTab === 'headers'
-                ? 'border-primary-500 text-primary-600'
+                ? 'app-chip-toggle-active border-primary-500 text-white'
                 : 'border-transparent text-neutral-600 hover:text-neutral-900'
             }`}
           >
@@ -89,10 +89,9 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
           </button>
         </div>
 
-        {/* Content */}
         <div className="overflow-auto flex-1 p-4">
           {activeTab === 'body' ? (
-            <pre className="font-mono text-sm bg-neutral-50 p-3 rounded overflow-auto max-h-96 border">
+            <pre className="app-code-block max-h-96 font-mono text-sm">
               {(() => {
                 try {
                   return JSON.stringify(JSON.parse(response.body), null, 2);
@@ -106,7 +105,7 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
               {Object.entries(response.headers).map(([key, value]) => (
                 <div
                   key={key}
-                  className="font-mono text-sm bg-neutral-50 p-2 rounded border"
+                  className="app-surface-muted rounded-[16px] p-2 font-mono text-sm"
                 >
                   <span className="font-semibold text-primary-600">{key}: </span>
                   <span className="text-neutral-900">{value as string}</span>
@@ -116,11 +115,10 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-2 p-4 border-t bg-neutral-50">
+        <div className="flex justify-end gap-2 border-t border-[color:var(--border-subtle)] bg-neutral-50/90 p-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 text-sm font-medium"
+            className="app-control h-10 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-medium text-white hover:bg-primary-700"
           >
             Fechar
           </button>

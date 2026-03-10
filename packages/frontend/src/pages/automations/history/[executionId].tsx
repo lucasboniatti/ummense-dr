@@ -66,16 +66,17 @@ export default function ExecutionDetailPage() {
 
   if (error || !execution) {
     return (
-      <div className="min-h-screen bg-neutral-50">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="app-page">
+        <div className="px-4 py-4">
           <button
             onClick={() => router.back()}
             className="text-primary-600 hover:text-primary-800 mb-4"
           >
             ← Voltar
           </button>
-          <div className="bg-error-50 border border-error-200 rounded-lg p-4">
-            <p className="text-error-800">{error || 'Execução não encontrada'}</p>
+          <div className="app-inline-banner app-inline-banner-error">
+            <strong>Execucao</strong>
+            {error || 'Execução não encontrada'}
           </div>
         </div>
       </div>
@@ -107,27 +108,27 @@ export default function ExecutionDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
+    <div className="app-page">
+      <section className={`app-page-hero animate-fade-up ${getStatusColor(execution.status)}`}>
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="text-primary-600 hover:text-primary-800 mb-4 text-sm"
+            className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:underline"
           >
-            ← Voltar ao Histórico
+            ← Voltar ao histórico
           </button>
 
-          <div className={`border rounded-lg p-6 ${getStatusColor(execution.status)}`}>
-            <div className="flex items-start justify-between mb-4">
+          <div className="rounded-[22px] border border-white/60 bg-white/65 p-6">
+            <div className="mb-4 flex items-start justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-neutral-900">
+                <p className="app-kicker">Execucao</p>
+                <h1 className="text-2xl font-bold tracking-[-0.03em] text-neutral-900">
                   {execution.automation_name}
                 </h1>
-                <p className="text-neutral-600 text-sm font-mono mt-1">{execution.id}</p>
+                <p className="mt-1 text-sm font-mono text-neutral-600">{execution.id}</p>
               </div>
               <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${execution.status === 'success'
+                className={`rounded-full px-3 py-1 text-sm font-medium ${execution.status === 'success'
                     ? 'bg-success-200 text-success-800'
                     : 'bg-error-200 text-error-800'
                   }`}
@@ -136,7 +137,7 @@ export default function ExecutionDetailPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
               <div>
                 <p className="text-neutral-600">Início</p>
                 <p className="font-medium">
@@ -160,101 +161,100 @@ export default function ExecutionDetailPage() {
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Error Panel */}
-        {execution.status === 'failed' && execution.error_context && (
-          <div className="bg-error-50 border border-error-200 rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-semibold text-error-900 mb-4">Detalhes do Erro</h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-error-700 font-medium">Mensagem</p>
-                <p className="mt-1 text-error-900 font-mono text-sm">
-                  {execution.error_context.message}
-                </p>
-              </div>
-              {execution.error_context.stack && (
-                <div>
-                  <p className="text-sm text-error-700 font-medium">Stack Trace</p>
-                  <pre className="mt-1 bg-white border border-error-200 rounded p-3 text-xs text-error-800 overflow-auto max-h-32">
-                    {execution.error_context.stack}
-                  </pre>
-                </div>
-              )}
-              {execution.error_context.state && (
-                <div>
-                  <p className="text-sm text-error-700 font-medium">Estado</p>
-                  <pre className="mt-1 bg-white border border-error-200 rounded p-3 text-xs text-error-800 overflow-auto max-h-32">
-                    {JSON.stringify(execution.error_context.state, null, 2)}
-                  </pre>
-                </div>
-              )}
+      {execution.status === 'failed' && execution.error_context && (
+        <div className="app-inline-banner app-inline-banner-error">
+          <strong>Falha</strong>
+          <h2 className="text-lg font-semibold text-error-900">Detalhes do erro</h2>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-error-700">Mensagem</p>
+              <p className="mt-1 font-mono text-sm text-error-900">
+                {execution.error_context.message}
+              </p>
             </div>
+            {execution.error_context.stack && (
+              <div>
+                <p className="text-sm font-medium text-error-700">Stack trace</p>
+                <pre className="app-code-block mt-1 max-h-32 text-error-800">
+                  {execution.error_context.stack}
+                </pre>
+              </div>
+            )}
+            {execution.error_context.state && (
+              <div>
+                <p className="text-sm font-medium text-error-700">Estado</p>
+                <pre className="app-code-block mt-1 max-h-32 text-error-800">
+                  {JSON.stringify(execution.error_context.state, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Timeline de passos</h2>
+
+        {steps.length === 0 ? (
+          <div className="app-surface-muted rounded-[22px] p-6 text-center text-neutral-500">
+            Nenhum passo registrado
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {steps.map((step, index) => (
+              <div key={step.id} className="app-table-shell">
+                <button
+                  onClick={() => setExpandedStep(expandedStep === step.id ? null : step.id)}
+                  className="flex w-full items-center justify-between px-6 py-4 transition hover:bg-neutral-50"
+                >
+                  <div className="flex flex-1 items-center gap-4">
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${step.status === 'success'
+                          ? 'bg-success-100 text-success-700'
+                          : step.status === 'failed'
+                            ? 'bg-error-100 text-error-700'
+                            : 'bg-neutral-100 text-neutral-700'
+                        }`}
+                    >
+                      {getStepStatusIcon(step.status)}
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-neutral-900">Passo {index + 1}: {step.step_id}</p>
+                      <p className="text-sm text-neutral-600">
+                        {step.duration_ms}ms
+                        {step.error_message && ` • ${step.error_message}`}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-neutral-400">{expandedStep === step.id ? '▼' : '▶'}</span>
+                </button>
+
+                {expandedStep === step.id && (
+                  <div className="space-y-4 border-t border-[color:var(--border-subtle)] bg-neutral-50/85 px-6 py-4">
+                    {step.input && (
+                      <div>
+                        <p className="mb-2 text-sm font-medium text-neutral-700">Input</p>
+                        <pre className="app-code-block max-h-32">
+                          {JSON.stringify(step.input, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                    {step.output && (
+                      <div>
+                        <p className="mb-2 text-sm font-medium text-neutral-700">Output</p>
+                        <pre className="app-code-block max-h-32">
+                          {JSON.stringify(step.output, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
-
-        {/* Steps Timeline */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-neutral-900">Timeline de Passos</h2>
-
-          {steps.length === 0 ? (
-            <div className="bg-white rounded-lg p-6 text-center text-neutral-500">
-              Nenhum passo registrado
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {steps.map((step, index) => (
-                <div key={step.id} className="bg-white border rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setExpandedStep(expandedStep === step.id ? null : step.id)}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-neutral-50 transition"
-                  >
-                    <div className="flex items-center gap-4 flex-1">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step.status === 'success'
-                            ? 'bg-success-100 text-success-700'
-                            : step.status === 'failed'
-                              ? 'bg-error-100 text-error-700'
-                              : 'bg-neutral-100 text-neutral-700'
-                          }`}
-                      >
-                        {getStepStatusIcon(step.status)}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-medium text-neutral-900">Passo {index + 1}: {step.step_id}</p>
-                        <p className="text-sm text-neutral-600">
-                          {step.duration_ms}ms
-                          {step.error_message && ` • ${step.error_message}`}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-neutral-400">{expandedStep === step.id ? '▼' : '▶'}</span>
-                  </button>
-
-                  {expandedStep === step.id && (
-                    <div className="border-t px-6 py-4 bg-neutral-50 space-y-4">
-                      {step.input && (
-                        <div>
-                          <p className="text-sm font-medium text-neutral-700 mb-2">Input</p>
-                          <pre className="bg-white border rounded p-3 text-xs text-neutral-800 overflow-auto max-h-32">
-                            {JSON.stringify(step.input, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                      {step.output && (
-                        <div>
-                          <p className="text-sm font-medium text-neutral-700 mb-2">Output</p>
-                          <pre className="bg-white border rounded p-3 text-xs text-neutral-800 overflow-auto max-h-32">
-                            {JSON.stringify(step.output, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

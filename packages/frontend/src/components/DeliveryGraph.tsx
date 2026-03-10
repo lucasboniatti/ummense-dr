@@ -57,16 +57,19 @@ export const DeliveryGraph: React.FC<DeliveryGraphProps> = ({ webhookId }) => {
   };
 
   if (loading && data.length === 0) {
-    return <div className="text-center py-8 text-neutral-600">Loading delivery metrics...</div>;
+    return <div className="app-surface-muted rounded-[22px] py-8 text-center text-neutral-600">Loading delivery metrics...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-8 text-error-600">Error loading metrics: {error}</div>;
+    return <div className="app-inline-banner app-inline-banner-error"><strong>Metrics</strong>Error loading metrics: {error}</div>;
   }
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-6">
-      <h3 className="text-lg font-semibold mb-4 text-neutral-900">Delivery Metrics (Last 24 Hours)</h3>
+    <div className="app-surface p-6">
+      <div className="mb-4">
+        <p className="app-kicker">Entregas</p>
+        <h3 className="mt-2 text-lg font-semibold text-neutral-900">Delivery metrics (last 24 hours)</h3>
+      </div>
 
       {data.length > 0 ? (
         <ResponsiveContainer width="100%" height={300}>
@@ -115,7 +118,7 @@ export const DeliveryGraph: React.FC<DeliveryGraphProps> = ({ webhookId }) => {
 
       <button
         onClick={loadMetrics}
-        className="mt-4 text-sm text-primary-600 hover:text-primary-700"
+        className="mt-4 text-sm font-semibold text-primary-600 hover:text-primary-700"
       >
         ↻ Refresh
       </button>

@@ -25,8 +25,8 @@ export const QueueMetricsDisplay: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    if (loading) return <div className="p-4 text-neutral-600">Loading queue metrics...</div>;
-    if (error) return <div className="p-4 text-error-600 font-semibold">Error loading metrics: {error}</div>;
+    if (loading) return <div className="app-surface-muted rounded-[22px] p-4 text-neutral-600">Loading queue metrics...</div>;
+    if (error) return <div className="app-inline-banner app-inline-banner-error"><strong>Queue</strong>Error loading metrics: {error}</div>;
     if (!metrics) return null;
 
     const getCapacityVariant = (percentFull: number) => {
@@ -42,28 +42,31 @@ export const QueueMetricsDisplay: React.FC = () => {
     };
 
     return (
-        <div className="bg-white p-4 rounded-lg shadow-md border border-neutral-200">
+        <div className="app-surface p-4">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-neutral-900">Queue Metrics</h3>
+                <div>
+                    <p className="app-kicker">Fila</p>
+                    <h3 className="mt-2 text-lg font-semibold text-neutral-900">Queue metrics</h3>
+                </div>
                 {metrics.isPaused && (
                     <Badge variant="warning">PAUSED</Badge>
                 )}
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div className="bg-primary-50 p-3 rounded-lg border border-primary-100">
+                <div className="app-surface-muted rounded-[18px] p-3">
                     <p className="text-sm text-primary-600 font-medium">Active (Local)</p>
                     <p className="text-2xl font-bold text-neutral-900">{metrics.activeCount}</p>
                 </div>
-                <div className="bg-neutral-100 p-3 rounded-lg border border-neutral-200">
+                <div className="app-surface-muted rounded-[18px] p-3">
                     <p className="text-sm text-neutral-600 font-medium">Waiting</p>
                     <p className="text-2xl font-bold text-neutral-900">{metrics.waitingCount}</p>
                 </div>
-                <div className="bg-warning-50 p-3 rounded-lg border border-warning-100">
+                <div className="app-surface-muted rounded-[18px] p-3">
                     <p className="text-sm text-warning-600 font-medium">Delayed</p>
                     <p className="text-2xl font-bold text-neutral-900">{metrics.delayedCount}</p>
                 </div>
-                <div className="bg-error-50 p-3 rounded-lg border border-error-100">
+                <div className="app-surface-muted rounded-[18px] p-3">
                     <p className="text-sm text-error-600 font-medium">Failed</p>
                     <p className="text-2xl font-bold text-neutral-900">{metrics.failedCount}</p>
                 </div>

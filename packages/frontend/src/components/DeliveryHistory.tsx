@@ -68,9 +68,7 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="space-y-3">
-        {/* Search Bar */}
+      <div className="app-toolbar space-y-3 p-3">
         <div className="relative">
           <Search
             size={18}
@@ -81,17 +79,15 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
             placeholder="Buscar por ID do evento ou tipo..."
             value={filters.search || ''}
             onChange={(e) => updateSearch(e.target.value || undefined)}
-            className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="app-control h-11 w-full rounded-[var(--radius-control)] pl-10 pr-4"
           />
         </div>
 
-        {/* Status and Date Filters */}
         <div className="flex gap-2 flex-wrap">
-          {/* Status Filter */}
           <select
             value={filters.status || ''}
             onChange={(e) => updateStatus(e.target.value || undefined)}
-            className="px-3 py-1 border border-neutral-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="app-control h-10 rounded-[var(--radius-control)] px-3 text-sm"
           >
             <option value="">Todos os Status</option>
             <option value="success">Entregue</option>
@@ -100,37 +96,35 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
             <option value="dead_lettered">Descartado</option>
           </select>
 
-          {/* Quick Date Range */}
           <div className="flex gap-1">
             <button
               onClick={() => setQuickDateRange('last24h')}
-              className={`px-3 py-1 text-sm rounded ${
+              className={`app-chip-toggle ${
                 filters.startDate
-                  ? 'bg-primary-100 text-primary-700 border border-primary-300'
-                  : 'bg-neutral-100 text-neutral-700 border border-neutral-300 hover:bg-neutral-200'
+                  ? 'app-chip-toggle-active'
+                  : ''
               }`}
             >
               Últimas 24h
             </button>
             <button
               onClick={() => setQuickDateRange('last7d')}
-              className="px-3 py-1 text-sm rounded bg-neutral-100 text-neutral-700 border border-neutral-300 hover:bg-neutral-200"
+              className="app-chip-toggle"
             >
               Últimos 7d
             </button>
             <button
               onClick={() => setQuickDateRange('last30d')}
-              className="px-3 py-1 text-sm rounded bg-neutral-100 text-neutral-700 border border-neutral-300 hover:bg-neutral-200"
+              className="app-chip-toggle"
             >
               Últimos 30d
             </button>
           </div>
 
-          {/* Clear Filters */}
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-3 py-1 text-sm rounded bg-neutral-100 text-neutral-700 border border-neutral-300 hover:bg-neutral-200"
+              className="app-chip-toggle"
             >
               Limpar Filtros
             </button>
@@ -153,27 +147,26 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
         )}
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto border border-neutral-200 rounded-md">
+      <div className="app-table-shell overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50 border-b border-neutral-200">
+          <thead className="bg-neutral-50/90 border-b border-[color:var(--border-subtle)]">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-neutral-700">
+              <th className="h-12 px-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
                 Status
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-700">
+              <th className="h-12 px-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
                 Tipo de Evento
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-700">
+              <th className="h-12 px-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
                 Tentativa
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-700">
+              <th className="h-12 px-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
                 Código HTTP
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-700">
+              <th className="h-12 px-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
                 Data/Hora
               </th>
-              <th className="px-4 py-3 text-left font-medium text-neutral-700"></th>
+              <th className="h-12 px-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500"></th>
             </tr>
           </thead>
           <tbody>
@@ -187,7 +180,7 @@ export const DeliveryHistory: React.FC<DeliveryHistoryProps> = ({
               deliveries.map((delivery) => (
                 <tr
                   key={delivery.id}
-                  className="border-b border-neutral-200 hover:bg-neutral-50 cursor-pointer"
+                  className="cursor-pointer border-b border-[color:var(--border-subtle)] hover:bg-neutral-50"
                   onClick={() => onDeliveryClick?.(delivery)}
                 >
                   <td className="px-4 py-3">

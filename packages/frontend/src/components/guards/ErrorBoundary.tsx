@@ -26,9 +26,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center border border-neutral-200">
-                        <div className="w-16 h-16 bg-error-100 text-error-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="app-auth-shell">
+                    <div className="app-auth-card w-full max-w-md text-center">
+                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-error-100 text-error-600">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
@@ -45,15 +45,16 @@ export class ErrorBoundary extends React.Component<Props, State> {
                             </svg>
                         </div>
 
-                        <h1 className="text-2xl font-bold text-neutral-900 mb-2">Ops! Algo deu errado.</h1>
-                        <p className="text-neutral-600 mb-6">
+                        <p className="app-kicker">Falha de interface</p>
+                        <h1 className="mb-2 text-2xl font-bold tracking-[-0.03em] text-neutral-900">Algo deu errado.</h1>
+                        <p className="mb-6 text-neutral-600">
                             Um erro inesperado aconteceu enquanto processávamos sua solicitação. Nossos engenheiros já foram notificados.
                         </p>
 
                         <div className="space-y-3">
                             <button
                                 onClick={() => window.location.reload()}
-                                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                                className="app-control h-11 w-full rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 font-semibold text-white transition-colors hover:bg-primary-700"
                             >
                                 Recarregar Página
                             </button>
@@ -62,7 +63,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                                     this.setState({ hasError: false, error: null });
                                     window.location.href = '/';
                                 }}
-                                className="w-full bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-300 font-semibold py-3 px-4 rounded-lg transition-colors"
+                                className="app-control h-11 w-full rounded-[var(--radius-control)] px-4 font-semibold text-neutral-700 transition-colors"
                             >
                                 Voltar ao Início
                             </button>
@@ -71,7 +72,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                         {process.env.NODE_ENV === 'development' && this.state.error && (
                             <div className="mt-6 text-left">
                                 <p className="text-xs font-semibold text-error-700 mb-1">Detalhes do erro (apenas Dev):</p>
-                                <pre className="text-[10px] bg-error-50 text-error-800 p-3 rounded overflow-auto max-h-32">
+                                <pre className="app-code-block max-h-32 text-[10px] text-error-800">
                                     {this.state.error.toString()}
                                 </pre>
                             </div>

@@ -86,31 +86,34 @@ export default function WebhooksPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Webhooks</h1>
-          <p className="text-neutral-600 mt-1">Gerencie seus endpoints de webhook e histórico de entregas</p>
+    <div className="app-page">
+      <section className="app-page-hero animate-fade-up">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="app-page-heading">
+            <p className="app-kicker">Contatos & webhooks</p>
+            <h1 className="app-page-title">Webhooks</h1>
+            <p className="app-page-copy">
+              Gerencie endpoints, acompanhe taxa de sucesso e chegue ao historico de entregas sem sair da trilha operacional.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="app-control h-11 rounded-[var(--radius-control)] border-transparent bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
+          >
+            <Plus size={18} className="mr-2" />
+            Novo webhook
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-700 font-semibold"
-        >
-          <Plus size={20} />
-          Novo Webhook
-        </button>
-      </div>
+      </section>
 
-      {/* Error Message */}
       {error && (
-        <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
+        <div className="app-inline-banner app-inline-banner-error">
+          <strong>Webhooks</strong>
           {error}
         </div>
       )}
 
-      {/* Webhooks Table */}
-      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+      <div className="app-table-shell">
         {loading ? (
           <PageLoader message="Carregando webhooks..." />
         ) : webhooks.length === 0 ? (
@@ -118,30 +121,33 @@ export default function WebhooksPage() {
             icon={<Webhook size={48} />}
             title="Nenhum webhook encontrado"
             description="Você ainda não possui nenhum webhook configurado."
-            actionLabel="Criar Webhook"
+            actionLabel="Criar webhook"
             onAction={() => setShowCreateModal(true)}
           />
         ) : (
           <table className="w-full">
-            <thead className="bg-neutral-50 border-b border-neutral-200">
+            <thead className="border-b border-[color:var(--border-subtle)] bg-neutral-50/90">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">URL</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Taxa de Sucesso</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Último Disparo</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-neutral-700">Ações</th>
+                <th className="h-12 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">URL</th>
+                <th className="h-12 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Status</th>
+                <th className="h-12 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Taxa de sucesso</th>
+                <th className="h-12 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Ultimo disparo</th>
+                <th className="h-12 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Acoes</th>
               </tr>
             </thead>
             <tbody>
               {webhooks.map((webhook) => (
-                <tr key={webhook.id} className="border-b border-neutral-200 hover:bg-neutral-50">
+                <tr key={webhook.id} className="border-b border-[color:var(--border-subtle)] transition hover:bg-neutral-50/80">
                   <td className="px-6 py-4">
                     <Link
                       href={`/dashboard/webhooks/${webhook.id}`}
-                      className="font-medium text-primary-600 hover:underline"
+                      className="font-medium text-primary-700 hover:underline"
                     >
                       {webhook.url}
                     </Link>
+                    {webhook.description && (
+                      <p className="mt-1 text-xs text-neutral-500">{webhook.description}</p>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-sm font-bold ${webhook.enabled
@@ -169,13 +175,13 @@ export default function WebhooksPage() {
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/dashboard/webhooks/${webhook.id}`}
-                        className="text-neutral-600 hover:text-neutral-900"
+                        className="app-control inline-flex h-9 w-9 items-center justify-center rounded-full p-0 text-neutral-600 hover:text-neutral-900"
                       >
                         <Edit2 size={18} />
                       </Link>
                       <button
                         onClick={() => handleDelete(webhook.id)}
-                        className="text-error-600 hover:text-error-900"
+                        className="app-control inline-flex h-9 w-9 items-center justify-center rounded-full p-0 text-error-600 hover:text-error-900"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -191,8 +197,8 @@ export default function WebhooksPage() {
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-neutral-950/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl border border-neutral-200">
-            <h2 className="text-xl font-bold mb-4 text-neutral-900">Novo Webhook</h2>
+          <div className="app-surface w-full max-w-md rounded-[26px] p-6">
+            <h2 className="mb-4 text-xl font-bold tracking-[-0.02em] text-neutral-900">Novo webhook</h2>
             <WebhookForm
               onSubmit={async (data) => {
                 await webhookService.createWebhook(data);

@@ -35,14 +35,17 @@ export const PauseResumeControls: React.FC = () => {
 
     return (
         <>
-            <div className="bg-white p-4 rounded-lg shadow-md border border-neutral-200 mt-4">
-                <h3 className="text-lg font-semibold mb-4 text-neutral-800">Queue Controls</h3>
+            <div className="app-surface mt-4 p-4">
+                <div className="mb-4">
+                    <p className="app-kicker">Controle</p>
+                    <h3 className="mt-2 text-lg font-semibold text-neutral-800">Queue controls</h3>
+                </div>
 
                 <div className="flex flex-wrap gap-3">
                     <button
                         onClick={() => handleAction('pause')}
                         disabled={loadingAction !== null}
-                        className="bg-warning-500 hover:bg-warning-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
+                        className="app-control rounded-[var(--radius-control)] border-transparent bg-warning-500 px-4 py-2 font-medium text-white transition-colors hover:bg-warning-600 disabled:opacity-50"
                     >
                         {loadingAction === 'pause' ? 'Pausing...' : 'Pause Queue'}
                     </button>
@@ -50,7 +53,7 @@ export const PauseResumeControls: React.FC = () => {
                     <button
                         onClick={() => handleAction('resume')}
                         disabled={loadingAction !== null}
-                        className="bg-success-500 hover:bg-success-600 text-white px-4 py-2 rounded shadow font-medium transition-colors disabled:opacity-50"
+                        className="app-control rounded-[var(--radius-control)] border-transparent bg-success-500 px-4 py-2 font-medium text-white transition-colors hover:bg-success-600 disabled:opacity-50"
                     >
                         {loadingAction === 'resume' ? 'Resuming...' : 'Resume Queue'}
                     </button>
@@ -58,14 +61,14 @@ export const PauseResumeControls: React.FC = () => {
                     <button
                         onClick={handleClearConfirm}
                         disabled={loadingAction !== null}
-                        className="bg-error-500 hover:bg-error-600 text-white px-4 py-2 rounded shadow font-medium transition-colors ml-auto disabled:opacity-50"
+                        className="app-control ml-auto rounded-[var(--radius-control)] border-transparent bg-error-500 px-4 py-2 font-medium text-white transition-colors hover:bg-error-600 disabled:opacity-50"
                     >
                         {loadingAction === 'clear' ? 'Clearing...' : 'Clear Queue'}
                     </button>
                 </div>
 
                 {message && (
-                    <div className={`mt-4 p-3 rounded text-sm font-medium ${message.type === 'success' ? 'bg-success-50 text-success-700' : 'bg-error-50 text-error-700'}`}>
+                    <div className={`mt-4 rounded-[18px] p-3 text-sm font-medium ${message.type === 'success' ? 'bg-success-50 text-success-700' : 'bg-error-50 text-error-700'}`}>
                         {message.text}
                     </div>
                 )}
