@@ -1,8 +1,18 @@
-import { Activity, ListTodo, Sparkles, SquareKanban, CalendarClock, ShieldCheck } from 'lucide-react';
+import {
+  Activity,
+  ArrowUpRight,
+  CalendarClock,
+  CircleAlert,
+  ListTodo,
+  ShieldCheck,
+  Sparkles,
+  SquareKanban,
+} from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CalendarPanel, { CalendarEvent } from '../components/panel/CalendarPanel';
 import TasksPanel, { PanelTask, TaskTag } from '../components/panel/TasksPanel';
+import { AvatarStack } from '../components/ui/AvatarStack';
 import { Badge } from '../components/ui/Badge';
 import { ProgressSegments, type ProgressSegmentColor } from '../components/ui/ProgressSegments';
 import { eventsService } from '../services/events.service';
@@ -64,72 +74,11 @@ interface SummaryState {
   dueTodayTasksCount: number;
 }
 
-const fallbackTasks: PanelTask[] = [
-  {
-    id: 101,
-    title: 'Revisar estratégia e copy do projeto',
-    priority: 'P1',
-    status: 'in_progress',
-    dueDate: new Date().toISOString(),
-    assignedTo: 'Lucas Boniatti',
-    cardId: 44,
-    cardName: 'Agrocenter Solar',
-    progress: 64,
-    tags: [
-      { id: 1, name: 'ONBOARDING', color: '#6d28d9' },
-      { id: 2, name: 'ALTA PRIORIDADE', color: '#dc2626' },
-    ],
-  },
-  {
-    id: 102,
-    title: 'Coletar aprovação da SDR IA',
-    priority: 'P2',
-    status: 'todo',
-    dueDate: null,
-    assignedTo: 'Time Comercial',
-    cardId: 45,
-    cardName: 'Digital Rockets',
-    progress: 25,
-    tags: [{ id: 3, name: 'FLOW PLUS IA', color: '#059669' }],
-  },
-  {
-    id: 103,
-    title: 'Fechamento mensal operação DR',
-    priority: 'P3',
-    status: 'completed',
-    dueDate: new Date(Date.now() - 86400000).toISOString(),
-    assignedTo: 'Operações',
-    cardId: 46,
-    cardName: 'Gestão Operação DR',
-    progress: 100,
-    tags: [{ id: 4, name: 'OPERAÇÃO', color: '#2563eb' }],
-  },
-];
-
-const fallbackEvents: CalendarEvent[] = [
-  {
-    id: 'evt-local-1',
-    title: 'Reunião de alinhamento de fluxos',
-    startsAt: new Date().toISOString(),
-    endsAt: null,
-    cardId: 44,
-    taskId: 101,
-  },
-  {
-    id: 'evt-local-2',
-    title: 'Entrega de assets para jurídico',
-    startsAt: new Date(Date.now() + 86400000).toISOString(),
-    endsAt: null,
-    cardId: 45,
-    taskId: 102,
-  },
-];
-
-const fallbackSummary: SummaryState = {
-  flowsCount: 6,
-  cardsCount: 28,
-  openTasksCount: 19,
-  dueTodayTasksCount: 5,
+const emptySummary: SummaryState = {
+  flowsCount: 0,
+  cardsCount: 0,
+  openTasksCount: 0,
+  dueTodayTasksCount: 0,
 };
 
 function inferProgress(status: string): number {
@@ -137,6 +86,13 @@ function inferProgress(status: string): number {
   if (status === 'in_progress') return 65;
   if (status === 'todo') return 30;
   return 15;
+}
+
+function priorityRank(priority: string): number {
+  if (priority === 'P1') return 0;
+  if (priority === 'P2') return 1;
+  if (priority === 'P3') return 2;
+  return 3;
 }
 
 function toCalendarIso(value: string): string {
@@ -153,6 +109,22 @@ function toCalendarIso(value: string): string {
   }
 
   return parsed.toISOString();
+}
+
+function formatDueDate(value: string | null): string {
+  if (!value) {
+    return 'Sem prazo';
+  }
+
+  const parsed = new Date(value.includes('T') ? value : `${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+  });
 }
 
 function getLocalDevToken(): string {
@@ -177,7 +149,7 @@ export default function HomePage() {
   const [reloadCount, setReloadCount] = useState(0);
   const [todayLabel, setTodayLabel] = useState('Hoje');
 
-  const [summary, setSummary] = useState<SummaryState>(fallbackSummary);
+  const [summary, setSummary] = useState<SummaryState>(emptySummary);
 
   const [tasks, setTasks] = useState<PanelTask[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
@@ -249,10 +221,10 @@ export default function HomePage() {
             dueTodayTasksCount: summaryPayload.dueTodayTasksCount || 0,
           });
         } else {
-          setSummary(fallbackSummary);
+          setSummary(emptySummary);
         }
       } else {
-        setSummary(fallbackSummary);
+        setSummary(emptySummary);
       }
 
       if (tasksResult.status === 'fulfilled') {
@@ -350,7 +322,7 @@ export default function HomePage() {
       const message =
         error instanceof Error ? error.message : 'Erro inesperado ao carregar painel.';
 
-      setSummary(fallbackSummary);
+      setSummary(emptySummary);
       setTasks([]);
       setEvents([]);
       setTasksHint(null);
@@ -426,10 +398,36 @@ export default function HomePage() {
     [filteredTasks]
   );
   const completionRate = filteredTasks.length > 0 ? Math.round((completedTasks / filteredTasks.length) * 100) : 0;
+  const spotlightTasks = useMemo(() => {
+    return [...filteredTasks]
+      .sort((left, right) => {
+        const leftPriority = priorityRank(left.priority);
+        const rightPriority = priorityRank(right.priority);
+
+        if (leftPriority !== rightPriority) {
+          return leftPriority - rightPriority;
+        }
+
+        if (left.dueDate && right.dueDate) {
+          return new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime();
+        }
+
+        if (left.dueDate) return -1;
+        if (right.dueDate) return 1;
+
+        return left.title.localeCompare(right.title);
+      })
+      .slice(0, 3);
+  }, [filteredTasks]);
+  const liveEventsCount = calendarEvents.length;
+  const cadenceTone: ProgressSegmentColor =
+    completionRate >= 75 ? 'success' : completionRate >= 45 ? 'primary' : 'warning';
+  const cadenceSegments =
+    completionRate >= 75 ? 4 : completionRate >= 50 ? 3 : completionRate >= 25 ? 2 : completionRate > 0 ? 1 : 0;
   const operationalFocus =
     summary.dueTodayTasksCount > 0
       ? `${summary.dueTodayTasksCount} itens vencem hoje e merecem prioridade imediata.`
-      : 'Sem vencimentos urgentes no momento; bom espaço para evoluir tarefas estruturais.';
+      : 'Sem vencimentos urgentes no momento. Use a janela do dia para avançar cards e rotinas estruturais.';
 
   const handleCreateEvent = useCallback(
     async (payload: {
@@ -574,114 +572,269 @@ export default function HomePage() {
   ].filter((value): value is string => Boolean(value));
 
   return (
-    <div className="space-y-5">
-      <section className="app-surface overflow-hidden p-4 sm:p-5 md:p-6">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(22rem,0.88fr)]">
-          <div className="max-w-3xl">
-            <p className="app-kicker">Painel operacional</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-[1.85rem] font-bold tracking-[-0.03em] text-[color:var(--text-strong)] sm:text-3xl">
-                Painel Consolidado de Operações
-              </h1>
-              <Badge tone="info">{todayLabel}</Badge>
-            </div>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-[color:var(--text-secondary)]">
-              Acompanhe o que vence hoje, o pulso do pipeline e a agenda operacional em uma única leitura. Use os filtros da topbar para refinar prioridades sem perder o contexto do dia.
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {activeFilters.length > 0 ? (
-                activeFilters.map((filter) => (
-                  <Badge key={filter} tone="neutral" className="normal-case tracking-normal">
-                    {filter}
-                  </Badge>
-                ))
-              ) : (
-                <Badge tone="neutral" className="hidden normal-case tracking-normal sm:inline-flex">
-                  Sem filtros adicionais ativos
-                </Badge>
-              )}
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="app-note-card flex gap-3">
-                <Sparkles className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
-                <div>
-                  <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">
-                    Foco do dia
-                  </h3>
-                  <p className="text-sm text-[color:var(--text-secondary)]">{operationalFocus}</p>
-                </div>
+    <div className="space-y-6">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)]">
+        <div className="app-surface overflow-hidden p-5 sm:p-6 md:p-7">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="app-kicker">Operação em foco</p>
+                <Badge tone={summary.dueTodayTasksCount > 0 ? 'warning' : 'info'}>{todayLabel}</Badge>
               </div>
-              <div className="app-note-card flex gap-3">
-                <Activity className="mt-0.5 h-5 w-5 text-[color:var(--text-accent)]" />
-                <div>
-                  <h3 className="mb-2 font-semibold text-[color:var(--text-strong)]">
-                    Cadência atual
-                  </h3>
-                  <p className="text-sm text-[color:var(--text-secondary)]">
-                    {completionRate}% das tarefas filtradas já foram concluídas e {calendarEvents.length} eventos sustentam a agenda ativa.
+
+              <div className="space-y-3">
+                <h1 className="font-display max-w-4xl text-[2.2rem] font-bold leading-[1.02] tracking-[-0.045em] text-[color:var(--text-strong)] sm:text-[2.65rem]">
+                  Painel Consolidado de Operações
+                </h1>
+                <p className="max-w-3xl text-[15px] leading-7 text-[color:var(--text-secondary)]">
+                  Centralize a leitura do dia em uma única superfície: o que precisa de atenção,
+                  a cadência real das entregas e a agenda que sustenta a operação comercial.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {activeFilters.length > 0 ? (
+                  activeFilters.map((filter) => (
+                    <Badge key={filter} tone="neutral" className="normal-case tracking-normal">
+                      {filter}
+                    </Badge>
+                  ))
+                ) : (
+                  <Badge tone="neutral" className="normal-case tracking-normal">
+                    Vista base ativa
+                  </Badge>
+                )}
+                <Badge tone="info" className="normal-case tracking-normal">
+                  {liveEventsCount} eventos na agenda
+                </Badge>
+              </div>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
+              <article className="rounded-[var(--radius-xl)] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-4 shadow-[var(--shadow-soft)]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                      Foco do dia
+                    </p>
+                    <h2 className="mt-3 text-xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">
+                      Prioridades imediatas
+                    </h2>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary-100 bg-primary-50 text-primary-700">
+                    <Sparkles size={18} />
+                  </div>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-[color:var(--text-secondary)]">
+                  {operationalFocus}
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                      Janela do dia
+                    </p>
+                    <p className="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                      {summary.dueTodayTasksCount}
+                    </p>
+                    <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
+                      tarefas vencendo hoje
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                      Execução
+                    </p>
+                    <p className="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                      {summary.openTasksCount}
+                    </p>
+                    <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
+                      tarefas abertas
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                      Agenda
+                    </p>
+                    <p className="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-[color:var(--text-strong)]">
+                      {liveEventsCount}
+                    </p>
+                    <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
+                      marcos visíveis na vista
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article className="rounded-[var(--radius-xl)] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-4 shadow-[var(--shadow-soft)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                      Cadência operacional
+                    </p>
+                    <h2 className="mt-3 text-xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">
+                      Snapshot do dia
+                    </h2>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-success-100 bg-success-50 text-success-700">
+                    <Activity size={18} />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-end gap-3">
+                  <p className="text-4xl font-extrabold tracking-[-0.05em] text-[color:var(--text-strong)]">
+                    {completionRate}%
+                  </p>
+                  <p className="pb-1 text-sm font-medium text-[color:var(--text-secondary)]">
+                    conclusão do recorte atual
                   </p>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="app-note-card">
-              <div className="mb-2 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
-                <span>Ritmo da operação</span>
-                <span>{completionRate}%</span>
-              </div>
-              <ProgressSegments
-                filled={
-                  completionRate >= 75 ? 4 : completionRate >= 50 ? 3 : completionRate >= 25 ? 2 : 1
-                }
-                total={4}
-                color={completionRate >= 75 ? 'success' : completionRate >= 50 ? 'primary' : 'warning'}
-              />
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Badge tone={summary.dueTodayTasksCount > 0 ? 'warning' : 'success'}>
-                  {summary.dueTodayTasksCount} vencem hoje
-                </Badge>
-                <Badge tone="info">{summary.openTasksCount} abertas</Badge>
-                <Badge tone="neutral">{events.length} eventos reais</Badge>
-              </div>
+                <div className="mt-4">
+                  <ProgressSegments filled={cadenceSegments} total={4} color={cadenceTone} />
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Badge tone={summary.dueTodayTasksCount > 0 ? 'warning' : 'success'}>
+                    {summary.dueTodayTasksCount > 0 ? 'atenção hoje' : 'janela controlada'}
+                  </Badge>
+                  <Badge tone="info">{completedTasks} concluídas</Badge>
+                  <Badge tone="neutral">{undatedTasksCount} sem prazo</Badge>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-[color:var(--text-secondary)]">
+                  {completionRate > 0
+                    ? `${completionRate}% das tarefas filtradas já avançaram nesta janela.`
+                    : 'Sem progresso contabilizado neste recorte. Use a vista para decidir o próximo movimento.'}
+                </p>
+              </article>
             </div>
 
-            <div className="grid w-full grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {summaryCards.map((card) => {
                 const Icon = card.icon;
                 return (
                   <article
                     key={card.label}
-                    className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-3.5 shadow-[var(--shadow-soft)] sm:p-4"
+                    className="rounded-[var(--radius-xl)] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-4 shadow-[var(--shadow-soft)] transition duration-200 hover:-translate-y-0.5 hover:border-[color:var(--border-accent)] hover:shadow-[var(--shadow-primary-day)]"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className={`flex h-9 w-9 items-center justify-center rounded-lg border ${card.color} sm:h-10 sm:w-10`}>
-                        <Icon size={17} />
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                          {card.label}
+                        </p>
+                        <p className="mt-3 text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[color:var(--text-strong)]">
+                          {card.value}
+                        </p>
+                      </div>
+                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${card.color}`}>
+                        <Icon size={18} />
                       </div>
                     </div>
-                    <p className="mt-3 text-[9px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)] sm:mt-4 sm:text-[10px]">
-                      {card.label}
-                    </p>
-                    <p className="mt-2 text-[1.75rem] font-extrabold leading-none tracking-[-0.04em] text-[color:var(--text-strong)] sm:mt-3 sm:text-3xl">
-                      {card.value}
-                    </p>
-                    <div className="mt-2 sm:mt-3">
-                      <ProgressSegments
-                        filled={card.value > 0 ? 4 : 1}
-                        total={4}
-                        color={card.progressColor}
-                      />
+                    <div className="mt-4">
+                      <ProgressSegments filled={card.value > 0 ? 4 : 0} total={4} color={card.progressColor} />
                     </div>
-                    <p className="mt-2 text-[11px] font-medium text-[color:var(--text-secondary)] sm:mt-3 sm:text-xs">{card.note}</p>
+                    <p className="mt-3 text-sm text-[color:var(--text-secondary)]">{card.note}</p>
                   </article>
                 );
               })}
             </div>
           </div>
         </div>
+
+        <aside className="space-y-4">
+          <section className="rounded-[var(--radius-xl)] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-5 shadow-[var(--shadow-soft)]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                  Prioridades imediatas
+                </p>
+                <h2 className="mt-3 text-xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">
+                  O que merece atenção agora
+                </h2>
+              </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-warning-100 bg-warning-50 text-warning-700">
+                <CircleAlert size={18} />
+              </div>
+            </div>
+
+            {spotlightTasks.length > 0 ? (
+              <div className="mt-5 space-y-3">
+                {spotlightTasks.map((task) => (
+                  <article
+                    key={task.id}
+                    className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-3.5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[color:var(--text-strong)]">
+                          {task.title}
+                        </p>
+                        <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
+                          {task.cardName}
+                        </p>
+                      </div>
+                      <Badge tone={task.priority === 'P1' ? 'error' : task.priority === 'P2' ? 'warning' : 'info'}>
+                        {task.priority}
+                      </Badge>
+                    </div>
+                    <div className="mt-3">
+                      <ProgressSegments
+                        filled={
+                          task.progress >= 100 ? 4 : task.progress >= 60 ? 3 : task.progress >= 30 ? 2 : task.progress > 0 ? 1 : 0
+                        }
+                        total={4}
+                        color={task.status === 'completed' ? 'success' : task.priority === 'P1' ? 'warning' : 'primary'}
+                      />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <AvatarStack
+                        avatars={[{ fallback: task.assignedTo ? task.assignedTo.slice(0, 2) : 'ND' }]}
+                        size="sm"
+                        max={1}
+                      />
+                      <div className="flex items-center gap-2 text-xs text-[color:var(--text-secondary)]">
+                        <span>{task.dueDate ? formatDueDate(task.dueDate) : 'Sem prazo'}</span>
+                        <ArrowUpRight size={13} />
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-5 rounded-xl border border-dashed border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-4">
+                <p className="text-sm font-medium text-[color:var(--text-strong)]">Nenhuma prioridade aberta nesta vista</p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
+                  Quando novas tarefas entrarem na janela operacional, esta coluna destaca o que precisa de resposta imediata.
+                </p>
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-[var(--radius-xl)] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-5 shadow-[var(--shadow-soft)]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+              Leitura de contexto
+            </p>
+            <h2 className="mt-3 text-xl font-bold tracking-[-0.03em] text-[color:var(--text-strong)]">
+              Base da operação
+            </h2>
+            <div className="mt-5 space-y-3">
+              <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-3.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                  Vista ativa
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
+                  {activeFilters.length > 0
+                    ? activeFilters.join(' · ')
+                    : 'Sem filtros adicionais aplicados. A home reflete o panorama completo da conta.'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-3.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
+                  Próximo passo
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
+                  Use tarefas para puxar execução imediata e agenda para distribuir marcos sem perder o ritmo do pipeline.
+                </p>
+              </div>
+            </div>
+          </section>
+        </aside>
       </section>
 
       <section className="grid grid-cols-1 gap-5 2xl:grid-cols-[1.45fr_0.95fr]">
