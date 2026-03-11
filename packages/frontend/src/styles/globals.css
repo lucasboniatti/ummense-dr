@@ -415,6 +415,19 @@
     grid-template-columns: repeat(auto-fit, minmax(188px, 1fr));
   }
 
+  .home-main-grid {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .home-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-rhythm-grid {
+    grid-template-columns: 1fr;
+  }
+
   .app-metric-tile {
     border: 1px solid color-mix(in srgb, var(--border-strong) 90%, transparent);
     background:
@@ -786,6 +799,30 @@
 
     .app-auth-card {
       padding: 2.25rem;
+    }
+
+    .home-kpi-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (min-width: 1100px) {
+  @layer components {
+    .home-rhythm-grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(16rem, 0.9fr);
+    }
+  }
+}
+
+@media (min-width: 1280px) {
+  @layer components {
+    .home-main-grid {
+      grid-template-columns: minmax(0, 1.28fr) minmax(19rem, 0.72fr);
+    }
+
+    .home-kpi-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 }

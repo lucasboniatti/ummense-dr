@@ -597,7 +597,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.28fr)_minmax(19rem,0.72fr)]">
+      <section className="home-main-grid grid gap-5">
         <div className="space-y-5">
           <section className="relative overflow-hidden rounded-[20px] border border-[color:var(--border-default)] bg-[linear-gradient(180deg,rgba(255,255,255,.98),rgba(240,245,251,.92))] p-6 shadow-[var(--shadow-soft)] sm:p-7 md:p-8">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(13,96,184,.14),transparent_68%)]" />
@@ -639,7 +639,7 @@ export default function HomePage() {
                 </Button>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="home-kpi-grid grid gap-3">
                 {summaryCards.map((card) => {
                   const Icon = card.icon;
                   return (
@@ -685,7 +685,7 @@ export default function HomePage() {
                 <Sparkles size={18} />
               </div>
             </div>
-            <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]">
+            <div className="home-rhythm-grid mt-5 grid gap-4">
               <div className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-4">
                 <p className="text-sm leading-7 text-[color:var(--text-secondary)]">
                   {operationalFocus}
