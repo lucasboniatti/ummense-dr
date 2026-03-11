@@ -428,6 +428,64 @@
     grid-template-columns: 1fr;
   }
 
+  .home-hero-title {
+    font-size: clamp(2.05rem, 4.1vw, 3.2rem);
+    line-height: 0.94;
+    letter-spacing: -0.058em;
+    max-width: 34rem;
+  }
+
+  .home-hero-copy {
+    max-width: 42rem;
+    font-size: 0.98rem;
+    line-height: 1.72;
+  }
+
+  .home-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.7rem;
+    padding-top: 0.2rem;
+  }
+
+  .home-kpi-card {
+    min-height: 142px;
+    padding: 0.95rem 1rem;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 98%, transparent) 0%,
+      color-mix(in srgb, var(--surface-raised) 96%, transparent) 100%
+    );
+    transition:
+      transform var(--motion-fast) ease,
+      border-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease;
+  }
+
+  .home-kpi-card:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 24%, var(--border-default));
+    transform: translateY(-1px);
+  }
+
+  .home-kpi-value {
+    font-size: clamp(1.9rem, 2.4vw, 2.3rem);
+  }
+
+  .home-kpi-note {
+    font-size: 0.84rem;
+    line-height: 1.5;
+    text-transform: lowercase;
+  }
+
+  .home-side-card {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 98%, transparent) 0%,
+      color-mix(in srgb, var(--surface-muted) 54%, transparent) 100%
+    );
+  }
+
   .app-metric-tile {
     border: 1px solid color-mix(in srgb, var(--border-strong) 90%, transparent);
     background:

@@ -618,16 +618,16 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-4">
-                <h1 className="font-display max-w-4xl text-[2.25rem] font-bold leading-[0.98] tracking-[-0.05em] text-[color:var(--text-strong)] sm:text-[3.05rem]">
+                <h1 className="home-hero-title font-display max-w-4xl font-bold text-[color:var(--text-strong)]">
                   Painel Consolidado de Operações
                 </h1>
-                <p className="max-w-3xl text-[15px] leading-7 text-[color:var(--text-secondary)]">
+                <p className="home-hero-copy text-[color:var(--text-secondary)]">
                   Entenda o dia em poucos segundos: o que pede resposta agora, como está a cadência
                   da execução e quais frentes sustentam a operação comercial sem ruído.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="home-hero-actions">
                 <Button type="button" onClick={() => void router.push('/dashboard/automations')}>
                   Abrir automações
                 </Button>
@@ -643,16 +643,13 @@ export default function HomePage() {
                 {summaryCards.map((card) => {
                   const Icon = card.icon;
                   return (
-                    <article
-                      key={card.label}
-                      className="rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-4 shadow-[var(--shadow-soft)]"
-                    >
+                    <article key={card.label} className="home-kpi-card rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-card)] shadow-[var(--shadow-soft)]">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
                             {card.label}
                           </p>
-                          <p className="mt-3 text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[color:var(--text-strong)]">
+                          <p className="home-kpi-value mt-3 font-extrabold leading-none tracking-[-0.05em] text-[color:var(--text-strong)]">
                             {card.value}
                           </p>
                         </div>
@@ -663,7 +660,7 @@ export default function HomePage() {
                       <div className="mt-4">
                         <ProgressSegments filled={card.value > 0 ? 4 : 0} total={4} color={card.progressColor} />
                       </div>
-                      <p className="mt-3 text-sm text-[color:var(--text-secondary)]">{card.note}</p>
+                      <p className="home-kpi-note mt-3 text-[color:var(--text-secondary)]">{card.note}</p>
                     </article>
                   );
                 })}
@@ -671,7 +668,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section className="rounded-[18px] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-5 shadow-[var(--shadow-soft)]">
+          <section className="home-side-card rounded-[18px] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-5 shadow-[var(--shadow-soft)]">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
@@ -718,7 +715,7 @@ export default function HomePage() {
         </div>
 
         <aside className="grid gap-4">
-          <section className="rounded-[18px] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-5 shadow-[var(--shadow-soft)]">
+          <section className="home-side-card rounded-[18px] border border-[color:var(--border-default)] bg-[color:var(--surface-card)] p-5 shadow-[var(--shadow-soft)]">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
