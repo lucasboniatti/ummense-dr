@@ -771,13 +771,7 @@ export default function FlowsWorkspace({ initialFlowId = null }: FlowsWorkspaceP
 
       {viewMode === 'board' && (
         <KanbanBoard
-          columns={columns}
-          isCardPending={isCardPending}
-          onDragStart={(cardId, fromColumnId) => startDrag({ cardId, fromColumnId })}
-          onDragEnd={clearDrag}
-          onDropColumn={onDropColumn}
-          onCardClick={openCardWorkspace}
-          filterCard={matchCardFilter}
+          flowId={String(selectedFlowId)}
         />
       )}
 
