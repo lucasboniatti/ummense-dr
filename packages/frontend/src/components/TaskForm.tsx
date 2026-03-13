@@ -1,65 +1,73 @@
 import React, { useState } from 'react';
-import { FormInput } from './composite/FormField';
-import { Button } from './ui/Button';
+import type { TaskPriority } from '../types/taskflow';
 
 interface TaskFormProps {
-  onSubmit?: (task: any) => void;
-  onCancel?: () => void;
-  initialData?: any;
+  onSubmit?: (task: {
+    title: string;
+    priority: TaskPriority;
+    due_date?: string | null;
+  }) => Promise<void> | void;
+  submitting?: boolean;
 }
 
-export function TaskForm({ onSubmit, onCancel, initialData }: TaskFormProps) {
-  const [formData, setFormData] = useState(initialData || { name: '', description: '', priority: 'medium' });
-  const [loading, setLoading] = useState(false);
+export function TaskForm({ onSubmit, submitting = false }: TaskFormProps) {
+  const [title, setTitle] = useState('');
+  const [priority, setPriority] = useState<TaskPriority>('P3');
+  const [dueDate, setDueDate] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      onSubmit?.(formData);
-    } finally {
-      setLoading(false);
+    if (title.trim()) {
+      await onSubmit?.({
+        title: title.trim(),
+        priority,
+        due_date: dueDate || null,
+      });
+      setTitle('');
+      setDueDate('');
+      setPriority('P3');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      <FormInput
-        label="Task Name"
-        type="text"
-        value={formData.name}
-        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-        required
-      />
-
-      <FormInput
-        label="Description"
-        type="text"
-        value={formData.description}
-        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-      />
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neutral-700">Priority</label>
+    <form onSubmit={(event) => void handleSubmit(event)} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="mb-2">
+        <input
+          type="text"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="Task title"
+          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          required
+          disabled={submitting}
+        />
+      </div>
+      <div className="mb-3 flex gap-2">
         <select
-          value={formData.priority}
-          onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+          value={priority}
+          onChange={e => setPriority(e.target.value as TaskPriority)}
+          className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          disabled={submitting}
         >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
+          <option value="P1">P1 - High</option>
+          <option value="P2">P2 - Medium</option>
+          <option value="P3">P3 - Low</option>
         </select>
+        <input
+          type="date"
+          value={dueDate}
+          onChange={e => setDueDate(e.target.value)}
+          className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          disabled={submitting}
+        />
       </div>
-
-      <div className="flex gap-3 justify-end">
-        <Button variant="ghost" onClick={onCancel} type="button">
-          Cancel
-        </Button>
-        <Button variant="primary" type="submit" disabled={loading}>
-          {loading ? 'Saving...' : 'Save Task'}
-        </Button>
-      </div>
+      <button
+        type="submit"
+        className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={submitting}
+      >
+        {submitting ? 'Adding...' : 'Add Task'}
+      </button>
     </form>
   );
 }
