@@ -32,22 +32,48 @@ async function syncColumnOrder(
   orderedCardIds: string[],
   updatesById: Record<string, Record<string, unknown>> = {}
 ) {
-  await Promise.all(
-    orderedCardIds.map(async (cardId, orderIndex) => {
-      const { error } = await (supabase as any)
-        .from('cards')
-        .update({
-          order_index: orderIndex,
-          ...updatesById[cardId],
-        })
-        .eq('id', cardId)
-        .eq('flow_id', flowId);
+  if (orderedCardIds.length === 0) {
+    return;
+  }
 
-      if (error) {
-        throw error;
-      }
-    })
-  );
+  const { data: existingCards, error: fetchError } = await (supabase as any)
+    .from('cards')
+    .select('*')
+    .eq('flow_id', flowId)
+    .in('id', orderedCardIds);
+
+  if (fetchError) {
+    throw fetchError;
+  }
+
+  const safeCards = Array.isArray(existingCards) ? (existingCards as Card[]) : [];
+
+  if (safeCards.length !== orderedCardIds.length) {
+    throw new Error('Failed to load all cards required for atomic reorder');
+  }
+
+  const cardById = new Map(safeCards.map((card) => [card.id, card]));
+  const reorderedCards = orderedCardIds.map((cardId, orderIndex) => {
+    const existingCard = cardById.get(cardId);
+
+    if (!existingCard) {
+      throw new Error(`Missing card ${cardId} during atomic reorder`);
+    }
+
+    return {
+      ...existingCard,
+      order_index: orderIndex,
+      ...updatesById[cardId],
+    };
+  });
+
+  const { error: upsertError } = await (supabase as any)
+    .from('cards')
+    .upsert(reorderedCards, { onConflict: 'id' });
+
+  if (upsertError) {
+    throw upsertError;
+  }
 }
 
 async function fetchOwnedCard(cardId: string, userId: string) {
@@ -622,23 +648,23 @@ export async function reorderCards(req: AuthRequest, res: Response) {
       }
     }
 
-    await Promise.all(
-      payload.moves.map(async (move) => {
-        const card = cardById.get(move.card_id)!;
-        const { error } = await (supabase as any)
-          .from('cards')
-          .update({
-            column_id: move.column_id,
-            order_index: move.order_index,
-          })
-          .eq('id', move.card_id)
-          .eq('flow_id', card.flow_id);
+    const reorderedCards = payload.moves.map((move) => {
+      const card = cardById.get(move.card_id)!;
 
-        if (error) {
-          throw error;
-        }
-      })
-    );
+      return {
+        ...card,
+        column_id: move.column_id,
+        order_index: move.order_index,
+      };
+    });
+
+    const { error: upsertError } = await (supabase as any)
+      .from('cards')
+      .upsert(reorderedCards, { onConflict: 'id' });
+
+    if (upsertError) {
+      throw upsertError;
+    }
 
     return sendTaskflowData(res, 200, { updated: payload.moves.length });
   } catch (error) {

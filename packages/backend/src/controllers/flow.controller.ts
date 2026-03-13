@@ -695,21 +695,27 @@ export async function reorderColumns(req: AuthRequest, res: Response) {
       );
     }
 
-    await Promise.all(
-      payload.column_ids.map(async (columnId, orderIndex) => {
-        const { error } = await (supabase as any)
-          .from('flow_columns')
-          .update({ order_index: orderIndex })
-          .eq('id', columnId)
-          .eq('flow_id', flowId);
-
-        if (error) {
-          throw error;
-        }
-      })
-    );
-
     const columnMap = new Map(safeColumns.map((column) => [column.id, column]));
+    const reorderedColumns = payload.column_ids.map((columnId, orderIndex) => {
+      const existingColumn = columnMap.get(columnId);
+
+      if (!existingColumn) {
+        throw new Error(`Missing column ${columnId} during atomic reorder`);
+      }
+
+      return {
+        ...existingColumn,
+        order_index: orderIndex,
+      };
+    });
+
+    const { error: upsertError } = await (supabase as any)
+      .from('flow_columns')
+      .upsert(reorderedColumns, { onConflict: 'id' });
+
+    if (upsertError) {
+      throw upsertError;
+    }
 
     return sendTaskflowData(res, 200, {
       columns: payload.column_ids.map((columnId, orderIndex) => ({
